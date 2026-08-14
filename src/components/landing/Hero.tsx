@@ -9,7 +9,7 @@ export function Hero() {
 
   return (
     <section id="topo" className="relative overflow-hidden px-5 pb-16 pt-32 sm:px-8 md:pb-24 md:pt-40">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         {reduced ? (
           <img
             src={heroPoster.url}
@@ -24,19 +24,19 @@ export function Hero() {
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="auto"
             poster={heroPoster.url}
             src={heroVideo.url}
             className="h-full w-full object-cover"
           />
         )}
-        <div className="absolute inset-0 bg-background/60" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background" />
+        <div className="absolute inset-0 bg-background/55" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-transparent to-background" />
       </div>
-      <div className="pointer-events-none absolute inset-0 tech-glow opacity-70" />
-      <div className="pointer-events-none absolute inset-0 tech-grid opacity-25 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]" />
+      <div className="pointer-events-none absolute inset-0 z-[1] tech-glow opacity-40" />
+      <div className="pointer-events-none absolute inset-0 z-[1] tech-grid opacity-15 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]" />
 
-      <div className="relative mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center">
+      <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center">
         <div>
           <motion.span
             initial={reduced ? false : { opacity: 0, y: 12 }}
