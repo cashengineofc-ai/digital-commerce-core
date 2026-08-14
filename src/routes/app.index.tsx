@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { DashboardPage } from "@/components/app/dashboard/DashboardPage";
+
 
 export const Route = createFileRoute("/app/")({
   head: () => ({
