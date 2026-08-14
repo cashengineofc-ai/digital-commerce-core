@@ -24,7 +24,7 @@ export function Hero() {
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="auto"
             poster={heroPoster.url}
             src={heroVideo.url}
             className="h-full w-full object-cover"
