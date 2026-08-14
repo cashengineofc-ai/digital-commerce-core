@@ -28,7 +28,7 @@ export function Header() {
         scrolled ? "border-b border-border bg-background/85 backdrop-blur-xl" : "bg-transparent"
       }`}
     >
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4 sm:px-8">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
         <a href="#topo" className="flex min-w-0 items-center gap-2.5">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Zap className="h-4 w-4" />
