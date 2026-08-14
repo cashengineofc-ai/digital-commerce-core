@@ -36,7 +36,7 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-0 z-[1] tech-glow opacity-40" />
       <div className="pointer-events-none absolute inset-0 z-[1] tech-grid opacity-15 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]" />
 
-      <div className="relative mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center">
+      <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center">
         <div>
           <motion.span
             initial={reduced ? false : { opacity: 0, y: 12 }}
