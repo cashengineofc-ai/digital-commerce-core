@@ -45,7 +45,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                 return (
                   <li key={item.to}>
                     <Link
-                      to={item.to as LinkProps["to"]}
+                      to={item.to as NonNullable<LinkProps["to"]>}
                       onClick={onNavigate}
                       className={cn(
                         "group relative flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors",
