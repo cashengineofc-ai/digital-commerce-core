@@ -1,12 +1,24 @@
-export function formatBRL(value: number, opts?: { compact?: boolean }) {
-  if (opts?.compact) {
-    return value.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-      notation: "compact",
+function compactNumber(value: number) {
+  const abs = Math.abs(value);
+  const fmt = (v: number, suffix: string) => {
+    const rounded = Math.round(v * 10) / 10;
+    const text = rounded.toLocaleString("pt-BR", {
+      minimumFractionDigits: rounded % 1 === 0 ? 0 : 1,
       maximumFractionDigits: 1,
     });
+    return `${text}${suffix}`;
+  };
+  if (abs >= 1_000_000_000) return fmt(value / 1_000_000_000, " bi");
+  if (abs >= 1_000_000) return fmt(value / 1_000_000, " mi");
+  if (abs >= 1_000) return fmt(value / 1_000, " mil");
+  return value.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+}
+
+export function formatBRL(value: number, opts?: { compact?: boolean }) {
+  if (opts?.compact) {
+    return `R$ ${compactNumber(value)}`;
   }
+
   return value.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
