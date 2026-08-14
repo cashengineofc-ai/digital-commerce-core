@@ -1,5 +1,4 @@
 import { motion, useReducedMotion } from "motion/react";
-import CountUp from "react-countup";
 import { ArrowUpRight, CreditCard, Users, Wallet } from "lucide-react";
 
 const bars = [42, 58, 36, 74, 51, 88, 66, 95];
@@ -115,18 +114,7 @@ function Metric({
         <span className="truncate text-xs">{label}</span>
       </div>
       <p className="mt-2 font-display text-xl font-semibold tabular-nums sm:text-2xl">
-        <CountUp
-          start={0}
-          end={end}
-          duration={2.4}
-          decimals={decimals}
-          decimal=","
-          separator="."
-          prefix={prefix ?? ""}
-          suffix={suffix ?? ""}
-          enableScrollSpy
-          scrollSpyOnce={false}
-        />
+        
       </p>
     </div>
   );
