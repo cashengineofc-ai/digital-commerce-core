@@ -1,3 +1,4 @@
+import { Counter } from "./Counter";
 import { Link2, MousePointerClick, Package, TrendingUp } from "lucide-react";
 import { Reveal, Section, SectionHeading } from "./primitives";
 

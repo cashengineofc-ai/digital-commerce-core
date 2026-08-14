@@ -1,3 +1,4 @@
+import { Counter } from "./Counter";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight, CreditCard, Users, Wallet } from "lucide-react";
 
