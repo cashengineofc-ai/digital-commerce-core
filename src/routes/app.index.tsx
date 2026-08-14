@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { DashboardPage } from "@/components/app/dashboard/DashboardPage";
+
 
 export const Route = createFileRoute("/app/")({
   head: () => ({
@@ -12,10 +13,6 @@ export const Route = createFileRoute("/app/")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => (
-    <ComingSoon
-      title="Dashboard"
-      description="Volume processado, vendas, receita e taxa de aprovação em um só lugar. Os indicadores e gráficos chegam na próxima etapa."
-    />
-  ),
+  component: DashboardPage,
 });
+
