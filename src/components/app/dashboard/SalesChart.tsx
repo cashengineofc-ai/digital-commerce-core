@@ -99,7 +99,10 @@ export function SalesChart() {
                 width={78}
                 tickMargin={8}
                 tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-                tickFormatter={(v: number) => formatBRL(v, { compact: true })}
+                tickFormatter={(v: number) =>
+                  formatBRL(v, { compact: true }).replace(/ /g, "\u00a0")
+                }
+
               />
               <Tooltip
                 content={<ChartTooltip />}
