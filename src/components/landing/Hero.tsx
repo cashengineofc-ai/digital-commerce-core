@@ -30,7 +30,7 @@ export function Hero() {
             className="h-full w-full object-cover"
           />
         )}
-        <div className="absolute inset-0 bg-background/78" />
+        <div className="absolute inset-0 bg-background/60" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background" />
       </div>
       <div className="pointer-events-none absolute inset-0 tech-glow opacity-70" />
