@@ -28,6 +28,7 @@ import { Route as AppProdutosRouteImport } from './routes/app.produtos'
 import { Route as AppRepassesRouteImport } from './routes/app.repasses'
 import { Route as AppSaldoRouteImport } from './routes/app.saldo'
 import { Route as AppSaquesRouteImport } from './routes/app.saques'
+import { Route as AppSplitRouteImport } from './routes/app.split'
 import { Route as AppTaxasRouteImport } from './routes/app.taxas'
 import { Route as AppTransacoesRouteImport } from './routes/app.transacoes'
 import { Route as AppVendasRouteImport } from './routes/app.vendas'
@@ -138,6 +139,11 @@ const AppSaquesRoute = AppSaquesRouteImport.update({
   path: '/saques',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSplitRoute = AppSplitRouteImport.update({
+  id: '/split',
+  path: '/split',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppTaxasRoute = AppTaxasRouteImport.update({
   id: '/taxas',
   path: '/taxas',
@@ -231,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/app/repasses': typeof AppRepassesRoute
   '/app/saldo': typeof AppSaldoRoute
   '/app/saques': typeof AppSaquesRoute
+  '/app/split': typeof AppSplitRoute
   '/app/taxas': typeof AppTaxasRoute
   '/app/transacoes': typeof AppTransacoesRoute
   '/app/vendas': typeof AppVendasRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/app/repasses': typeof AppRepassesRoute
   '/app/saldo': typeof AppSaldoRoute
   '/app/saques': typeof AppSaquesRoute
+  '/app/split': typeof AppSplitRoute
   '/app/taxas': typeof AppTaxasRoute
   '/app/transacoes': typeof AppTransacoesRoute
   '/app/vendas': typeof AppVendasRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/app/repasses': typeof AppRepassesRoute
   '/app/saldo': typeof AppSaldoRoute
   '/app/saques': typeof AppSaquesRoute
+  '/app/split': typeof AppSplitRoute
   '/app/taxas': typeof AppTaxasRoute
   '/app/transacoes': typeof AppTransacoesRoute
   '/app/vendas': typeof AppVendasRoute
@@ -338,6 +347,7 @@ export interface FileRouteTypes {
     | '/app/repasses'
     | '/app/saldo'
     | '/app/saques'
+    | '/app/split'
     | '/app/taxas'
     | '/app/transacoes'
     | '/app/vendas'
@@ -372,6 +382,7 @@ export interface FileRouteTypes {
     | '/app/repasses'
     | '/app/saldo'
     | '/app/saques'
+    | '/app/split'
     | '/app/taxas'
     | '/app/transacoes'
     | '/app/vendas'
@@ -407,6 +418,7 @@ export interface FileRouteTypes {
     | '/app/repasses'
     | '/app/saldo'
     | '/app/saques'
+    | '/app/split'
     | '/app/taxas'
     | '/app/transacoes'
     | '/app/vendas'
@@ -564,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSaquesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/split': {
+      id: '/app/split'
+      path: '/split'
+      fullPath: '/app/split'
+      preLoaderRoute: typeof AppSplitRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/taxas': {
       id: '/app/taxas'
       path: '/taxas'
@@ -682,6 +701,7 @@ interface AppRouteChildren {
   AppRepassesRoute: typeof AppRepassesRoute
   AppSaldoRoute: typeof AppSaldoRoute
   AppSaquesRoute: typeof AppSaquesRoute
+  AppSplitRoute: typeof AppSplitRoute
   AppTaxasRoute: typeof AppTaxasRoute
   AppTransacoesRoute: typeof AppTransacoesRoute
   AppVendasRoute: typeof AppVendasRoute
@@ -716,6 +736,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRepassesRoute: AppRepassesRoute,
   AppSaldoRoute: AppSaldoRoute,
   AppSaquesRoute: AppSaquesRoute,
+  AppSplitRoute: AppSplitRoute,
   AppTaxasRoute: AppTaxasRoute,
   AppTransacoesRoute: AppTransacoesRoute,
   AppVendasRoute: AppVendasRoute,

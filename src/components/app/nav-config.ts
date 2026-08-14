@@ -68,6 +68,7 @@ export const navGroups: NavGroup[] = [
   {
     label: "Financeiro",
     items: [
+      { label: "Split Engine", to: "/app/split", icon: CircleDollarSign },
       { label: "Saldo", to: "/app/saldo", icon: Wallet },
       { label: "Extrato", to: "/app/extrato", icon: Receipt },
       { label: "Saques", to: "/app/saques", icon: Banknote },
