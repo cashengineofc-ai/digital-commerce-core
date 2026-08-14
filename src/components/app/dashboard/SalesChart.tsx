@@ -96,7 +96,7 @@ export function SalesChart() {
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                width={64}
+                width={78}
                 tickMargin={8}
                 tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
                 tickFormatter={(v: number) => formatBRL(v, { compact: true })}
