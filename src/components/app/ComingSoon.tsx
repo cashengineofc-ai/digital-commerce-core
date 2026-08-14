@@ -1,4 +1,3 @@
-import { motion, useReducedMotion } from "motion/react";
 import { Sparkles } from "lucide-react";
 
 export function ComingSoon({
@@ -8,16 +7,9 @@ export function ComingSoon({
   title: string;
   description: string;
 }) {
-  const reduced = useReducedMotion();
-
   return (
     <div className="mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center sm:py-24">
-      <motion.div
-        initial={reduced ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.21, 0.6, 0.35, 1] }}
-        className="w-full"
-      >
+      <div className="w-full">
         <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
           Em construção
@@ -42,7 +34,7 @@ export function ComingSoon({
             Esta área será construída nas próximas etapas do projeto.
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
