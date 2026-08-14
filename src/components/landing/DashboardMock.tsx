@@ -122,8 +122,8 @@ function Metric({
           decimals={decimals}
           decimal=","
           separator="."
-          prefix={prefix}
-          suffix={suffix}
+          prefix={prefix ?? ""}
+          suffix={suffix ?? ""}
           enableScrollSpy
           scrollSpyOnce={false}
         />
