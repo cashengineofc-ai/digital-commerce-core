@@ -51,33 +51,31 @@ export function KpiCard({
   const positive = delta >= 0;
   return (
     <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Icon className="h-4 w-4" />
-          </span>
-          <span className="truncate text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-            {label}
-          </span>
-        </div>
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
+        </span>
+        <span className="text-[11px] font-medium uppercase leading-tight tracking-[0.12em] text-muted-foreground">
+          {label}
+        </span>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <p className="text-2xl font-semibold tracking-tight text-foreground tabular-nums sm:text-[1.7rem]">
+          {value}
+        </p>
         <span
           className={cn(
             "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-
-            positive
-              ? "bg-success/12 text-success"
-              : "bg-destructive/12 text-destructive",
+            positive ? "bg-success/12 text-success" : "bg-destructive/12 text-destructive",
           )}
         >
           {positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
           {formatDelta(delta)}
         </span>
       </div>
-
-      <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground tabular-nums sm:text-[1.7rem]">
-        {value}
-      </p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+
 
       <div className="mt-4 -mb-1">
         <Sparkline points={points} positive={positive} />
