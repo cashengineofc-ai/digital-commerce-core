@@ -92,7 +92,7 @@ function Stat({
     <div className="rounded-xl border border-border bg-surface/60 p-3">
       <span className="text-primary-soft">{icon}</span>
       <p className="mt-2 font-display text-lg font-semibold tabular-nums">
-        
+        <Counter end={end} decimals={decimals} suffix={suffix} />
       </p>
       <p className="truncate text-[11px] text-muted-foreground">{label}</p>
     </div>

@@ -114,7 +114,7 @@ function Metric({
         <span className="truncate text-xs">{label}</span>
       </div>
       <p className="mt-2 font-display text-xl font-semibold tabular-nums sm:text-2xl">
-        
+        <Counter end={end} decimals={decimals} prefix={prefix ?? ""} suffix={suffix ?? ""} />
       </p>
     </div>
   );
