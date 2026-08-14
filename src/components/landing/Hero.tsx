@@ -1,12 +1,38 @@
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, PlayCircle } from "lucide-react";
 import { DashboardMock } from "./DashboardMock";
+import heroVideo from "@/assets/hero-bg.mp4.asset.json";
+import heroPoster from "@/assets/hero-poster.jpg.asset.json";
 
 export function Hero() {
   const reduced = useReducedMotion();
 
   return (
     <section id="topo" className="relative overflow-hidden px-5 pb-16 pt-32 sm:px-8 md:pb-24 md:pt-40">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        {reduced ? (
+          <img
+            src={heroPoster.url}
+            alt=""
+            aria-hidden="true"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <video
+            aria-hidden="true"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={heroPoster.url}
+            src={heroVideo.url}
+            className="h-full w-full object-cover"
+          />
+        )}
+        <div className="absolute inset-0 bg-background/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background" />
+      </div>
       <div className="pointer-events-none absolute inset-0 tech-glow opacity-70" />
       <div className="pointer-events-none absolute inset-0 tech-grid opacity-25 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]" />
 
