@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export function Shimmer({ className }: { className?: string }) {
@@ -37,12 +38,10 @@ export function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: nu
 
 /** Simula um carregamento curto para exibir skeletons na montagem. */
 export function useFakeLoading(ms = 550) {
-  const [loading, setLoading] = useStateSafe(true);
-  useEffectSafe(() => {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
     const id = setTimeout(() => setLoading(false), ms);
     return () => clearTimeout(id);
   }, [ms]);
   return loading;
 }
-
-import { useEffect as useEffectSafe, useState as useStateSafe } from "react";
