@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { ProductsPage } from "@/components/app/products/ProductsPage";
 
 export const Route = createFileRoute("/app/produtos")({
   head: () => ({
     meta: [
       { title: "Produtos · Cash Engine PRO" },
-      { name: "description", content: "Catálogo de produtos, preços e regras de comissão." },
+      { name: "description", content: "Catálogo de produtos, preços, comissões e checkout builder." },
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Produtos" description="Catálogo de produtos, preços e regras de comissão." />,
+  component: ProductsPage,
 });
