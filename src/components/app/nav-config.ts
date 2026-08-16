@@ -18,6 +18,7 @@ import {
   RefreshCcw,
   ScrollText,
   Settings,
+  ShieldAlert,
   ShieldCheck,
   ShoppingBag,
   Store,
@@ -105,6 +106,10 @@ export const navGroups: NavGroup[] = [
       { label: "Segurança", to: "/app/configuracoes/seguranca", icon: Lock },
       { label: "Integrações", to: "/app/configuracoes/integracoes", icon: Plug },
     ],
+  },
+  {
+    label: "Plataforma",
+    items: [{ label: "Admin Global", to: "/admin", icon: ShieldAlert }],
   },
 ];
 

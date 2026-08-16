@@ -2,36 +2,30 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { LinkProps } from "@tanstack/react-router";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { LogOut, Settings, X } from "lucide-react";
-import { navGroups, hiddenForAffiliate } from "./nav-config";
-import { useAppShell } from "./app-shell-context";
+import { navGroups } from "./admin-nav-config";
 import { cn } from "@/lib/utils";
 
 function Brand() {
   return (
-    <Link to="/app" className="flex items-center gap-2.5 px-4 py-5">
-      <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-[13px] font-bold text-primary-foreground">
-        CE
+    <Link to="/admin" className="flex items-center gap-2.5 px-4 py-5">
+      <span className="flex h-8 w-8 items-center justify-center rounded-md bg-destructive text-[13px] font-bold text-destructive-foreground">
+        ADM
       </span>
       <span className="text-[13px] font-bold uppercase leading-tight tracking-[0.14em] text-foreground">
-        Cash Engine
-        <span className="block text-[10px] font-semibold tracking-[0.28em] text-primary">PRO</span>
+        Admin Global
+        <span className="block text-[10px] font-semibold tracking-[0.28em] text-destructive">PRO</span>
       </span>
     </Link>
   );
 }
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
-  const { role } = useAppShell();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isAdminGlobal = role === "admin_global" || (typeof window !== "undefined" && (window as unknown as { is_admin_global?: boolean }).is_admin_global === true);
 
   return (
     <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
       {navGroups.map((group) => {
-        if (group.label === "Plataforma" && !isAdminGlobal) return null;
-        const items = group.items.filter(
-          (item) => !(role === "afiliado" && hiddenForAffiliate.has(item.to)),
-        );
+        const items = group.items;
         if (items.length === 0) return null;
 
         return (
@@ -42,7 +36,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             <ul className="space-y-0.5">
               {items.map((item) => {
                 const active =
-                  item.to === "/app" ? pathname === "/app" : pathname.startsWith(item.to);
+                  item.to === "/admin" ? pathname === "/admin" : pathname.startsWith(item.to);
                 const Icon = item.icon;
                 return (
                   <li key={item.to}>
@@ -52,12 +46,12 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                       className={cn(
                         "group relative flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors",
                         active
-                          ? "bg-primary/8 text-primary"
+                          ? "bg-destructive/10 text-destructive"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
                       {active && (
-                        <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
+                        <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-destructive" />
                       )}
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2.2 : 1.8} />
                       <span className="truncate">{item.label}</span>
@@ -77,28 +71,28 @@ function UserFooter() {
   return (
     <div className="border-t border-border p-3">
       <div className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
-          KV
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-destructive text-xs font-semibold text-destructive-foreground">
+          ADM
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold text-foreground">Kelvin</p>
-          <p className="truncate text-[11px] text-muted-foreground">Administrador</p>
+          <p className="truncate text-[13px] font-semibold text-foreground">Admin Global</p>
+          <p className="truncate text-[11px] text-muted-foreground">Admin Global · Acesso Total</p>
         </div>
         <div className="flex items-center gap-1">
-          <Link
-            to="/app/configuracoes/conta"
+          <button
+            type="button"
             aria-label="Configurações da conta"
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
           >
             <Settings className="h-4 w-4" />
-          </Link>
-          <Link
-            to="/"
+          </button>
+          <button
+            type="button"
             aria-label="Sair"
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
-          </Link>
+          </button>
         </div>
       </div>
     </div>

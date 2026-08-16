@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 export type PeriodKey = "hoje" | "7d" | "30d" | "90d" | "12m";
-export type RoleKey = "super-admin" | "produtor" | "afiliado";
+export type RoleKey = "admin_global" | "super-admin" | "produtor" | "afiliado";
 
 export const periods: { key: PeriodKey; label: string }[] = [
   { key: "hoje", label: "Hoje" },
@@ -12,6 +12,7 @@ export const periods: { key: PeriodKey; label: string }[] = [
 ];
 
 export const roles: { key: RoleKey; label: string; description: string }[] = [
+  { key: "admin_global", label: "Admin Global", description: "Acesso total e irrestrito à plataforma" },
   { key: "super-admin", label: "Super Admin", description: "Visão global da plataforma" },
   { key: "produtor", label: "Produtor", description: "Vendas, produtos e carteira" },
   { key: "afiliado", label: "Afiliado", description: "Comissões e marketplace" },

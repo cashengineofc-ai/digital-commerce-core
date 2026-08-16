@@ -10,7 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAuditoriaRouteImport } from './routes/admin.auditoria'
+import { Route as AdminBanimentosRouteImport } from './routes/admin.banimentos'
+import { Route as AdminComunicadosRouteImport } from './routes/admin.comunicados'
+import { Route as AdminConfiguracoesRouteImport } from './routes/admin.configuracoes'
+import { Route as AdminEmpresasRouteImport } from './routes/admin.empresas'
+import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
+import { Route as AdminSuporteRouteImport } from './routes/admin.suporte'
+import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppAfiliadosRouteImport } from './routes/app.afiliados'
 import { Route as AppApiRouteImport } from './routes/app.api'
@@ -49,10 +59,60 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditoriaRoute = AdminAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBanimentosRoute = AdminBanimentosRouteImport.update({
+  id: '/banimentos',
+  path: '/banimentos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComunicadosRoute = AdminComunicadosRouteImport.update({
+  id: '/comunicados',
+  path: '/comunicados',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmpresasRoute = AdminEmpresasRouteImport.update({
+  id: '/empresas',
+  path: '/empresas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
+  id: '/moderacao',
+  path: '/moderacao',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSuporteRoute = AdminSuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
@@ -220,7 +280,16 @@ const AppRelatoriosVendasRoute = AppRelatoriosVendasRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
+  '/admin/auditoria': typeof AdminAuditoriaRoute
+  '/admin/banimentos': typeof AdminBanimentosRoute
+  '/admin/comunicados': typeof AdminComunicadosRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/admin/empresas': typeof AdminEmpresasRoute
+  '/admin/moderacao': typeof AdminModeracaoRoute
+  '/admin/suporte': typeof AdminSuporteRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/afiliados': typeof AppAfiliadosRoute
   '/app/api': typeof AppApiRoute
   '/app/chargebacks': typeof AppChargebacksRoute
@@ -242,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/app/transacoes': typeof AppTransacoesRoute
   '/app/vendas': typeof AppVendasRoute
   '/app/webhooks': typeof AppWebhooksRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/configuracoes/conta': typeof AppConfiguracoesContaRoute
   '/app/configuracoes/empresa': typeof AppConfiguracoesEmpresaRoute
@@ -256,6 +326,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
+  '/admin/banimentos': typeof AdminBanimentosRoute
+  '/admin/comunicados': typeof AdminComunicadosRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/admin/empresas': typeof AdminEmpresasRoute
+  '/admin/moderacao': typeof AdminModeracaoRoute
+  '/admin/suporte': typeof AdminSuporteRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/afiliados': typeof AppAfiliadosRoute
   '/app/api': typeof AppApiRoute
   '/app/chargebacks': typeof AppChargebacksRoute
@@ -277,6 +355,7 @@ export interface FileRoutesByTo {
   '/app/transacoes': typeof AppTransacoesRoute
   '/app/vendas': typeof AppVendasRoute
   '/app/webhooks': typeof AppWebhooksRoute
+  '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/app/configuracoes/conta': typeof AppConfiguracoesContaRoute
   '/app/configuracoes/empresa': typeof AppConfiguracoesEmpresaRoute
@@ -292,7 +371,16 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
+  '/admin/auditoria': typeof AdminAuditoriaRoute
+  '/admin/banimentos': typeof AdminBanimentosRoute
+  '/admin/comunicados': typeof AdminComunicadosRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/admin/empresas': typeof AdminEmpresasRoute
+  '/admin/moderacao': typeof AdminModeracaoRoute
+  '/admin/suporte': typeof AdminSuporteRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/afiliados': typeof AppAfiliadosRoute
   '/app/api': typeof AppApiRoute
   '/app/chargebacks': typeof AppChargebacksRoute
@@ -314,6 +402,7 @@ export interface FileRoutesById {
   '/app/transacoes': typeof AppTransacoesRoute
   '/app/vendas': typeof AppVendasRoute
   '/app/webhooks': typeof AppWebhooksRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/configuracoes/conta': typeof AppConfiguracoesContaRoute
   '/app/configuracoes/empresa': typeof AppConfiguracoesEmpresaRoute
@@ -330,7 +419,16 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/app'
+    | '/admin/auditoria'
+    | '/admin/banimentos'
+    | '/admin/comunicados'
+    | '/admin/configuracoes'
+    | '/admin/empresas'
+    | '/admin/moderacao'
+    | '/admin/suporte'
+    | '/admin/usuarios'
     | '/app/afiliados'
     | '/app/api'
     | '/app/chargebacks'
@@ -352,6 +450,7 @@ export interface FileRouteTypes {
     | '/app/transacoes'
     | '/app/vendas'
     | '/app/webhooks'
+    | '/admin/'
     | '/app/'
     | '/app/configuracoes/conta'
     | '/app/configuracoes/empresa'
@@ -366,6 +465,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin/auditoria'
+    | '/admin/banimentos'
+    | '/admin/comunicados'
+    | '/admin/configuracoes'
+    | '/admin/empresas'
+    | '/admin/moderacao'
+    | '/admin/suporte'
+    | '/admin/usuarios'
     | '/app/afiliados'
     | '/app/api'
     | '/app/chargebacks'
@@ -387,6 +494,7 @@ export interface FileRouteTypes {
     | '/app/transacoes'
     | '/app/vendas'
     | '/app/webhooks'
+    | '/admin'
     | '/app'
     | '/app/configuracoes/conta'
     | '/app/configuracoes/empresa'
@@ -401,7 +509,16 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/app'
+    | '/admin/auditoria'
+    | '/admin/banimentos'
+    | '/admin/comunicados'
+    | '/admin/configuracoes'
+    | '/admin/empresas'
+    | '/admin/moderacao'
+    | '/admin/suporte'
+    | '/admin/usuarios'
     | '/app/afiliados'
     | '/app/api'
     | '/app/chargebacks'
@@ -423,6 +540,7 @@ export interface FileRouteTypes {
     | '/app/transacoes'
     | '/app/vendas'
     | '/app/webhooks'
+    | '/admin/'
     | '/app/'
     | '/app/configuracoes/conta'
     | '/app/configuracoes/empresa'
@@ -438,6 +556,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
 }
 
@@ -450,12 +569,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app': {
       id: '/app'
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/auditoria': {
+      id: '/admin/auditoria'
+      path: '/auditoria'
+      fullPath: '/admin/auditoria'
+      preLoaderRoute: typeof AdminAuditoriaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/banimentos': {
+      id: '/admin/banimentos'
+      path: '/banimentos'
+      fullPath: '/admin/banimentos'
+      preLoaderRoute: typeof AdminBanimentosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/comunicados': {
+      id: '/admin/comunicados'
+      path: '/comunicados'
+      fullPath: '/admin/comunicados'
+      preLoaderRoute: typeof AdminComunicadosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/configuracoes': {
+      id: '/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AdminConfiguracoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/empresas': {
+      id: '/admin/empresas'
+      path: '/empresas'
+      fullPath: '/admin/empresas'
+      preLoaderRoute: typeof AdminEmpresasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/moderacao': {
+      id: '/admin/moderacao'
+      path: '/moderacao'
+      fullPath: '/admin/moderacao'
+      preLoaderRoute: typeof AdminModeracaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/suporte': {
+      id: '/admin/suporte'
+      path: '/suporte'
+      fullPath: '/admin/suporte'
+      preLoaderRoute: typeof AdminSuporteRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/app/': {
       id: '/app/'
@@ -684,6 +873,32 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminAuditoriaRoute: typeof AdminAuditoriaRoute
+  AdminBanimentosRoute: typeof AdminBanimentosRoute
+  AdminComunicadosRoute: typeof AdminComunicadosRoute
+  AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
+  AdminEmpresasRoute: typeof AdminEmpresasRoute
+  AdminModeracaoRoute: typeof AdminModeracaoRoute
+  AdminSuporteRoute: typeof AdminSuporteRoute
+  AdminUsuariosRoute: typeof AdminUsuariosRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAuditoriaRoute: AdminAuditoriaRoute,
+  AdminBanimentosRoute: AdminBanimentosRoute,
+  AdminComunicadosRoute: AdminComunicadosRoute,
+  AdminConfiguracoesRoute: AdminConfiguracoesRoute,
+  AdminEmpresasRoute: AdminEmpresasRoute,
+  AdminModeracaoRoute: AdminModeracaoRoute,
+  AdminSuporteRoute: AdminSuporteRoute,
+  AdminUsuariosRoute: AdminUsuariosRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface AppRouteChildren {
   AppAfiliadosRoute: typeof AppAfiliadosRoute
   AppApiRoute: typeof AppApiRoute
@@ -758,6 +973,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
