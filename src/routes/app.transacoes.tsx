@@ -5,7 +5,10 @@ export const Route = createFileRoute("/app/transacoes")({
   head: () => ({
     meta: [
       { title: "Transações · Cash Engine PRO" },
-      { name: "description", content: "Todas as transações da sua operação, com filtros e detalhe por pagamento." },
+      {
+        name: "description",
+        content: "Todas as transações da sua operação, com filtros e detalhe por pagamento.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),

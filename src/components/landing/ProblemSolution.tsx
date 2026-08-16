@@ -11,7 +11,14 @@ const chaos = [
   "Conciliação financeira",
 ];
 
-const flow = ["Cliente", "Checkout", "Cash Engine PRO", "Pagamento", "Venda", "Comissão / Financeiro"];
+const flow = [
+  "Cliente",
+  "Checkout",
+  "Cash Engine PRO",
+  "Pagamento",
+  "Venda",
+  "Comissão / Financeiro",
+];
 
 export function ProblemSolution() {
   const reduced = useReducedMotion();

@@ -8,7 +8,10 @@ export function Hero() {
   const reduced = useReducedMotion();
 
   return (
-    <section id="topo" className="relative overflow-hidden px-5 pb-16 pt-32 sm:px-8 md:pb-24 md:pt-40">
+    <section
+      id="topo"
+      className="relative overflow-hidden px-5 pb-16 pt-32 sm:px-8 md:pb-24 md:pt-40"
+    >
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         {reduced ? (
           <img
@@ -54,8 +57,7 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.08 }}
             className="mt-6 text-4xl font-semibold leading-[1.05] sm:text-5xl md:text-6xl"
           >
-            Sua operação de pagamentos.{" "}
-            <span className="text-gradient-blue">Em um só lugar.</span>
+            Sua operação de pagamentos. <span className="text-gradient-blue">Em um só lugar.</span>
           </motion.h1>
 
           <motion.p
@@ -75,7 +77,7 @@ export function Hero() {
             className="mt-9 flex flex-col gap-3 sm:flex-row"
           >
             <a
-              href="#comecar"
+              href="/app"
               className="group inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02]"
             >
               Quero conhecer o Cash Engine PRO

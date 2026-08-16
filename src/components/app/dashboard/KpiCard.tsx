@@ -28,7 +28,15 @@ function Sparkline({ points, positive }: { points: number[]; positive: boolean }
         </linearGradient>
       </defs>
       <path d={area} fill={`url(#${id})`} />
-      <path d={line} fill="none" stroke={stroke} strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      <path
+        d={line}
+        fill="none"
+        stroke={stroke}
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
     </svg>
   );
 }
@@ -75,7 +83,6 @@ export function KpiCard({
         </span>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-
 
       <div className="mt-4 -mb-1">
         <Sparkline points={points} positive={positive} />

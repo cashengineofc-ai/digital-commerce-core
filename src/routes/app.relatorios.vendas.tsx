@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { SalesReportPage } from "@/components/app/reports/SalesReportPage";
 
 export const Route = createFileRoute("/app/relatorios/vendas")({
   head: () => ({
@@ -9,5 +9,5 @@ export const Route = createFileRoute("/app/relatorios/vendas")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Relatório de vendas" description="Desempenho de vendas por período, produto e canal." />,
+  component: SalesReportPage,
 });

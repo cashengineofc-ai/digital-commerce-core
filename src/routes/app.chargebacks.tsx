@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { ChargebacksPage } from "@/components/app/finance/ChargebacksPage";
 
 export const Route = createFileRoute("/app/chargebacks")({
   head: () => ({
     meta: [
       { title: "Chargebacks · Cash Engine PRO" },
-      { name: "description", content: "Contestações, prazos e defesa de chargebacks." },
+      { name: "description", content: "Contestações do emissor, defesa e recuperação de receita." },
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Chargebacks" description="Contestações, prazos e defesa de chargebacks." />,
+  component: () => <ChargebacksPage />,
 });

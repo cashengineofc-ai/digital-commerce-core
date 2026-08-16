@@ -1,17 +1,53 @@
-import { Activity, Code2, FileSearch, KeyRound, ShieldCheck, Webhook, Workflow } from "lucide-react";
+import {
+  Activity,
+  Code2,
+  FileSearch,
+  KeyRound,
+  ShieldCheck,
+  Webhook,
+  Workflow,
+} from "lucide-react";
 import { Reveal, Section, SectionHeading } from "./primitives";
 
 const tech = [
-  { icon: Code2, title: "API", text: "Endpoints para integrar produtos, vendas e participantes ao seu sistema." },
-  { icon: Webhook, title: "Webhooks", text: "Eventos enviados em tempo real para acionar suas automações." },
-  { icon: Workflow, title: "Automação", text: "Fluxos que reagem a status de pagamento sem intervenção manual." },
-  { icon: Activity, title: "Rastreamento", text: "Origem, etapa e status registrados em cada transação." },
+  {
+    icon: Code2,
+    title: "API",
+    text: "Endpoints para integrar produtos, vendas e participantes ao seu sistema.",
+  },
+  {
+    icon: Webhook,
+    title: "Webhooks",
+    text: "Eventos enviados em tempo real para acionar suas automações.",
+  },
+  {
+    icon: Workflow,
+    title: "Automação",
+    text: "Fluxos que reagem a status de pagamento sem intervenção manual.",
+  },
+  {
+    icon: Activity,
+    title: "Rastreamento",
+    text: "Origem, etapa e status registrados em cada transação.",
+  },
 ];
 
 const security = [
-  { icon: KeyRound, title: "Controle de acesso", text: "Permissões por perfil dentro da operação." },
-  { icon: ShieldCheck, title: "Autenticação", text: "Sessões protegidas e credenciais gerenciadas." },
-  { icon: FileSearch, title: "Logs e auditoria", text: "Histórico de ações e eventos para consulta." },
+  {
+    icon: KeyRound,
+    title: "Controle de acesso",
+    text: "Permissões por perfil dentro da operação.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Autenticação",
+    text: "Sessões protegidas e credenciais gerenciadas.",
+  },
+  {
+    icon: FileSearch,
+    title: "Logs e auditoria",
+    text: "Histórico de ações e eventos para consulta.",
+  },
 ];
 
 export function Infrastructure() {

@@ -5,7 +5,10 @@ export const Route = createFileRoute("/app/extrato")({
   head: () => ({
     meta: [
       { title: "Extrato · Cash Engine PRO" },
-      { name: "description", content: "Entradas, saídas, taxas e saldo acumulado da sua carteira." },
+      {
+        name: "description",
+        content: "Entradas, saídas, taxas e saldo acumulado da sua carteira.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),

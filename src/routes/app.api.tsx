@@ -5,7 +5,10 @@ export const Route = createFileRoute("/app/api")({
   head: () => ({
     meta: [
       { title: "API · Cash Engine PRO" },
-      { name: "description", content: "Chaves de API por ambiente, rotação e exemplos de integração." },
+      {
+        name: "description",
+        content: "Chaves de API por ambiente, rotação e exemplos de integração.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),

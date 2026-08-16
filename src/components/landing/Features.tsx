@@ -11,14 +11,46 @@ import {
 import { Reveal, Section, SectionHeading } from "./primitives";
 
 const features = [
-  { icon: CreditCard, title: "Pagamentos", text: "Processamento de transações com métodos e status acompanhados em tempo real." },
-  { icon: ShoppingCart, title: "Checkout", text: "Páginas de pagamento rápidas, responsivas e configuráveis por produto." },
-  { icon: BarChart3, title: "Gestão de vendas", text: "Pedidos, clientes e histórico organizados em uma base única." },
-  { icon: Users, title: "Afiliados", text: "Cadastro, links de divulgação e acompanhamento de performance." },
-  { icon: Percent, title: "Comissões", text: "Regras por produto, cálculo automático e histórico auditável." },
-  { icon: Split, title: "Split", text: "Divisão de valores entre participantes definida na própria transação." },
-  { icon: LayoutDashboard, title: "Dashboard", text: "Indicadores da operação reunidos em uma visão só." },
-  { icon: Code2, title: "API", text: "Endpoints e webhooks para integrar o Cash Engine PRO ao seu sistema." },
+  {
+    icon: CreditCard,
+    title: "Pagamentos",
+    text: "Processamento de transações com métodos e status acompanhados em tempo real.",
+  },
+  {
+    icon: ShoppingCart,
+    title: "Checkout",
+    text: "Páginas de pagamento rápidas, responsivas e configuráveis por produto.",
+  },
+  {
+    icon: BarChart3,
+    title: "Gestão de vendas",
+    text: "Pedidos, clientes e histórico organizados em uma base única.",
+  },
+  {
+    icon: Users,
+    title: "Afiliados",
+    text: "Cadastro, links de divulgação e acompanhamento de performance.",
+  },
+  {
+    icon: Percent,
+    title: "Comissões",
+    text: "Regras por produto, cálculo automático e histórico auditável.",
+  },
+  {
+    icon: Split,
+    title: "Split",
+    text: "Divisão de valores entre participantes definida na própria transação.",
+  },
+  {
+    icon: LayoutDashboard,
+    title: "Dashboard",
+    text: "Indicadores da operação reunidos em uma visão só.",
+  },
+  {
+    icon: Code2,
+    title: "API",
+    text: "Endpoints e webhooks para integrar o Cash Engine PRO ao seu sistema.",
+  },
 ];
 
 export function Features() {

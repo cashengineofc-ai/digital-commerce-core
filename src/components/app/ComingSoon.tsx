@@ -1,12 +1,6 @@
 import { Sparkles } from "lucide-react";
 
-export function ComingSoon({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+export function ComingSoon({ title, description }: { title: string; description: string }) {
   return (
     <div className="mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center sm:py-24">
       <div className="w-full">

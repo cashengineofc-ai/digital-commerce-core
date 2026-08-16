@@ -91,7 +91,11 @@ export function DashboardPage() {
         className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
       >
         {cards.map((c) => (
-          <motion.div key={c.label} variants={fade} transition={{ duration: 0.35, ease: "easeOut" }}>
+          <motion.div
+            key={c.label}
+            variants={fade}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
             <KpiCard {...c} />
           </motion.div>
         ))}

@@ -1,5 +1,11 @@
 import { AlertTriangle, Check, Clock, Copy, Mail, Receipt, User } from "lucide-react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { StatusBadge } from "@/components/app/dashboard/RecentTransactions";
 import { buildTimeline, customerEmail, splitOf } from "@/lib/mock/transactions";
 import type { Transaction } from "@/lib/mock/data";
@@ -9,7 +15,11 @@ import { cn } from "@/lib/utils";
 const stateStyles = {
   done: { dot: "bg-success text-success-foreground", line: "bg-success/30", Icon: Check },
   current: { dot: "bg-primary text-primary-foreground", line: "bg-border", Icon: Clock },
-  failed: { dot: "bg-destructive text-destructive-foreground", line: "bg-border", Icon: AlertTriangle },
+  failed: {
+    dot: "bg-destructive text-destructive-foreground",
+    line: "bg-border",
+    Icon: AlertTriangle,
+  },
   pending: { dot: "bg-muted text-muted-foreground", line: "bg-border", Icon: Clock },
 } as const;
 
@@ -72,7 +82,12 @@ function DrawerBody({ t }: { t: Transaction }) {
               return (
                 <li key={step.label} className="relative flex gap-3 pb-5 last:pb-0">
                   {!last && (
-                    <span className={cn("absolute left-[11px] top-6 h-[calc(100%-1.25rem)] w-px", s.line)} />
+                    <span
+                      className={cn(
+                        "absolute left-[11px] top-6 h-[calc(100%-1.25rem)] w-px",
+                        s.line,
+                      )}
+                    />
                   )}
                   <span
                     className={cn(
@@ -104,9 +119,13 @@ function DrawerBody({ t }: { t: Transaction }) {
               <li key={s.key} className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-muted-foreground">
                   {s.label}
-                  <span className="ml-1.5 text-xs text-muted-foreground/70">{formatPct(s.percent)}</span>
+                  <span className="ml-1.5 text-xs text-muted-foreground/70">
+                    {formatPct(s.percent)}
+                  </span>
                 </span>
-                <span className="font-medium tabular-nums text-foreground">{formatBRL(s.amount)}</span>
+                <span className="font-medium tabular-nums text-foreground">
+                  {formatBRL(s.amount)}
+                </span>
               </li>
             ))}
           </ul>

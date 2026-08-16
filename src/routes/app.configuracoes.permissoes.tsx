@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { PermissionsPage } from "@/components/app/settings/PermissionsPage";
 
 export const Route = createFileRoute("/app/configuracoes/permissoes")({
   head: () => ({
@@ -9,5 +9,5 @@ export const Route = createFileRoute("/app/configuracoes/permissoes")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Permissões" description="Papéis e níveis de acesso." />,
+  component: PermissionsPage,
 });

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { SecurityPage } from "@/components/app/settings/SecurityPage";
 
 export const Route = createFileRoute("/app/configuracoes/seguranca")({
   head: () => ({
@@ -9,5 +9,5 @@ export const Route = createFileRoute("/app/configuracoes/seguranca")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Segurança" description="Autenticação em duas etapas e sessões." />,
+  component: SecurityPage,
 });

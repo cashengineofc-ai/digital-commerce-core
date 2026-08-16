@@ -16,7 +16,11 @@ const statusStyles: Record<TransactionStatus, { label: string; className: string
     className: "bg-destructive/12 text-destructive",
     dot: "bg-destructive",
   },
-  estornada: { label: "Estornada", className: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" },
+  estornada: {
+    label: "Estornada",
+    className: "bg-muted text-muted-foreground",
+    dot: "bg-muted-foreground",
+  },
 };
 
 export function StatusBadge({ status }: { status: TransactionStatus }) {

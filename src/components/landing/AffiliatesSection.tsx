@@ -3,10 +3,16 @@ import { Link2, MousePointerClick, Package, TrendingUp } from "lucide-react";
 import { Reveal, Section, SectionHeading } from "./primitives";
 
 const steps = [
-  { title: "Afiliado se cadastra", text: "Acesso ao painel e aos produtos liberados para divulgação." },
+  {
+    title: "Afiliado se cadastra",
+    text: "Acesso ao painel e aos produtos liberados para divulgação.",
+  },
   { title: "Gera o link", text: "Cada divulgação recebe um link rastreável e único." },
   { title: "Venda acontece", text: "A origem da venda é registrada na própria transação." },
-  { title: "Comissão calculada", text: "Regras aplicadas automaticamente e refletidas no financeiro." },
+  {
+    title: "Comissão calculada",
+    text: "Regras aplicadas automaticamente e refletidas no financeiro.",
+  },
 ];
 
 export function AffiliatesSection() {
@@ -48,7 +54,13 @@ export function AffiliatesSection() {
 
             <div className="mt-5 grid grid-cols-3 gap-3">
               <Stat icon={<MousePointerClick className="h-4 w-4" />} label="Cliques" end={4820} />
-              <Stat icon={<TrendingUp className="h-4 w-4" />} label="Conversão" end={5.9} decimals={1} suffix="%" />
+              <Stat
+                icon={<TrendingUp className="h-4 w-4" />}
+                label="Conversão"
+                end={5.9}
+                decimals={1}
+                suffix="%"
+              />
               <Stat icon={<Package className="h-4 w-4" />} label="Produtos" end={12} />
             </div>
 

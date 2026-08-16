@@ -5,7 +5,11 @@ export const Route = createFileRoute("/app/split")({
   head: () => ({
     meta: [
       { title: "Split Engine · Cash Engine PRO" },
-      { name: "description", content: "Visualize a distribuição automática de cada venda entre produtor, afiliado e plataforma." },
+      {
+        name: "description",
+        content:
+          "Visualize a distribuição automática de cada venda entre produtor, afiliado e plataforma.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),

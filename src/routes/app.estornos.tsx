@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { RefundsPage } from "@/components/app/finance/RefundsPage";
 
 export const Route = createFileRoute("/app/estornos")({
   head: () => ({
     meta: [
       { title: "Estornos · Cash Engine PRO" },
-      { name: "description", content: "Estornos solicitados e processados." },
+      { name: "description", content: "Garantia, desistência e reembolso do cliente." },
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Estornos" description="Estornos solicitados e processados." />,
+  component: () => <RefundsPage />,
 });

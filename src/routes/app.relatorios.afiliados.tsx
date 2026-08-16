@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { AffiliateReportPage } from "@/components/app/reports/AffiliateReportPage";
 
 export const Route = createFileRoute("/app/relatorios/afiliados")({
   head: () => ({
@@ -9,5 +9,5 @@ export const Route = createFileRoute("/app/relatorios/afiliados")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Relatório de afiliados" description="Ranking de afiliados e comissões geradas." />,
+  component: AffiliateReportPage,
 });

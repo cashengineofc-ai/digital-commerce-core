@@ -17,7 +17,9 @@ function StatusPill({ status }: { status: Product["status"] }) {
     rascunho: "bg-muted text-muted-foreground",
   };
   return (
-    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium capitalize", map[status])}>
+    <span
+      className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium capitalize", map[status])}
+    >
       {status}
     </span>
   );
@@ -133,9 +135,15 @@ export function ProductsPage() {
                       <p className="font-medium text-foreground">{p.name}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">{p.id}</p>
                     </td>
-                    <td className="px-5 py-3.5 tabular-nums text-foreground">{formatBRL(p.price)}</td>
-                    <td className="px-5 py-3.5 tabular-nums text-muted-foreground">{p.commission}%</td>
-                    <td className="px-5 py-3.5 tabular-nums text-muted-foreground">{formatInt(p.sales)}</td>
+                    <td className="px-5 py-3.5 tabular-nums text-foreground">
+                      {formatBRL(p.price)}
+                    </td>
+                    <td className="px-5 py-3.5 tabular-nums text-muted-foreground">
+                      {p.commission}%
+                    </td>
+                    <td className="px-5 py-3.5 tabular-nums text-muted-foreground">
+                      {formatInt(p.sales)}
+                    </td>
                     <td className="px-5 py-3.5 font-semibold tabular-nums text-foreground">
                       {formatBRL(p.revenue, { compact: true })}
                     </td>

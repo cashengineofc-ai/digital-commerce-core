@@ -19,7 +19,13 @@ function Spark({ data }: { data: number[] }) {
     .join(" ");
   return (
     <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="mt-4 h-8 w-full">
-      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
+      <polyline
+        points={points}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        vectorEffect="non-scaling-stroke"
+      />
     </svg>
   );
 }
@@ -112,8 +118,12 @@ export function BalancePage() {
 
       <div className="mt-8 flex items-end justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold tracking-tight text-foreground">Últimos lançamentos</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">Entradas, taxas, comissões e saques</p>
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            Últimos lançamentos
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Entradas, taxas, comissões e saques
+          </p>
         </div>
         <Link to="/app/extrato" className="text-xs font-medium text-primary hover:underline">
           Ver extrato completo

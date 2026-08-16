@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { WebhooksPage } from "@/components/app/developers/WebhooksPage";
 
 export const Route = createFileRoute("/app/webhooks")({
   head: () => ({
@@ -9,5 +9,5 @@ export const Route = createFileRoute("/app/webhooks")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Webhooks" description="Endpoints, eventos e tentativas de entrega." />,
+  component: () => <WebhooksPage />,
 });

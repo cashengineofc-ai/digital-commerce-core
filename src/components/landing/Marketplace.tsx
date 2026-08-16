@@ -4,9 +4,19 @@ const products = [
   { name: "Operação Digital do Zero", category: "Negócios", price: "R$ 497,00", commission: "40%" },
   { name: "Mentoria de Escala", category: "Educação", price: "R$ 1.997,00", commission: "25%" },
   { name: "Checkout que Converte", category: "Marketing", price: "R$ 297,00", commission: "50%" },
-  { name: "Gestão Financeira Digital", category: "Finanças", price: "R$ 697,00", commission: "30%" },
+  {
+    name: "Gestão Financeira Digital",
+    category: "Finanças",
+    price: "R$ 697,00",
+    commission: "30%",
+  },
   { name: "Automação com API", category: "Tecnologia", price: "R$ 897,00", commission: "35%" },
-  { name: "Rede de Afiliados na Prática", category: "Vendas", price: "R$ 397,00", commission: "45%" },
+  {
+    name: "Rede de Afiliados na Prática",
+    category: "Vendas",
+    price: "R$ 397,00",
+    commission: "45%",
+  },
 ];
 
 export function Marketplace() {
@@ -28,11 +38,15 @@ export function Marketplace() {
               <h3 className="mt-4 text-base font-semibold leading-snug">{p.name}</h3>
               <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-4">
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Preço</p>
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    Preço
+                  </p>
                   <p className="truncate text-sm font-medium tabular-nums">{p.price}</p>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Comissão</p>
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                    Comissão
+                  </p>
                   <p className="truncate text-sm font-medium text-primary-soft tabular-nums">
                     {p.commission}
                   </p>

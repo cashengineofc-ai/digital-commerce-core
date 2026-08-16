@@ -5,7 +5,10 @@ export const Route = createFileRoute("/app/produtos")({
   head: () => ({
     meta: [
       { title: "Produtos · Cash Engine PRO" },
-      { name: "description", content: "Catálogo de produtos, preços, comissões e checkout builder." },
+      {
+        name: "description",
+        content: "Catálogo de produtos, preços, comissões e checkout builder.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),

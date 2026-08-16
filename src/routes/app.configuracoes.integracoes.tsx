@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { IntegrationsPage } from "@/components/app/settings/IntegrationsPage";
 
 export const Route = createFileRoute("/app/configuracoes/integracoes")({
   head: () => ({
@@ -9,5 +9,5 @@ export const Route = createFileRoute("/app/configuracoes/integracoes")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Integrações" description="Conecte ferramentas externas à sua operação." />,
+  component: IntegrationsPage,
 });

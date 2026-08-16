@@ -32,11 +32,7 @@ export function DashboardMock() {
             end={184320}
             decimals={2}
           />
-          <Metric
-            icon={<CreditCard className="h-4 w-4" />}
-            label="Transações hoje"
-            end={1287}
-          />
+          <Metric icon={<CreditCard className="h-4 w-4" />} label="Transações hoje" end={1287} />
           <Metric
             icon={<Users className="h-4 w-4" />}
             label="Conversão"
@@ -57,7 +53,12 @@ export function DashboardMock() {
             </span>
           </div>
 
-          <svg viewBox="0 0 320 96" className="mt-4 h-24 w-full" role="img" aria-label="Gráfico de volume processado">
+          <svg
+            viewBox="0 0 320 96"
+            className="mt-4 h-24 w-full"
+            role="img"
+            aria-label="Gráfico de volume processado"
+          >
             <defs>
               <linearGradient id="ce-line" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="var(--primary)" />

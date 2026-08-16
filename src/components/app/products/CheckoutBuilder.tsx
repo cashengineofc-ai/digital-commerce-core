@@ -186,7 +186,9 @@ export function CheckoutBuilder({
 
           <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <h2 className="text-sm font-semibold text-foreground">Comissão de afiliado</h2>
-            <p className="mt-1 text-xs text-muted-foreground">{cfg.commission}% por venda aprovada</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {cfg.commission}% por venda aprovada
+            </p>
             <input
               type="range"
               min={0}
@@ -264,8 +266,16 @@ export function CheckoutBuilder({
               ))}
             </div>
             <div className="mt-3 space-y-2">
-              <Toggle label="Pedir telefone" checked={cfg.askPhone} onChange={(v) => set("askPhone", v)} />
-              <Toggle label="Pedir CPF/CNPJ" checked={cfg.askDocument} onChange={(v) => set("askDocument", v)} />
+              <Toggle
+                label="Pedir telefone"
+                checked={cfg.askPhone}
+                onChange={(v) => set("askPhone", v)}
+              />
+              <Toggle
+                label="Pedir CPF/CNPJ"
+                checked={cfg.askDocument}
+                onChange={(v) => set("askDocument", v)}
+              />
             </div>
           </section>
         </aside>
@@ -274,17 +284,24 @@ export function CheckoutBuilder({
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-muted/40 p-4 shadow-sm sm:p-8">
             <div className="mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
-              <div className="px-6 py-4 text-center text-sm font-semibold text-primary-foreground" style={{ backgroundColor: accent }}>
+              <div
+                className="px-6 py-4 text-center text-sm font-semibold text-primary-foreground"
+                style={{ backgroundColor: accent }}
+              >
                 Pagamento seguro · Cash Engine PRO
               </div>
 
               <div className="space-y-5 p-6">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Você está comprando</p>
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                    Você está comprando
+                  </p>
                   <p className="mt-1 text-base font-semibold text-foreground">{cfg.name}</p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
                     {formatBRL(cfg.price)}
-                    {cfg.installments > 1 ? ` ou ${cfg.installments}x de ${formatBRL(cfg.price / cfg.installments)}` : ""}
+                    {cfg.installments > 1
+                      ? ` ou ${cfg.installments}x de ${formatBRL(cfg.price / cfg.installments)}`
+                      : ""}
                   </p>
                 </div>
 
@@ -348,14 +365,18 @@ export function CheckoutBuilder({
                     <span
                       className={cn(
                         "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border",
-                        bumpChecked ? "border-transparent text-primary-foreground" : "border-border",
+                        bumpChecked
+                          ? "border-transparent text-primary-foreground"
+                          : "border-border",
                       )}
                       style={bumpChecked ? { backgroundColor: accent } : undefined}
                     >
                       {bumpChecked ? "✓" : ""}
                     </span>
                     <span>
-                      <span className="block text-sm font-semibold text-foreground">{cfg.bumpTitle}</span>
+                      <span className="block text-sm font-semibold text-foreground">
+                        {cfg.bumpTitle}
+                      </span>
                       <span className="mt-0.5 block text-xs text-muted-foreground">
                         Adicione por apenas {formatBRL(cfg.bumpPrice)} — oferta única nesta página.
                       </span>
@@ -384,7 +405,11 @@ export function CheckoutBuilder({
                   className="w-full rounded-lg py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
                   style={{ backgroundColor: accent }}
                 >
-                  {activeMethod === "pix" ? "Gerar Pix e pagar" : activeMethod === "boleto" ? "Gerar boleto" : "Finalizar compra"}
+                  {activeMethod === "pix"
+                    ? "Gerar Pix e pagar"
+                    : activeMethod === "boleto"
+                      ? "Gerar boleto"
+                      : "Finalizar compra"}
                 </button>
 
                 <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
@@ -398,7 +423,9 @@ export function CheckoutBuilder({
           <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-semibold text-foreground">Quanto você recebe por venda</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                Quanto você recebe por venda
+              </h2>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-4">
               {[

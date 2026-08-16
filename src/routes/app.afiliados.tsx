@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon } from "@/components/app/ComingSoon";
+import { AffiliatesPage } from "@/components/app/affiliates/AffiliatesPage";
 
 export const Route = createFileRoute("/app/afiliados")({
   head: () => ({
@@ -9,5 +9,5 @@ export const Route = createFileRoute("/app/afiliados")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <ComingSoon title="Afiliados" description="Gestão da rede de afiliados e aprovações." />,
+  component: AffiliatesPage,
 });

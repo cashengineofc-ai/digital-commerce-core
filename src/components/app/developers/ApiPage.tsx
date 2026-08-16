@@ -24,7 +24,11 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition hover:bg-muted"
       aria-label={`Copiar ${label}`}
     >
-      {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-emerald-600" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
     </button>
   );
 }
@@ -49,7 +53,11 @@ function KeyRow({ apiKey }: { apiKey: ApiKey }) {
           </span>
         </div>
         <button
-          onClick={() => toast.success("Chave rotacionada", { description: "A chave anterior expira em 24 horas." })}
+          onClick={() =>
+            toast.success("Chave rotacionada", {
+              description: "A chave anterior expira em 24 horas.",
+            })
+          }
           className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground transition hover:bg-muted"
         >
           <RefreshCcw className="h-3.5 w-3.5" />
@@ -100,7 +108,9 @@ export function ApiPage() {
               onClick={() => setEnv(e)}
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-medium transition",
-                env === e ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted",
+                env === e
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted",
               )}
             >
               {e === "teste" ? "Teste" : "Produção"}
@@ -111,7 +121,11 @@ export function ApiPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-4">
-          {loading ? <CardsSkeleton count={2} /> : keys.map((k) => <KeyRow key={k.id} apiKey={k} />)}
+          {loading ? (
+            <CardsSkeleton count={2} />
+          ) : (
+            keys.map((k) => <KeyRow key={k.id} apiKey={k} />)
+          )}
           <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center gap-2">
               <Webhook className="h-4 w-4 text-primary" />
