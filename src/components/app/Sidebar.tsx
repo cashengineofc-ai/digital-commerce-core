@@ -3,8 +3,16 @@ import type { LinkProps } from "@tanstack/react-router";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { LogOut, Settings, X } from "lucide-react";
 import { navGroups, hiddenForAffiliate } from "./nav-config";
-import { useAppShell } from "./app-shell-context";
+import { useAppShell, roles } from "./app-shell-context";
 import { cn } from "@/lib/utils";
+import { useTempAuth } from "@/lib/auth-temp";
+
+function getUserInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return "??";
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+  return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase();
+}
 
 function Brand() {
   return (
@@ -22,8 +30,12 @@ function Brand() {
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { role } = useAppShell();
+  const { isAdminGlobal: tempIsAdminGlobal } = useTempAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isAdminGlobal = role === "admin_global" || (typeof window !== "undefined" && (window as unknown as { is_admin_global?: boolean }).is_admin_global === true);
+  const windowIsAdmin =
+    typeof window !== "undefined" &&
+    (window as unknown as { is_admin_global?: boolean }).is_admin_global === true;
+  const isAdminGlobal = tempIsAdminGlobal || windowIsAdmin || role === "admin_global";
 
   return (
     <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
@@ -74,15 +86,25 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function UserFooter() {
+  const { user, logout, isAdminGlobal } = useTempAuth();
+  const { role } = useAppShell();
+  const effectiveRole = user?.role || role;
+  const roleInfo = roles.find((r) => r.key === effectiveRole);
+  const displayName = user?.name || "Usuário";
+  const displayUsername = user?.username || "usuario";
+  const initials = user?.name ? getUserInitials(user.name) : "??";
+
   return (
     <div className="border-t border-border p-3">
       <div className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted">
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
-          KV
+          {initials}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold text-foreground">Kelvin</p>
-          <p className="truncate text-[11px] text-muted-foreground">Administrador</p>
+          <p className="truncate text-[13px] font-semibold text-foreground">{displayName}</p>
+          <p className="truncate text-[11px] text-muted-foreground">
+            @{displayUsername} · {roleInfo?.label || (isAdminGlobal ? "Admin Global" : "Usuário")}
+          </p>
         </div>
         <div className="flex items-center gap-1">
           <Link
@@ -92,13 +114,14 @@ function UserFooter() {
           >
             <Settings className="h-4 w-4" />
           </Link>
-          <Link
-            to="/"
+          <button
+            type="button"
+            onClick={logout}
             aria-label="Sair"
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
-          </Link>
+          </button>
         </div>
       </div>
     </div>

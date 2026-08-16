@@ -77,7 +77,7 @@ export function Hero() {
             className="mt-9 flex flex-col gap-3 sm:flex-row"
           >
             <a
-              href="/app"
+              href="/login"
               className="group inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02]"
             >
               Quero conhecer o Cash Engine PRO

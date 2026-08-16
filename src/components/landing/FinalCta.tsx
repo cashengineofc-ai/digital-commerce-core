@@ -24,7 +24,7 @@ export function FinalCta() {
         <Reveal delay={0.18}>
           <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
             <a
-              href="/app"
+              href="/login"
               className="group inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02]"
             >
               Começar agora

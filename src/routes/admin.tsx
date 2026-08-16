@@ -1,5 +1,5 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { AppShellProvider, useAppShell } from "@/components/app/app-shell-context";
 import {
   DesktopSidebar,
@@ -7,6 +7,8 @@ import {
 } from "@/components/app/admin/AdminSidebar";
 import { Bell, HelpCircle, Lock, Menu, Search } from "lucide-react";
 import { ArrowLeftToLine } from "lucide-react";
+import { useTempAuth } from "@/lib/auth-temp";
+import { Skeleton } from "@/components/ui/skeleton";
 
 declare global {
   interface Window {
@@ -99,14 +101,65 @@ function AccessRestrictedPage() {
   );
 }
 
-function AdminShell() {
+function AdminShellInner() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { role } = useAppShell();
+  const { user, isAuthed, isLoading, isAdminGlobal: tempIsAdminGlobal } = useTempAuth();
+  const { role, setRole } = useAppShell();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthed) {
+      navigate({ to: "/login", replace: true }).catch(() => {});
+    }
+  }, [isAuthed, isLoading, navigate]);
+
+  useEffect(() => {
+    if (user?.role) {
+      setRole(user.role);
+    }
+  }, [user?.role, setRole]);
+
+  const windowIsAdmin =
+    typeof window !== "undefined" && window.is_admin_global === true;
 
   const isAdminGlobal =
-    typeof window !== "undefined" && window.is_admin_global === true
-      ? true
-      : role === "admin_global";
+    windowIsAdmin ||
+    tempIsAdminGlobal ||
+    user?.role === "admin_global" ||
+    role === "admin_global";
+
+  if (isLoading) {
+    return (
+      <div className="app-light min-h-screen bg-background text-foreground antialiased">
+        <div className="hidden w-64 lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:flex-col lg:border-r lg:border-border lg:bg-card">
+          <Skeleton className="mx-4 my-5 h-8 w-40" />
+          <div className="flex-1 space-y-6 px-3 pb-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="mx-3 h-8" />
+            ))}
+          </div>
+          <Skeleton className="m-3 h-16" />
+        </div>
+        <div className="lg:pl-64">
+          <Skeleton className="h-16 w-full border-b border-border" />
+          <main className="space-y-4 px-4 py-6 sm:px-6 lg:px-8">
+            <Skeleton className="h-10 w-1/3" />
+            <div className="grid gap-4 md:grid-cols-3">
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+            </div>
+            <Skeleton className="h-80" />
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthed) {
+    return null;
+  }
 
   if (!isAdminGlobal) {
     return <AccessRestrictedPage />;
@@ -124,6 +177,10 @@ function AdminShell() {
       </div>
     </div>
   );
+}
+
+function AdminShell() {
+  return <AdminShellInner />;
 }
 
 export const Route = createFileRoute("/admin")({

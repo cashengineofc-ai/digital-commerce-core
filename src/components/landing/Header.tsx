@@ -52,7 +52,7 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <a
-            href="/app"
+            href="/login"
             className="hidden rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02] sm:inline-flex"
           >
             Começar agora
@@ -90,7 +90,7 @@ export function Header() {
                 </a>
               ))}
               <a
-                href="/app"
+                href="/login"
                 onClick={() => setOpen(false)}
                 className="mt-2 rounded-lg bg-primary px-4 py-3 text-center text-sm font-medium text-primary-foreground"
               >
