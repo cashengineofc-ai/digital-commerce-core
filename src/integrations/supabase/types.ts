@@ -14,6 +14,481 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_banimentos: {
+        Row: {
+          acoes_disparadas: Json | null
+          apelacao_aceita: boolean | null
+          aplicado_por: string | null
+          created_at: string
+          data_desfeito: string | null
+          data_fim: string | null
+          data_inicio: string
+          desfeito: boolean | null
+          desfeito_por: string | null
+          detalhamento: string | null
+          empresa_id: string | null
+          evidencias_urls: string[] | null
+          id: string
+          identificador: string
+          motivo_desfeito: string | null
+          motivo_principal: string
+          nivel_gravidade: string
+          permanente: boolean | null
+          profile_id: string | null
+          revisado_em: string | null
+          revisado_por: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          acoes_disparadas?: Json | null
+          apelacao_aceita?: boolean | null
+          aplicado_por?: string | null
+          created_at?: string
+          data_desfeito?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          desfeito?: boolean | null
+          desfeito_por?: string | null
+          detalhamento?: string | null
+          empresa_id?: string | null
+          evidencias_urls?: string[] | null
+          id?: string
+          identificador: string
+          motivo_desfeito?: string | null
+          motivo_principal: string
+          nivel_gravidade?: string
+          permanente?: boolean | null
+          profile_id?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          acoes_disparadas?: Json | null
+          apelacao_aceita?: boolean | null
+          aplicado_por?: string | null
+          created_at?: string
+          data_desfeito?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          desfeito?: boolean | null
+          desfeito_por?: string | null
+          detalhamento?: string | null
+          empresa_id?: string | null
+          evidencias_urls?: string[] | null
+          id?: string
+          identificador?: string
+          motivo_desfeito?: string | null
+          motivo_principal?: string
+          nivel_gravidade?: string
+          permanente?: boolean | null
+          profile_id?: string | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_banimentos_aplicado_por_fkey"
+            columns: ["aplicado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_banimentos_desfeito_por_fkey"
+            columns: ["desfeito_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_banimentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_banimentos_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_banimentos_revisado_por_fkey"
+            columns: ["revisado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_comunicados: {
+        Row: {
+          banner_cor: string | null
+          created_at: string
+          dados_popup: Json | null
+          data_fim: string | null
+          data_inicio: string
+          data_publicacao: string | null
+          deleted_at: string | null
+          empresas_destino_ids: string[] | null
+          id: string
+          mensagem: string
+          mostrar_banner_dashboard: boolean | null
+          mostrar_email: boolean | null
+          mostrar_popup: boolean | null
+          nivel_importancia: number | null
+          perfis_destino_ids: string[] | null
+          publicado: boolean | null
+          publicado_por: string | null
+          publico_alvo: string | null
+          requer_confirmacao: boolean | null
+          tipo: string
+          titulo: string
+          total_confirmacoes: number | null
+          total_visualizacoes: number | null
+          updated_at: string
+        }
+        Insert: {
+          banner_cor?: string | null
+          created_at?: string
+          dados_popup?: Json | null
+          data_fim?: string | null
+          data_inicio?: string
+          data_publicacao?: string | null
+          deleted_at?: string | null
+          empresas_destino_ids?: string[] | null
+          id?: string
+          mensagem: string
+          mostrar_banner_dashboard?: boolean | null
+          mostrar_email?: boolean | null
+          mostrar_popup?: boolean | null
+          nivel_importancia?: number | null
+          perfis_destino_ids?: string[] | null
+          publicado?: boolean | null
+          publicado_por?: string | null
+          publico_alvo?: string | null
+          requer_confirmacao?: boolean | null
+          tipo?: string
+          titulo: string
+          total_confirmacoes?: number | null
+          total_visualizacoes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          banner_cor?: string | null
+          created_at?: string
+          dados_popup?: Json | null
+          data_fim?: string | null
+          data_inicio?: string
+          data_publicacao?: string | null
+          deleted_at?: string | null
+          empresas_destino_ids?: string[] | null
+          id?: string
+          mensagem?: string
+          mostrar_banner_dashboard?: boolean | null
+          mostrar_email?: boolean | null
+          mostrar_popup?: boolean | null
+          nivel_importancia?: number | null
+          perfis_destino_ids?: string[] | null
+          publicado?: boolean | null
+          publicado_por?: string | null
+          publico_alvo?: string | null
+          requer_confirmacao?: boolean | null
+          tipo?: string
+          titulo?: string
+          total_confirmacoes?: number | null
+          total_visualizacoes?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_comunicados_publicado_por_fkey"
+            columns: ["publicado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_empresas_gestao: {
+        Row: {
+          bloqueado_funcionalidades: string[] | null
+          categoria_cliente: string | null
+          contrato_assinado_url: string | null
+          created_at: string
+          dados_kpi_extras: Json | null
+          data_ultima_revisao: string | null
+          desconto_plano_percentual: number | null
+          empresa_id: string
+          id: string
+          limites_customizados: Json | null
+          observacoes_admin: string | null
+          revisado_por: string | null
+          risco_nivel: string | null
+          risco_score: number | null
+          tags_admin: string[] | null
+          termo_adesao_assinado: string | null
+          updated_at: string
+          vip: boolean | null
+        }
+        Insert: {
+          bloqueado_funcionalidades?: string[] | null
+          categoria_cliente?: string | null
+          contrato_assinado_url?: string | null
+          created_at?: string
+          dados_kpi_extras?: Json | null
+          data_ultima_revisao?: string | null
+          desconto_plano_percentual?: number | null
+          empresa_id: string
+          id?: string
+          limites_customizados?: Json | null
+          observacoes_admin?: string | null
+          revisado_por?: string | null
+          risco_nivel?: string | null
+          risco_score?: number | null
+          tags_admin?: string[] | null
+          termo_adesao_assinado?: string | null
+          updated_at?: string
+          vip?: boolean | null
+        }
+        Update: {
+          bloqueado_funcionalidades?: string[] | null
+          categoria_cliente?: string | null
+          contrato_assinado_url?: string | null
+          created_at?: string
+          dados_kpi_extras?: Json | null
+          data_ultima_revisao?: string | null
+          desconto_plano_percentual?: number | null
+          empresa_id?: string
+          id?: string
+          limites_customizados?: Json | null
+          observacoes_admin?: string | null
+          revisado_por?: string | null
+          risco_nivel?: string | null
+          risco_score?: number | null
+          tags_admin?: string[] | null
+          termo_adesao_assinado?: string | null
+          updated_at?: string
+          vip?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_empresas_gestao_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: true
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_empresas_gestao_revisado_por_fkey"
+            columns: ["revisado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_global_config: {
+        Row: {
+          categoria: string | null
+          chave: string
+          created_at: string
+          descricao: string | null
+          id: string
+          modulo: string | null
+          publico: boolean | null
+          sensivel: boolean | null
+          somente_leitura: boolean | null
+          tipo_valor: string
+          updated_at: string
+          updated_by: string | null
+          valor: Json
+        }
+        Insert: {
+          categoria?: string | null
+          chave: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          modulo?: string | null
+          publico?: boolean | null
+          sensivel?: boolean | null
+          somente_leitura?: boolean | null
+          tipo_valor?: string
+          updated_at?: string
+          updated_by?: string | null
+          valor: Json
+        }
+        Update: {
+          categoria?: string | null
+          chave?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          modulo?: string | null
+          publico?: boolean | null
+          sensivel?: boolean | null
+          somente_leitura?: boolean | null
+          tipo_valor?: string
+          updated_at?: string
+          updated_by?: string | null
+          valor?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_global_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_moderacao: {
+        Row: {
+          acoes_tomadas: Json | null
+          analisado_em: string | null
+          analisado_por: string | null
+          atribuido_em: string | null
+          atribuido_para: string | null
+          categoria_risco: string | null
+          checkout_reportado_id: string | null
+          created_at: string
+          decisao: string | null
+          detalhe_decisao: string | null
+          detalhe_motivo: string | null
+          empresa_reportada_id: string | null
+          evidencias: string[] | null
+          id: string
+          item_reportado_id: string | null
+          marketplace_reportado_id: string | null
+          motivo: string
+          produto_reportado_id: string | null
+          profile_reportado_id: string | null
+          reportado_por: string | null
+          sinalizacoes_count: number | null
+          status: string
+          tipo_item_reportado: string
+          updated_at: string
+        }
+        Insert: {
+          acoes_tomadas?: Json | null
+          analisado_em?: string | null
+          analisado_por?: string | null
+          atribuido_em?: string | null
+          atribuido_para?: string | null
+          categoria_risco?: string | null
+          checkout_reportado_id?: string | null
+          created_at?: string
+          decisao?: string | null
+          detalhe_decisao?: string | null
+          detalhe_motivo?: string | null
+          empresa_reportada_id?: string | null
+          evidencias?: string[] | null
+          id?: string
+          item_reportado_id?: string | null
+          marketplace_reportado_id?: string | null
+          motivo: string
+          produto_reportado_id?: string | null
+          profile_reportado_id?: string | null
+          reportado_por?: string | null
+          sinalizacoes_count?: number | null
+          status?: string
+          tipo_item_reportado: string
+          updated_at?: string
+        }
+        Update: {
+          acoes_tomadas?: Json | null
+          analisado_em?: string | null
+          analisado_por?: string | null
+          atribuido_em?: string | null
+          atribuido_para?: string | null
+          categoria_risco?: string | null
+          checkout_reportado_id?: string | null
+          created_at?: string
+          decisao?: string | null
+          detalhe_decisao?: string | null
+          detalhe_motivo?: string | null
+          empresa_reportada_id?: string | null
+          evidencias?: string[] | null
+          id?: string
+          item_reportado_id?: string | null
+          marketplace_reportado_id?: string | null
+          motivo?: string
+          produto_reportado_id?: string | null
+          profile_reportado_id?: string | null
+          reportado_por?: string | null
+          sinalizacoes_count?: number | null
+          status?: string
+          tipo_item_reportado?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_moderacao_analisado_por_fkey"
+            columns: ["analisado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_moderacao_atribuido_para_fkey"
+            columns: ["atribuido_para"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_moderacao_checkout_reportado_id_fkey"
+            columns: ["checkout_reportado_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_moderacao_empresa_reportada_id_fkey"
+            columns: ["empresa_reportada_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_moderacao_marketplace_reportado_id_fkey"
+            columns: ["marketplace_reportado_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_moderacao_produto_reportado_id_fkey"
+            columns: ["produto_reportado_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_moderacao_profile_reportado_id_fkey"
+            columns: ["profile_reportado_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_moderacao_reportado_por_fkey"
+            columns: ["reportado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       afiliados: {
         Row: {
           aprovado_por: string | null
@@ -1951,6 +2426,190 @@ export type Database = {
           },
         ]
       }
+      integracoes: {
+        Row: {
+          categoria: string | null
+          conectado_por: string | null
+          config: Json | null
+          connected_at: string | null
+          created_at: string
+          credenciais_criptografadas: Json | null
+          deleted_at: string | null
+          desconectado_por: string | null
+          descricao: string | null
+          disconnected_at: string | null
+          empresa_id: string
+          id: string
+          last_error: string | null
+          last_error_at: string | null
+          last_sync_at: string | null
+          logo_url: string | null
+          metadata: Json | null
+          nome_integracao: string
+          provider: string
+          rate_limit_por_dia: number | null
+          rate_limit_por_minuto: number | null
+          status: Database["public"]["Enums"]["status_integracao"]
+          total_requisicoes: number | null
+          updated_at: string
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          conectado_por?: string | null
+          config?: Json | null
+          connected_at?: string | null
+          created_at?: string
+          credenciais_criptografadas?: Json | null
+          deleted_at?: string | null
+          desconectado_por?: string | null
+          descricao?: string | null
+          disconnected_at?: string | null
+          empresa_id: string
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_sync_at?: string | null
+          logo_url?: string | null
+          metadata?: Json | null
+          nome_integracao: string
+          provider: string
+          rate_limit_por_dia?: number | null
+          rate_limit_por_minuto?: number | null
+          status?: Database["public"]["Enums"]["status_integracao"]
+          total_requisicoes?: number | null
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          conectado_por?: string | null
+          config?: Json | null
+          connected_at?: string | null
+          created_at?: string
+          credenciais_criptografadas?: Json | null
+          deleted_at?: string | null
+          desconectado_por?: string | null
+          descricao?: string | null
+          disconnected_at?: string | null
+          empresa_id?: string
+          id?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_sync_at?: string | null
+          logo_url?: string | null
+          metadata?: Json | null
+          nome_integracao?: string
+          provider?: string
+          rate_limit_por_dia?: number | null
+          rate_limit_por_minuto?: number | null
+          status?: Database["public"]["Enums"]["status_integracao"]
+          total_requisicoes?: number | null
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integracoes_conectado_por_fkey"
+            columns: ["conectado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integracoes_desconectado_por_fkey"
+            columns: ["desconectado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integracoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integracoes_logs: {
+        Row: {
+          acao: string
+          cabecalhos_requisicao: Json | null
+          cabecalhos_resposta: Json | null
+          corpo_requisicao: Json | null
+          corpo_resposta: string | null
+          created_at: string
+          duracao_ms: number | null
+          empresa_id: string
+          endpoint_url: string | null
+          id: string
+          idempotency_key: string | null
+          integracao_id: string
+          mensagem_erro: string | null
+          metodo_http: string | null
+          status_resposta: number | null
+          sucesso: boolean | null
+          tentativa_numero: number | null
+        }
+        Insert: {
+          acao: string
+          cabecalhos_requisicao?: Json | null
+          cabecalhos_resposta?: Json | null
+          corpo_requisicao?: Json | null
+          corpo_resposta?: string | null
+          created_at?: string
+          duracao_ms?: number | null
+          empresa_id: string
+          endpoint_url?: string | null
+          id?: string
+          idempotency_key?: string | null
+          integracao_id: string
+          mensagem_erro?: string | null
+          metodo_http?: string | null
+          status_resposta?: number | null
+          sucesso?: boolean | null
+          tentativa_numero?: number | null
+        }
+        Update: {
+          acao?: string
+          cabecalhos_requisicao?: Json | null
+          cabecalhos_resposta?: Json | null
+          corpo_requisicao?: Json | null
+          corpo_resposta?: string | null
+          created_at?: string
+          duracao_ms?: number | null
+          empresa_id?: string
+          endpoint_url?: string | null
+          id?: string
+          idempotency_key?: string | null
+          integracao_id?: string
+          mensagem_erro?: string | null
+          metodo_http?: string | null
+          status_resposta?: number | null
+          sucesso?: boolean | null
+          tentativa_numero?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integracoes_logs_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integracoes_logs_integracao_id_fkey"
+            columns: ["integracao_id"]
+            isOneToOne: false
+            referencedRelation: "integracoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           aceito_em: string | null
@@ -3476,6 +4135,214 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relatorios_agendados: {
+        Row: {
+          assunto_email: string | null
+          ativo: boolean | null
+          colunas_exibidas: string[] | null
+          compactar_arquivo: boolean | null
+          corpo_email: string | null
+          created_at: string
+          criado_por: string | null
+          deleted_at: string | null
+          destinatarios_emails: string[]
+          destinatarios_profiles: string[] | null
+          dia_mes: number | null
+          dia_semana: number | null
+          empresa_id: string
+          enviar_se_sem_dados: boolean | null
+          erro_ultimo: string | null
+          filtros: Json | null
+          formato: string | null
+          frequencia: Database["public"]["Enums"]["frequencia_relatorio"]
+          hora: string
+          id: string
+          nome_relatorio: string
+          proximo_envio: string | null
+          status: string | null
+          tipo_relatorio: string
+          total_enviados: number | null
+          total_falhas: number | null
+          ultimo_envio: string | null
+          updated_at: string
+          webhook_notificacao: string | null
+          zip_senha_protegida: boolean | null
+        }
+        Insert: {
+          assunto_email?: string | null
+          ativo?: boolean | null
+          colunas_exibidas?: string[] | null
+          compactar_arquivo?: boolean | null
+          corpo_email?: string | null
+          created_at?: string
+          criado_por?: string | null
+          deleted_at?: string | null
+          destinatarios_emails?: string[]
+          destinatarios_profiles?: string[] | null
+          dia_mes?: number | null
+          dia_semana?: number | null
+          empresa_id: string
+          enviar_se_sem_dados?: boolean | null
+          erro_ultimo?: string | null
+          filtros?: Json | null
+          formato?: string | null
+          frequencia: Database["public"]["Enums"]["frequencia_relatorio"]
+          hora: string
+          id?: string
+          nome_relatorio: string
+          proximo_envio?: string | null
+          status?: string | null
+          tipo_relatorio: string
+          total_enviados?: number | null
+          total_falhas?: number | null
+          ultimo_envio?: string | null
+          updated_at?: string
+          webhook_notificacao?: string | null
+          zip_senha_protegida?: boolean | null
+        }
+        Update: {
+          assunto_email?: string | null
+          ativo?: boolean | null
+          colunas_exibidas?: string[] | null
+          compactar_arquivo?: boolean | null
+          corpo_email?: string | null
+          created_at?: string
+          criado_por?: string | null
+          deleted_at?: string | null
+          destinatarios_emails?: string[]
+          destinatarios_profiles?: string[] | null
+          dia_mes?: number | null
+          dia_semana?: number | null
+          empresa_id?: string
+          enviar_se_sem_dados?: boolean | null
+          erro_ultimo?: string | null
+          filtros?: Json | null
+          formato?: string | null
+          frequencia?: Database["public"]["Enums"]["frequencia_relatorio"]
+          hora?: string
+          id?: string
+          nome_relatorio?: string
+          proximo_envio?: string | null
+          status?: string | null
+          tipo_relatorio?: string
+          total_enviados?: number | null
+          total_falhas?: number | null
+          ultimo_envio?: string | null
+          updated_at?: string
+          webhook_notificacao?: string | null
+          zip_senha_protegida?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_agendados_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relatorios_agendados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      relatorios_historico: {
+        Row: {
+          agendamento_id: string | null
+          created_at: string
+          empresa_id: string | null
+          error_message: string | null
+          expira_em: string | null
+          filtros_aplicados: Json | null
+          formato: string
+          gerado_por: string | null
+          id: string
+          nome_arquivo: string
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          profile_id: string | null
+          status: string
+          tamanho_bytes: number | null
+          tempo_geracao_ms: number | null
+          tipo_relatorio: string
+          total_downloads: number | null
+          total_registros: number | null
+          total_visualizacoes: number | null
+          url_arquivo: string | null
+        }
+        Insert: {
+          agendamento_id?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          error_message?: string | null
+          expira_em?: string | null
+          filtros_aplicados?: Json | null
+          formato: string
+          gerado_por?: string | null
+          id?: string
+          nome_arquivo: string
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          profile_id?: string | null
+          status?: string
+          tamanho_bytes?: number | null
+          tempo_geracao_ms?: number | null
+          tipo_relatorio: string
+          total_downloads?: number | null
+          total_registros?: number | null
+          total_visualizacoes?: number | null
+          url_arquivo?: string | null
+        }
+        Update: {
+          agendamento_id?: string | null
+          created_at?: string
+          empresa_id?: string | null
+          error_message?: string | null
+          expira_em?: string | null
+          filtros_aplicados?: Json | null
+          formato?: string
+          gerado_por?: string | null
+          id?: string
+          nome_arquivo?: string
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          profile_id?: string | null
+          status?: string
+          tamanho_bytes?: number | null
+          tempo_geracao_ms?: number | null
+          tipo_relatorio?: string
+          total_downloads?: number | null
+          total_registros?: number | null
+          total_visualizacoes?: number | null
+          url_arquivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relatorios_historico_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "relatorios_agendados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relatorios_historico_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "relatorios_historico_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5689,6 +6556,580 @@ export type Database = {
           },
         ]
       }
+      treinamentos_aulas: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_tamanho: number | null
+          arquivo_url: string | null
+          attachments: string[] | null
+          conteudo_html: string | null
+          conteudo_texto: string | null
+          created_at: string
+          curso_id: string
+          descricao: string | null
+          duracao_estimada_min: number | null
+          empresa_id: string | null
+          gratuito_previzualizacao: boolean | null
+          id: string
+          max_downloads: number | null
+          min_tempo_segundos: number | null
+          min_visualizacoes: number | null
+          modulo_id: string
+          nota_minima_aprovacao: number | null
+          ordem: number
+          perguntas_quiz: Json | null
+          recursos_links: Json | null
+          require_download: boolean | null
+          tipo: Database["public"]["Enums"]["tipo_curso"]
+          titulo: string
+          total_comentarios: number | null
+          updated_at: string
+          url_externa: string | null
+          video_duracao_segundos: number | null
+          video_resolucoes: Json | null
+          video_tipo: string | null
+          video_url: string | null
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          attachments?: string[] | null
+          conteudo_html?: string | null
+          conteudo_texto?: string | null
+          created_at?: string
+          curso_id: string
+          descricao?: string | null
+          duracao_estimada_min?: number | null
+          empresa_id?: string | null
+          gratuito_previzualizacao?: boolean | null
+          id?: string
+          max_downloads?: number | null
+          min_tempo_segundos?: number | null
+          min_visualizacoes?: number | null
+          modulo_id: string
+          nota_minima_aprovacao?: number | null
+          ordem?: number
+          perguntas_quiz?: Json | null
+          recursos_links?: Json | null
+          require_download?: boolean | null
+          tipo?: Database["public"]["Enums"]["tipo_curso"]
+          titulo: string
+          total_comentarios?: number | null
+          updated_at?: string
+          url_externa?: string | null
+          video_duracao_segundos?: number | null
+          video_resolucoes?: Json | null
+          video_tipo?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_tamanho?: number | null
+          arquivo_url?: string | null
+          attachments?: string[] | null
+          conteudo_html?: string | null
+          conteudo_texto?: string | null
+          created_at?: string
+          curso_id?: string
+          descricao?: string | null
+          duracao_estimada_min?: number | null
+          empresa_id?: string | null
+          gratuito_previzualizacao?: boolean | null
+          id?: string
+          max_downloads?: number | null
+          min_tempo_segundos?: number | null
+          min_visualizacoes?: number | null
+          modulo_id?: string
+          nota_minima_aprovacao?: number | null
+          ordem?: number
+          perguntas_quiz?: Json | null
+          recursos_links?: Json | null
+          require_download?: boolean | null
+          tipo?: Database["public"]["Enums"]["tipo_curso"]
+          titulo?: string
+          total_comentarios?: number | null
+          updated_at?: string
+          url_externa?: string | null
+          video_duracao_segundos?: number | null
+          video_resolucoes?: Json | null
+          video_tipo?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinamentos_aulas_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "treinamentos_cursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_aulas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_aulas_modulo_id_fkey"
+            columns: ["modulo_id"]
+            isOneToOne: false
+            referencedRelation: "treinamentos_modulos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treinamentos_cursos: {
+        Row: {
+          acesso_vitalicio: boolean | null
+          aprendizados: string[] | null
+          atualizado_por: string | null
+          avaliacao_media: number | null
+          capa_url: string | null
+          carga_horaria_horas: number | null
+          categoria: string | null
+          certificado_disponivel: boolean | null
+          created_at: string
+          criado_por: string | null
+          data_publicacao: string | null
+          deleted_at: string | null
+          descricao_curta: string | null
+          descricao_longa: string | null
+          destaque: boolean | null
+          dias_validade: number | null
+          duracao_total_minutos: number | null
+          empresa_id: string | null
+          gratuito: boolean | null
+          id: string
+          instrutor_avatar: string | null
+          instrutor_bio: string | null
+          instrutor_nome: string | null
+          libera_afiliados: boolean | null
+          modelo_certificado: string | null
+          nivel: string | null
+          permite_parcelamento: boolean | null
+          preco: number | null
+          publicado: boolean | null
+          publico_alvo: string | null
+          requisitos: string[] | null
+          slug: string
+          status: string | null
+          subtitulo: string | null
+          tags: string[] | null
+          taxa_comissao_afiliado: number | null
+          taxa_conclusao: number | null
+          tipo: Database["public"]["Enums"]["tipo_curso"]
+          titulo: string
+          total_aulas: number | null
+          total_avaliacoes: number | null
+          total_concluidos: number | null
+          total_matriculas: number | null
+          total_modulos: number | null
+          updated_at: string
+          video_demo_url: string | null
+        }
+        Insert: {
+          acesso_vitalicio?: boolean | null
+          aprendizados?: string[] | null
+          atualizado_por?: string | null
+          avaliacao_media?: number | null
+          capa_url?: string | null
+          carga_horaria_horas?: number | null
+          categoria?: string | null
+          certificado_disponivel?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          data_publicacao?: string | null
+          deleted_at?: string | null
+          descricao_curta?: string | null
+          descricao_longa?: string | null
+          destaque?: boolean | null
+          dias_validade?: number | null
+          duracao_total_minutos?: number | null
+          empresa_id?: string | null
+          gratuito?: boolean | null
+          id?: string
+          instrutor_avatar?: string | null
+          instrutor_bio?: string | null
+          instrutor_nome?: string | null
+          libera_afiliados?: boolean | null
+          modelo_certificado?: string | null
+          nivel?: string | null
+          permite_parcelamento?: boolean | null
+          preco?: number | null
+          publicado?: boolean | null
+          publico_alvo?: string | null
+          requisitos?: string[] | null
+          slug: string
+          status?: string | null
+          subtitulo?: string | null
+          tags?: string[] | null
+          taxa_comissao_afiliado?: number | null
+          taxa_conclusao?: number | null
+          tipo?: Database["public"]["Enums"]["tipo_curso"]
+          titulo: string
+          total_aulas?: number | null
+          total_avaliacoes?: number | null
+          total_concluidos?: number | null
+          total_matriculas?: number | null
+          total_modulos?: number | null
+          updated_at?: string
+          video_demo_url?: string | null
+        }
+        Update: {
+          acesso_vitalicio?: boolean | null
+          aprendizados?: string[] | null
+          atualizado_por?: string | null
+          avaliacao_media?: number | null
+          capa_url?: string | null
+          carga_horaria_horas?: number | null
+          categoria?: string | null
+          certificado_disponivel?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          data_publicacao?: string | null
+          deleted_at?: string | null
+          descricao_curta?: string | null
+          descricao_longa?: string | null
+          destaque?: boolean | null
+          dias_validade?: number | null
+          duracao_total_minutos?: number | null
+          empresa_id?: string | null
+          gratuito?: boolean | null
+          id?: string
+          instrutor_avatar?: string | null
+          instrutor_bio?: string | null
+          instrutor_nome?: string | null
+          libera_afiliados?: boolean | null
+          modelo_certificado?: string | null
+          nivel?: string | null
+          permite_parcelamento?: boolean | null
+          preco?: number | null
+          publicado?: boolean | null
+          publico_alvo?: string | null
+          requisitos?: string[] | null
+          slug?: string
+          status?: string | null
+          subtitulo?: string | null
+          tags?: string[] | null
+          taxa_comissao_afiliado?: number | null
+          taxa_conclusao?: number | null
+          tipo?: Database["public"]["Enums"]["tipo_curso"]
+          titulo?: string
+          total_aulas?: number | null
+          total_avaliacoes?: number | null
+          total_concluidos?: number | null
+          total_matriculas?: number | null
+          total_modulos?: number | null
+          updated_at?: string
+          video_demo_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinamentos_cursos_atualizado_por_fkey"
+            columns: ["atualizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_cursos_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_cursos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treinamentos_matriculas: {
+        Row: {
+          afiliado_id: string | null
+          aprovado: boolean | null
+          certificado_emitido: boolean | null
+          certificado_url: string | null
+          cliente_id: string | null
+          created_at: string
+          curso_id: string
+          data_certificado: string | null
+          data_conclusao: string | null
+          data_expiracao: string | null
+          data_matricula: string
+          empresa_id: string | null
+          id: string
+          metadata: Json | null
+          motivo_cancelamento: string | null
+          nota_final: number | null
+          numero_certificado: string | null
+          originou_de: string | null
+          pausado_em: string | null
+          profile_id: string
+          progresso_percentual: number | null
+          reativado_em: string | null
+          status: Database["public"]["Enums"]["status_matricula"]
+          tempo_total_estudado_seg: number | null
+          total_aulas_concluidas: number | null
+          transacao_id: string | null
+          ultimo_acesso: string | null
+          updated_at: string
+          valor_pago: number | null
+        }
+        Insert: {
+          afiliado_id?: string | null
+          aprovado?: boolean | null
+          certificado_emitido?: boolean | null
+          certificado_url?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          curso_id: string
+          data_certificado?: string | null
+          data_conclusao?: string | null
+          data_expiracao?: string | null
+          data_matricula?: string
+          empresa_id?: string | null
+          id?: string
+          metadata?: Json | null
+          motivo_cancelamento?: string | null
+          nota_final?: number | null
+          numero_certificado?: string | null
+          originou_de?: string | null
+          pausado_em?: string | null
+          profile_id: string
+          progresso_percentual?: number | null
+          reativado_em?: string | null
+          status?: Database["public"]["Enums"]["status_matricula"]
+          tempo_total_estudado_seg?: number | null
+          total_aulas_concluidas?: number | null
+          transacao_id?: string | null
+          ultimo_acesso?: string | null
+          updated_at?: string
+          valor_pago?: number | null
+        }
+        Update: {
+          afiliado_id?: string | null
+          aprovado?: boolean | null
+          certificado_emitido?: boolean | null
+          certificado_url?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          curso_id?: string
+          data_certificado?: string | null
+          data_conclusao?: string | null
+          data_expiracao?: string | null
+          data_matricula?: string
+          empresa_id?: string | null
+          id?: string
+          metadata?: Json | null
+          motivo_cancelamento?: string | null
+          nota_final?: number | null
+          numero_certificado?: string | null
+          originou_de?: string | null
+          pausado_em?: string | null
+          profile_id?: string
+          progresso_percentual?: number | null
+          reativado_em?: string | null
+          status?: Database["public"]["Enums"]["status_matricula"]
+          tempo_total_estudado_seg?: number | null
+          total_aulas_concluidas?: number | null
+          transacao_id?: string | null
+          ultimo_acesso?: string | null
+          updated_at?: string
+          valor_pago?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinamentos_matriculas_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_matriculas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_matriculas_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "treinamentos_cursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_matriculas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_matriculas_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_matriculas_transacao_id_fkey"
+            columns: ["transacao_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treinamentos_modulos: {
+        Row: {
+          aula_requisito_id: string | null
+          created_at: string
+          curso_id: string
+          data_desbloqueio: string | null
+          desbloqueio_automatico: boolean | null
+          descricao: string | null
+          duracao_total_minutos: number | null
+          empresa_id: string | null
+          id: string
+          ordem: number
+          titulo: string
+          total_aulas: number | null
+          updated_at: string
+        }
+        Insert: {
+          aula_requisito_id?: string | null
+          created_at?: string
+          curso_id: string
+          data_desbloqueio?: string | null
+          desbloqueio_automatico?: boolean | null
+          descricao?: string | null
+          duracao_total_minutos?: number | null
+          empresa_id?: string | null
+          id?: string
+          ordem?: number
+          titulo: string
+          total_aulas?: number | null
+          updated_at?: string
+        }
+        Update: {
+          aula_requisito_id?: string | null
+          created_at?: string
+          curso_id?: string
+          data_desbloqueio?: string | null
+          desbloqueio_automatico?: boolean | null
+          descricao?: string | null
+          duracao_total_minutos?: number | null
+          empresa_id?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+          total_aulas?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinamentos_modulos_curso_id_fkey"
+            columns: ["curso_id"]
+            isOneToOne: false
+            referencedRelation: "treinamentos_cursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_modulos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treinamentos_progresso: {
+        Row: {
+          aula_id: string
+          concluida: boolean | null
+          created_at: string
+          data_conclusao: string | null
+          downloads_feitos: number | null
+          id: string
+          matricula_id: string
+          nota_quiz: number | null
+          primeiro_acesso: string | null
+          profile_id: string
+          quiz_tentativas: number | null
+          tempo_assistido_seg: number | null
+          total_acessos: number | null
+          ultima_posicao_video_seg: number | null
+          ultimo_acesso: string | null
+          updated_at: string
+        }
+        Insert: {
+          aula_id: string
+          concluida?: boolean | null
+          created_at?: string
+          data_conclusao?: string | null
+          downloads_feitos?: number | null
+          id?: string
+          matricula_id: string
+          nota_quiz?: number | null
+          primeiro_acesso?: string | null
+          profile_id: string
+          quiz_tentativas?: number | null
+          tempo_assistido_seg?: number | null
+          total_acessos?: number | null
+          ultima_posicao_video_seg?: number | null
+          ultimo_acesso?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aula_id?: string
+          concluida?: boolean | null
+          created_at?: string
+          data_conclusao?: string | null
+          downloads_feitos?: number | null
+          id?: string
+          matricula_id?: string
+          nota_quiz?: number | null
+          primeiro_acesso?: string | null
+          profile_id?: string
+          quiz_tentativas?: number | null
+          tempo_assistido_seg?: number | null
+          total_acessos?: number | null
+          ultima_posicao_video_seg?: number | null
+          ultimo_acesso?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinamentos_progresso_aula_id_fkey"
+            columns: ["aula_id"]
+            isOneToOne: false
+            referencedRelation: "treinamentos_aulas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_progresso_matricula_id_fkey"
+            columns: ["matricula_id"]
+            isOneToOne: false
+            referencedRelation: "treinamentos_matriculas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treinamentos_progresso_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -5698,6 +7139,13 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
+      frequencia_relatorio:
+        | "diario"
+        | "semanal"
+        | "quinzenal"
+        | "mensal"
+        | "trimestral"
+        | "anual"
       metodo_pagamento:
         | "pix"
         | "cartao_credito"
@@ -5732,12 +7180,24 @@ export type Database = {
         | "rejeitado"
         | "cancelado"
         | "em_disputa"
+      status_integracao:
+        | "nao_configurado"
+        | "conectado"
+        | "erro"
+        | "expirado"
+        | "revogado"
       status_link_pagamento: "ativo" | "expirado" | "usado" | "desativado"
       status_marketplace_produto:
         | "pendente_aprovacao"
         | "publicado"
         | "rejeitado"
         | "arquivado"
+      status_matricula:
+        | "ativa"
+        | "pausada"
+        | "cancelada"
+        | "concluida"
+        | "expirada"
       status_produto: "rascunho" | "publicado" | "arquivado" | "indisponivel"
       status_repasse:
         | "agendado"
@@ -5812,6 +7272,7 @@ export type Database = {
         | "checkout_publicado"
       tipo_conta: "corrente" | "poupanca" | "pagamento" | "juridica"
       tipo_cupom: "percentual" | "valor_fixo" | "frete_gratis"
+      tipo_curso: "video" | "texto" | "quiz" | "live" | "arquivo" | "webinar"
       tipo_desconto: "percentual" | "valor_fixo"
       tipo_link_pagamento:
         | "simples"
@@ -5994,6 +7455,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      frequencia_relatorio: [
+        "diario",
+        "semanal",
+        "quinzenal",
+        "mensal",
+        "trimestral",
+        "anual",
+      ],
       metodo_pagamento: [
         "pix",
         "cartao_credito",
@@ -6031,12 +7500,26 @@ export const Constants = {
         "cancelado",
         "em_disputa",
       ],
+      status_integracao: [
+        "nao_configurado",
+        "conectado",
+        "erro",
+        "expirado",
+        "revogado",
+      ],
       status_link_pagamento: ["ativo", "expirado", "usado", "desativado"],
       status_marketplace_produto: [
         "pendente_aprovacao",
         "publicado",
         "rejeitado",
         "arquivado",
+      ],
+      status_matricula: [
+        "ativa",
+        "pausada",
+        "cancelada",
+        "concluida",
+        "expirada",
       ],
       status_produto: ["rascunho", "publicado", "arquivado", "indisponivel"],
       status_repasse: [
@@ -6117,6 +7600,7 @@ export const Constants = {
       ],
       tipo_conta: ["corrente", "poupanca", "pagamento", "juridica"],
       tipo_cupom: ["percentual", "valor_fixo", "frete_gratis"],
+      tipo_curso: ["video", "texto", "quiz", "live", "arquivo", "webinar"],
       tipo_desconto: ["percentual", "valor_fixo"],
       tipo_link_pagamento: [
         "simples",
