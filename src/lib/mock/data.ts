@@ -1645,8 +1645,8 @@ export type CommissionRule = {
   value: number;
   productId?: string;
   productName?: string;
-  affiliateId?: string;
-  affiliateName?: string;
+  affiliateId?: string | undefined;
+  affiliateName?: string | undefined;
   status: "ativo" | "inativo";
   updatedAt: string;
   updatedBy: string;
@@ -1896,6 +1896,7 @@ export type CommunityReply = {
   id: string;
   author: string;
   avatarColor: string;
+  role?: string;
   content: string;
   createdAt: string;
   likes: number;

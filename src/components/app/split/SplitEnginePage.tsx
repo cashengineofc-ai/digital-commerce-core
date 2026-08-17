@@ -52,9 +52,9 @@ const gatewayPercent = 0.0349;
 
 function resolveCommission(params: {
   productId: string;
-  affiliateId?: string;
-  customType?: CommissionRuleType;
-  customValue?: number;
+  affiliateId?: string | undefined;
+  customType?: CommissionRuleType | undefined;
+  customValue?: number | undefined;
   gross: number;
 }): { amount: number; type: CommissionRuleType; value: number; source: string } {
   const { productId, affiliateId, customType, customValue, gross } = params;
@@ -352,7 +352,6 @@ export function SplitEnginePage() {
                   className="tabular-nums"
                   value={platformFee}
                   onChange={(e) => setPlatformFee(e.target.value)}
-                  suffix="%"
                 />
                 <p className="text-[11px] text-muted-foreground">
                   Configurável — atual: {formatPct(platformFeeRule.value)}.
@@ -392,13 +391,6 @@ export function SplitEnginePage() {
                       value={overrideValue}
                       onChange={(e) => setOverrideValue(e.target.value)}
                       disabled={overrideType === "auto"}
-                      suffix={
-                        overrideType === "percentual"
-                          ? "%"
-                          : overrideType === "fixa"
-                            ? "R$"
-                            : undefined
-                      }
                     />
                   </div>
                 </div>
