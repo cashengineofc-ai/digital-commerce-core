@@ -805,7 +805,7 @@ export const affiliateLinks: AffiliateLink[] = (() => {
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
           .replace(/\s+/g, "-")
-          .slice(0, 18)}-${a.name.split(" ")[0].toLowerCase()}`,
+          .slice(0, 18)}-${(a.name.split(" ")[0] ?? "").toLowerCase()}`,
         affiliate: a.name,
         product: p.name,
         clicks,
@@ -1645,8 +1645,8 @@ export type CommissionRule = {
   value: number;
   productId?: string;
   productName?: string;
-  affiliateId?: string;
-  affiliateName?: string;
+  affiliateId?: string | undefined;
+  affiliateName?: string | undefined;
   status: "ativo" | "inativo";
   updatedAt: string;
   updatedBy: string;
@@ -1896,6 +1896,7 @@ export type CommunityReply = {
   id: string;
   author: string;
   avatarColor: string;
+  role?: string;
   content: string;
   createdAt: string;
   likes: number;

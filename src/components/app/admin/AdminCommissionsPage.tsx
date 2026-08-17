@@ -179,7 +179,6 @@ export function AdminCommissionsPage() {
                     className="mt-1.5 tabular-nums"
                     value={defaultValue}
                     onChange={(e) => setDefaultValue(e.target.value)}
-                    suffix={defaultType === "percentual" ? "%" : "R$"}
                   />
                 </div>
               </div>
@@ -232,7 +231,6 @@ export function AdminCommissionsPage() {
                     className="mt-1.5 tabular-nums"
                     value={platformValue}
                     onChange={(e) => setPlatformValue(e.target.value)}
-                    suffix="%"
                   />
                 </div>
               </div>
