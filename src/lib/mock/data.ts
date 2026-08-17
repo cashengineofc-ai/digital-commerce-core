@@ -805,7 +805,7 @@ export const affiliateLinks: AffiliateLink[] = (() => {
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
           .replace(/\s+/g, "-")
-          .slice(0, 18)}-${a.name.split(" ")[0].toLowerCase()}`,
+          .slice(0, 18)}-${(a.name.split(" ")[0] ?? "").toLowerCase()}`,
         affiliate: a.name,
         product: p.name,
         clicks,
