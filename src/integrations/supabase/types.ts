@@ -14,6 +14,287 @@ export type Database = {
   }
   public: {
     Tables: {
+      afiliados: {
+        Row: {
+          aprovado_por: string | null
+          biografia: string | null
+          chave_pix: string | null
+          codigo_afiliado: string
+          convite_id: string | null
+          created_at: string
+          dados_bancarios: Json | null
+          data_aprovacao: string | null
+          deleted_at: string | null
+          documentacao_enviada: boolean | null
+          documento_titular: string | null
+          documentos_verificados: boolean | null
+          empresa_id: string
+          id: string
+          indicado_por_afiliado_id: string | null
+          limite_diario_geracao_link: number | null
+          link_personalizado: string | null
+          metadata: Json | null
+          midia_kit_url: string | null
+          minimo_saque: number | null
+          motivo_rejeicao: string | null
+          nivel_rede: number | null
+          pontos_desempenho: number | null
+          preferencias_comunicacao: Json | null
+          profile_id: string | null
+          ranking_posicao: number | null
+          redes_sociais: Json | null
+          regras_especiais: Json | null
+          saldo_aprovado: number | null
+          saldo_disponivel: number | null
+          saldo_pendente: number | null
+          status: Database["public"]["Enums"]["status_afiliado"]
+          subdominio: string | null
+          taxa_comissao_padrao: number | null
+          taxa_comissao_recorrente: number | null
+          taxa_conversao: number | null
+          ticket_medio_vendas: number | null
+          tier: string | null
+          tipo_chave_pix: string | null
+          titular_conta: string | null
+          total_cliques: number | null
+          total_comissao_bruta: number | null
+          total_comissao_liquida: number | null
+          total_leads: number | null
+          total_sacado: number | null
+          total_vendas: number | null
+          total_vendas_confirmadas: number | null
+          total_visualizacoes: number | null
+          ultimo_acesso: string | null
+          updated_at: string
+        }
+        Insert: {
+          aprovado_por?: string | null
+          biografia?: string | null
+          chave_pix?: string | null
+          codigo_afiliado: string
+          convite_id?: string | null
+          created_at?: string
+          dados_bancarios?: Json | null
+          data_aprovacao?: string | null
+          deleted_at?: string | null
+          documentacao_enviada?: boolean | null
+          documento_titular?: string | null
+          documentos_verificados?: boolean | null
+          empresa_id: string
+          id?: string
+          indicado_por_afiliado_id?: string | null
+          limite_diario_geracao_link?: number | null
+          link_personalizado?: string | null
+          metadata?: Json | null
+          midia_kit_url?: string | null
+          minimo_saque?: number | null
+          motivo_rejeicao?: string | null
+          nivel_rede?: number | null
+          pontos_desempenho?: number | null
+          preferencias_comunicacao?: Json | null
+          profile_id?: string | null
+          ranking_posicao?: number | null
+          redes_sociais?: Json | null
+          regras_especiais?: Json | null
+          saldo_aprovado?: number | null
+          saldo_disponivel?: number | null
+          saldo_pendente?: number | null
+          status?: Database["public"]["Enums"]["status_afiliado"]
+          subdominio?: string | null
+          taxa_comissao_padrao?: number | null
+          taxa_comissao_recorrente?: number | null
+          taxa_conversao?: number | null
+          ticket_medio_vendas?: number | null
+          tier?: string | null
+          tipo_chave_pix?: string | null
+          titular_conta?: string | null
+          total_cliques?: number | null
+          total_comissao_bruta?: number | null
+          total_comissao_liquida?: number | null
+          total_leads?: number | null
+          total_sacado?: number | null
+          total_vendas?: number | null
+          total_vendas_confirmadas?: number | null
+          total_visualizacoes?: number | null
+          ultimo_acesso?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aprovado_por?: string | null
+          biografia?: string | null
+          chave_pix?: string | null
+          codigo_afiliado?: string
+          convite_id?: string | null
+          created_at?: string
+          dados_bancarios?: Json | null
+          data_aprovacao?: string | null
+          deleted_at?: string | null
+          documentacao_enviada?: boolean | null
+          documento_titular?: string | null
+          documentos_verificados?: boolean | null
+          empresa_id?: string
+          id?: string
+          indicado_por_afiliado_id?: string | null
+          limite_diario_geracao_link?: number | null
+          link_personalizado?: string | null
+          metadata?: Json | null
+          midia_kit_url?: string | null
+          minimo_saque?: number | null
+          motivo_rejeicao?: string | null
+          nivel_rede?: number | null
+          pontos_desempenho?: number | null
+          preferencias_comunicacao?: Json | null
+          profile_id?: string | null
+          ranking_posicao?: number | null
+          redes_sociais?: Json | null
+          regras_especiais?: Json | null
+          saldo_aprovado?: number | null
+          saldo_disponivel?: number | null
+          saldo_pendente?: number | null
+          status?: Database["public"]["Enums"]["status_afiliado"]
+          subdominio?: string | null
+          taxa_comissao_padrao?: number | null
+          taxa_comissao_recorrente?: number | null
+          taxa_conversao?: number | null
+          ticket_medio_vendas?: number | null
+          tier?: string | null
+          tipo_chave_pix?: string | null
+          titular_conta?: string | null
+          total_cliques?: number | null
+          total_comissao_bruta?: number | null
+          total_comissao_liquida?: number | null
+          total_leads?: number | null
+          total_sacado?: number | null
+          total_vendas?: number | null
+          total_vendas_confirmadas?: number | null
+          total_visualizacoes?: number | null
+          ultimo_acesso?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afiliados_aprovado_por_fkey"
+            columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afiliados_convite_id_fkey"
+            columns: ["convite_id"]
+            isOneToOne: false
+            referencedRelation: "invites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afiliados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afiliados_indicado_por_afiliado_id_fkey"
+            columns: ["indicado_por_afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afiliados_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      afiliados_produtos: {
+        Row: {
+          afiliado_id: string
+          ativo: boolean | null
+          autorizado_em: string | null
+          autorizado_por: string | null
+          comissao_valor_fixo: number | null
+          created_at: string
+          data_fim: string | null
+          data_inicio: string | null
+          empresa_id: string
+          id: string
+          maximo_comissao_periodo: number | null
+          produto_id: string
+          taxa_comissao_personalizada: number | null
+          total_comissao_gerada: number | null
+          total_vendas: number | null
+          updated_at: string
+        }
+        Insert: {
+          afiliado_id: string
+          ativo?: boolean | null
+          autorizado_em?: string | null
+          autorizado_por?: string | null
+          comissao_valor_fixo?: number | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          empresa_id: string
+          id?: string
+          maximo_comissao_periodo?: number | null
+          produto_id: string
+          taxa_comissao_personalizada?: number | null
+          total_comissao_gerada?: number | null
+          total_vendas?: number | null
+          updated_at?: string
+        }
+        Update: {
+          afiliado_id?: string
+          ativo?: boolean | null
+          autorizado_em?: string | null
+          autorizado_por?: string | null
+          comissao_valor_fixo?: number | null
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string | null
+          empresa_id?: string
+          id?: string
+          maximo_comissao_periodo?: number | null
+          produto_id?: string
+          taxa_comissao_personalizada?: number | null
+          total_comissao_gerada?: number | null
+          total_vendas?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afiliados_produtos_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afiliados_produtos_autorizado_por_fkey"
+            columns: ["autorizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afiliados_produtos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afiliados_produtos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categorias_produtos: {
         Row: {
           ativa: boolean | null
@@ -409,6 +690,180 @@ export type Database = {
           },
         ]
       }
+      comissoes: {
+        Row: {
+          afiliado_id: string
+          aprovado_por: string | null
+          cancelado_por: string | null
+          cliente_id: string | null
+          created_at: string
+          data_aprovacao: string | null
+          data_cancelamento: string | null
+          data_pagamento: string | null
+          data_prevista_liberacao: string | null
+          deleted_at: string | null
+          descontos_aplicados: number | null
+          empresa_id: string
+          id: string
+          id_transacao_externo: string | null
+          indicado_por_afiliado_id: string | null
+          link_afiliado_id: string | null
+          metadata: Json | null
+          moeda: string | null
+          motivo_cancelamento: string | null
+          nota_interna: string | null
+          origem_trafego: string | null
+          parcela_numero: number | null
+          periodo_recorrencia: number | null
+          produto_id: string | null
+          saque_id: string | null
+          status: Database["public"]["Enums"]["status_comissao"]
+          taxa_comissao_percentual: number
+          taxa_plataforma: number | null
+          taxa_processamento: number | null
+          tipo_venda: string | null
+          total_parcelas: number | null
+          transacao_id: string | null
+          updated_at: string
+          valor_comissao_bruta: number
+          valor_comissao_liquida: number
+          valor_venda: number
+        }
+        Insert: {
+          afiliado_id: string
+          aprovado_por?: string | null
+          cancelado_por?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data_aprovacao?: string | null
+          data_cancelamento?: string | null
+          data_pagamento?: string | null
+          data_prevista_liberacao?: string | null
+          deleted_at?: string | null
+          descontos_aplicados?: number | null
+          empresa_id: string
+          id?: string
+          id_transacao_externo?: string | null
+          indicado_por_afiliado_id?: string | null
+          link_afiliado_id?: string | null
+          metadata?: Json | null
+          moeda?: string | null
+          motivo_cancelamento?: string | null
+          nota_interna?: string | null
+          origem_trafego?: string | null
+          parcela_numero?: number | null
+          periodo_recorrencia?: number | null
+          produto_id?: string | null
+          saque_id?: string | null
+          status?: Database["public"]["Enums"]["status_comissao"]
+          taxa_comissao_percentual: number
+          taxa_plataforma?: number | null
+          taxa_processamento?: number | null
+          tipo_venda?: string | null
+          total_parcelas?: number | null
+          transacao_id?: string | null
+          updated_at?: string
+          valor_comissao_bruta: number
+          valor_comissao_liquida: number
+          valor_venda: number
+        }
+        Update: {
+          afiliado_id?: string
+          aprovado_por?: string | null
+          cancelado_por?: string | null
+          cliente_id?: string | null
+          created_at?: string
+          data_aprovacao?: string | null
+          data_cancelamento?: string | null
+          data_pagamento?: string | null
+          data_prevista_liberacao?: string | null
+          deleted_at?: string | null
+          descontos_aplicados?: number | null
+          empresa_id?: string
+          id?: string
+          id_transacao_externo?: string | null
+          indicado_por_afiliado_id?: string | null
+          link_afiliado_id?: string | null
+          metadata?: Json | null
+          moeda?: string | null
+          motivo_cancelamento?: string | null
+          nota_interna?: string | null
+          origem_trafego?: string | null
+          parcela_numero?: number | null
+          periodo_recorrencia?: number | null
+          produto_id?: string | null
+          saque_id?: string | null
+          status?: Database["public"]["Enums"]["status_comissao"]
+          taxa_comissao_percentual?: number
+          taxa_plataforma?: number | null
+          taxa_processamento?: number | null
+          tipo_venda?: string | null
+          total_parcelas?: number | null
+          transacao_id?: string | null
+          updated_at?: string
+          valor_comissao_bruta?: number
+          valor_comissao_liquida?: number
+          valor_venda?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissoes_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_aprovado_por_fkey"
+            columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_cancelado_por_fkey"
+            columns: ["cancelado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_indicado_por_afiliado_id_fkey"
+            columns: ["indicado_por_afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_link_afiliado_id_fkey"
+            columns: ["link_afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "links_afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cupons: {
         Row: {
           categoria_ids: string[] | null
@@ -674,6 +1129,145 @@ export type Database = {
           },
         ]
       }
+      links_afiliados: {
+        Row: {
+          afiliado_id: string
+          checkout_id: string | null
+          codigo_rastreio: string
+          created_at: string
+          criado_por: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          deleted_at: string | null
+          empresa_id: string
+          id: string
+          link_pagamento_id: string | null
+          nome_campanha: string | null
+          parametros_extra: Json | null
+          produto_id: string | null
+          slug_personalizado: string | null
+          status: Database["public"]["Enums"]["status_link_pagamento"]
+          taxa_conversao: number | null
+          total_cliques: number | null
+          total_conversoes: number | null
+          total_vendas: number | null
+          total_visualizacoes: number | null
+          updated_at: string
+          url_curta: string | null
+          url_destino: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          afiliado_id: string
+          checkout_id?: string | null
+          codigo_rastreio: string
+          created_at?: string
+          criado_por?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          deleted_at?: string | null
+          empresa_id: string
+          id?: string
+          link_pagamento_id?: string | null
+          nome_campanha?: string | null
+          parametros_extra?: Json | null
+          produto_id?: string | null
+          slug_personalizado?: string | null
+          status?: Database["public"]["Enums"]["status_link_pagamento"]
+          taxa_conversao?: number | null
+          total_cliques?: number | null
+          total_conversoes?: number | null
+          total_vendas?: number | null
+          total_visualizacoes?: number | null
+          updated_at?: string
+          url_curta?: string | null
+          url_destino: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          afiliado_id?: string
+          checkout_id?: string | null
+          codigo_rastreio?: string
+          created_at?: string
+          criado_por?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          deleted_at?: string | null
+          empresa_id?: string
+          id?: string
+          link_pagamento_id?: string | null
+          nome_campanha?: string | null
+          parametros_extra?: Json | null
+          produto_id?: string | null
+          slug_personalizado?: string | null
+          status?: Database["public"]["Enums"]["status_link_pagamento"]
+          taxa_conversao?: number | null
+          total_cliques?: number | null
+          total_conversoes?: number | null
+          total_vendas?: number | null
+          total_visualizacoes?: number | null
+          updated_at?: string
+          url_curta?: string | null
+          url_destino?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "links_afiliados_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "links_afiliados_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "links_afiliados_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "links_afiliados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "links_afiliados_link_pagamento_id_fkey"
+            columns: ["link_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "links_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "links_afiliados_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       links_pagamento: {
         Row: {
           afiliado_id: string | null
@@ -827,6 +1421,268 @@ export type Database = {
           },
           {
             foreignKeyName: "links_pagamento_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_inscricoes: {
+        Row: {
+          afiliado_id: string
+          aprovada_em: string | null
+          aprovada_por: string | null
+          ativa: boolean | null
+          created_at: string
+          data_inscricao: string
+          data_ultima_venda: string | null
+          empresa_id: string
+          id: string
+          marketplace_produto_id: string
+          metadata: Json | null
+          motivo_rejeicao: string | null
+          produto_id: string | null
+          rejeitada_em: string | null
+          status: string
+          taxa_comissao_aplicada: number | null
+          total_comissao_gerada: number | null
+          total_vendas: number | null
+          updated_at: string
+        }
+        Insert: {
+          afiliado_id: string
+          aprovada_em?: string | null
+          aprovada_por?: string | null
+          ativa?: boolean | null
+          created_at?: string
+          data_inscricao?: string
+          data_ultima_venda?: string | null
+          empresa_id: string
+          id?: string
+          marketplace_produto_id: string
+          metadata?: Json | null
+          motivo_rejeicao?: string | null
+          produto_id?: string | null
+          rejeitada_em?: string | null
+          status?: string
+          taxa_comissao_aplicada?: number | null
+          total_comissao_gerada?: number | null
+          total_vendas?: number | null
+          updated_at?: string
+        }
+        Update: {
+          afiliado_id?: string
+          aprovada_em?: string | null
+          aprovada_por?: string | null
+          ativa?: boolean | null
+          created_at?: string
+          data_inscricao?: string
+          data_ultima_venda?: string | null
+          empresa_id?: string
+          id?: string
+          marketplace_produto_id?: string
+          metadata?: Json | null
+          motivo_rejeicao?: string | null
+          produto_id?: string | null
+          rejeitada_em?: string | null
+          status?: string
+          taxa_comissao_aplicada?: number | null
+          total_comissao_gerada?: number | null
+          total_vendas?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_inscricoes_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_inscricoes_aprovada_por_fkey"
+            columns: ["aprovada_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_inscricoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_inscricoes_marketplace_produto_id_fkey"
+            columns: ["marketplace_produto_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_inscricoes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_produtos: {
+        Row: {
+          avaliacao_media: number | null
+          categoria_marketplace: string | null
+          comissao_valor_fixo_oferecida: number | null
+          created_at: string
+          data_destaque: string | null
+          data_publicacao: string | null
+          deleted_at: string | null
+          descricao_marketplace: string
+          destaque_marketplace: boolean | null
+          empresa_vendedora_id: string
+          enviado_por: string | null
+          faixa_etaria: string | null
+          galeria_marketplace: string[] | null
+          id: string
+          imagem_destaque: string
+          material_apoio_disponivel: string[] | null
+          metadata: Json | null
+          motivo_rejeicao: string | null
+          nivel_qualidade: number | null
+          ordem_destaque: number | null
+          palavras_chave: string | null
+          politica_reembolso_marketplace: string | null
+          preco_marketplace: number
+          produto_id: string
+          publico_alvo: string | null
+          recorrencia_ativa: boolean | null
+          revisado_em: string | null
+          revisado_por: string | null
+          status: Database["public"]["Enums"]["status_marketplace_produto"]
+          subcategoria_marketplace: string | null
+          subtitulo_marketplace: string | null
+          tags_marketplace: string[] | null
+          taxa_comissao_oferecida: number
+          taxa_comissao_recorrente: number | null
+          termos_condicoes_marketplace: string | null
+          titulo_marketplace: string
+          total_afiliados_ativos: number | null
+          total_avaliacoes: number | null
+          total_vendas_total: number | null
+          updated_at: string
+          url_pagina_obrigacoes: string | null
+          url_pagina_vendas: string | null
+          video_promocional_url: string | null
+        }
+        Insert: {
+          avaliacao_media?: number | null
+          categoria_marketplace?: string | null
+          comissao_valor_fixo_oferecida?: number | null
+          created_at?: string
+          data_destaque?: string | null
+          data_publicacao?: string | null
+          deleted_at?: string | null
+          descricao_marketplace: string
+          destaque_marketplace?: boolean | null
+          empresa_vendedora_id: string
+          enviado_por?: string | null
+          faixa_etaria?: string | null
+          galeria_marketplace?: string[] | null
+          id?: string
+          imagem_destaque: string
+          material_apoio_disponivel?: string[] | null
+          metadata?: Json | null
+          motivo_rejeicao?: string | null
+          nivel_qualidade?: number | null
+          ordem_destaque?: number | null
+          palavras_chave?: string | null
+          politica_reembolso_marketplace?: string | null
+          preco_marketplace: number
+          produto_id: string
+          publico_alvo?: string | null
+          recorrencia_ativa?: boolean | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: Database["public"]["Enums"]["status_marketplace_produto"]
+          subcategoria_marketplace?: string | null
+          subtitulo_marketplace?: string | null
+          tags_marketplace?: string[] | null
+          taxa_comissao_oferecida?: number
+          taxa_comissao_recorrente?: number | null
+          termos_condicoes_marketplace?: string | null
+          titulo_marketplace: string
+          total_afiliados_ativos?: number | null
+          total_avaliacoes?: number | null
+          total_vendas_total?: number | null
+          updated_at?: string
+          url_pagina_obrigacoes?: string | null
+          url_pagina_vendas?: string | null
+          video_promocional_url?: string | null
+        }
+        Update: {
+          avaliacao_media?: number | null
+          categoria_marketplace?: string | null
+          comissao_valor_fixo_oferecida?: number | null
+          created_at?: string
+          data_destaque?: string | null
+          data_publicacao?: string | null
+          deleted_at?: string | null
+          descricao_marketplace?: string
+          destaque_marketplace?: boolean | null
+          empresa_vendedora_id?: string
+          enviado_por?: string | null
+          faixa_etaria?: string | null
+          galeria_marketplace?: string[] | null
+          id?: string
+          imagem_destaque?: string
+          material_apoio_disponivel?: string[] | null
+          metadata?: Json | null
+          motivo_rejeicao?: string | null
+          nivel_qualidade?: number | null
+          ordem_destaque?: number | null
+          palavras_chave?: string | null
+          politica_reembolso_marketplace?: string | null
+          preco_marketplace?: number
+          produto_id?: string
+          publico_alvo?: string | null
+          recorrencia_ativa?: boolean | null
+          revisado_em?: string | null
+          revisado_por?: string | null
+          status?: Database["public"]["Enums"]["status_marketplace_produto"]
+          subcategoria_marketplace?: string | null
+          subtitulo_marketplace?: string | null
+          tags_marketplace?: string[] | null
+          taxa_comissao_oferecida?: number
+          taxa_comissao_recorrente?: number | null
+          termos_condicoes_marketplace?: string | null
+          titulo_marketplace?: string
+          total_afiliados_ativos?: number | null
+          total_avaliacoes?: number | null
+          total_vendas_total?: number | null
+          updated_at?: string
+          url_pagina_obrigacoes?: string | null
+          url_pagina_vendas?: string | null
+          video_promocional_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_produtos_empresa_vendedora_id_fkey"
+            columns: ["empresa_vendedora_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_produtos_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_produtos_produto_id_fkey"
             columns: ["produto_id"]
             isOneToOne: false
             referencedRelation: "produtos"
@@ -1265,6 +2121,67 @@ export type Database = {
           },
         ]
       }
+      rede_afiliados_hierarquia: {
+        Row: {
+          afiliado_filho_id: string
+          afiliado_pai_id: string
+          ativa: boolean | null
+          created_at: string
+          data_associacao: string
+          empresa_id: string
+          id: string
+          lado: string | null
+          nivel: number
+          posicao: number | null
+        }
+        Insert: {
+          afiliado_filho_id: string
+          afiliado_pai_id: string
+          ativa?: boolean | null
+          created_at?: string
+          data_associacao?: string
+          empresa_id: string
+          id?: string
+          lado?: string | null
+          nivel?: number
+          posicao?: number | null
+        }
+        Update: {
+          afiliado_filho_id?: string
+          afiliado_pai_id?: string
+          ativa?: boolean | null
+          created_at?: string
+          data_associacao?: string
+          empresa_id?: string
+          id?: string
+          lado?: string | null
+          nivel?: number
+          posicao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rede_afiliados_hierarquia_afiliado_filho_id_fkey"
+            columns: ["afiliado_filho_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rede_afiliados_hierarquia_afiliado_pai_id_fkey"
+            columns: ["afiliado_pai_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rede_afiliados_hierarquia_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -1524,10 +2441,23 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
+      status_afiliado: "pendente" | "ativo" | "inativo" | "suspenso" | "banido"
       status_ativo: "ativo" | "inativo" | "suspenso" | "bloqueado"
       status_checkout: "rascunho" | "publicado" | "arquivado"
+      status_comissao:
+        | "pendente"
+        | "aprovada"
+        | "liberada"
+        | "paga"
+        | "cancelada"
+        | "estornada"
       status_cupom: "ativo" | "inativo" | "expirado"
       status_link_pagamento: "ativo" | "expirado" | "usado" | "desativado"
+      status_marketplace_produto:
+        | "pendente_aprovacao"
+        | "publicado"
+        | "rejeitado"
+        | "arquivado"
       status_produto: "rascunho" | "publicado" | "arquivado" | "indisponivel"
       tipo_cupom: "percentual" | "valor_fixo" | "frete_gratis"
       tipo_desconto: "percentual" | "valor_fixo"
@@ -1545,6 +2475,7 @@ export type Database = {
         | "approve"
         | "manage"
       tipo_produto: "fisico" | "digital" | "assinatura" | "servico" | "ingresso"
+      tipo_rede_afiliado: "uninivel" | "binario" | "matriz"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1672,10 +2603,25 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      status_afiliado: ["pendente", "ativo", "inativo", "suspenso", "banido"],
       status_ativo: ["ativo", "inativo", "suspenso", "bloqueado"],
       status_checkout: ["rascunho", "publicado", "arquivado"],
+      status_comissao: [
+        "pendente",
+        "aprovada",
+        "liberada",
+        "paga",
+        "cancelada",
+        "estornada",
+      ],
       status_cupom: ["ativo", "inativo", "expirado"],
       status_link_pagamento: ["ativo", "expirado", "usado", "desativado"],
+      status_marketplace_produto: [
+        "pendente_aprovacao",
+        "publicado",
+        "rejeitado",
+        "arquivado",
+      ],
       status_produto: ["rascunho", "publicado", "arquivado", "indisponivel"],
       tipo_cupom: ["percentual", "valor_fixo", "frete_gratis"],
       tipo_desconto: ["percentual", "valor_fixo"],
@@ -1695,6 +2641,7 @@ export const Constants = {
         "manage",
       ],
       tipo_produto: ["fisico", "digital", "assinatura", "servico", "ingresso"],
+      tipo_rede_afiliado: ["uninivel", "binario", "matriz"],
     },
   },
 } as const
