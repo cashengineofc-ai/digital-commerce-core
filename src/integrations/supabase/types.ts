@@ -367,6 +367,125 @@ export type Database = {
           },
         ]
       }
+      chargebacks: {
+        Row: {
+          arquivos_defesa: string[] | null
+          cliente_id: string | null
+          codigo_chargeback_banco: string | null
+          created_at: string
+          data_decisao: string | null
+          data_limite_resposta: string | null
+          data_notificacao: string
+          data_ocorrencia: string | null
+          data_resposta_enviada: string | null
+          decisao_final: string | null
+          empresa_id: string
+          fase_processo: number | null
+          id: string
+          metadata: Json | null
+          moeda: string | null
+          motivo_banco: string | null
+          observacoes: string | null
+          protocolo: string
+          responsavel_defesa: string | null
+          resposta_banco: string | null
+          status: string
+          texto_defesa: string | null
+          transacao_id: string
+          updated_at: string
+          valor_chargeback: number
+          valor_multa_banco: number | null
+          valor_total_prejuizo: number
+        }
+        Insert: {
+          arquivos_defesa?: string[] | null
+          cliente_id?: string | null
+          codigo_chargeback_banco?: string | null
+          created_at?: string
+          data_decisao?: string | null
+          data_limite_resposta?: string | null
+          data_notificacao?: string
+          data_ocorrencia?: string | null
+          data_resposta_enviada?: string | null
+          decisao_final?: string | null
+          empresa_id: string
+          fase_processo?: number | null
+          id?: string
+          metadata?: Json | null
+          moeda?: string | null
+          motivo_banco?: string | null
+          observacoes?: string | null
+          protocolo: string
+          responsavel_defesa?: string | null
+          resposta_banco?: string | null
+          status?: string
+          texto_defesa?: string | null
+          transacao_id: string
+          updated_at?: string
+          valor_chargeback: number
+          valor_multa_banco?: number | null
+          valor_total_prejuizo: number
+        }
+        Update: {
+          arquivos_defesa?: string[] | null
+          cliente_id?: string | null
+          codigo_chargeback_banco?: string | null
+          created_at?: string
+          data_decisao?: string | null
+          data_limite_resposta?: string | null
+          data_notificacao?: string
+          data_ocorrencia?: string | null
+          data_resposta_enviada?: string | null
+          decisao_final?: string | null
+          empresa_id?: string
+          fase_processo?: number | null
+          id?: string
+          metadata?: Json | null
+          moeda?: string | null
+          motivo_banco?: string | null
+          observacoes?: string | null
+          protocolo?: string
+          responsavel_defesa?: string | null
+          resposta_banco?: string | null
+          status?: string
+          texto_defesa?: string | null
+          transacao_id?: string
+          updated_at?: string
+          valor_chargeback?: number
+          valor_multa_banco?: number | null
+          valor_total_prejuizo?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chargebacks_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chargebacks_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chargebacks_responsavel_defesa_fkey"
+            columns: ["responsavel_defesa"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chargebacks_transacao_id_fkey"
+            columns: ["transacao_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkouts: {
         Row: {
           afiliado_requerido: boolean | null
@@ -864,6 +983,106 @@ export type Database = {
           },
         ]
       }
+      contas_bancarias: {
+        Row: {
+          afiliado_id: string | null
+          agencia: string
+          agencia_dv: string | null
+          banco_codigo: string
+          banco_nome: string
+          chave_pix: string | null
+          conta: string
+          conta_dv: string | null
+          created_at: string
+          data_verificacao: string | null
+          deleted_at: string | null
+          documento_titular: string
+          documento_verificacao_url: string | null
+          empresa_id: string | null
+          id: string
+          is_verificada: boolean | null
+          metadata: Json | null
+          principal: boolean | null
+          profile_id: string | null
+          tipo_chave_pix: string | null
+          tipo_conta: Database["public"]["Enums"]["tipo_conta"]
+          titular: string
+          updated_at: string
+        }
+        Insert: {
+          afiliado_id?: string | null
+          agencia: string
+          agencia_dv?: string | null
+          banco_codigo: string
+          banco_nome: string
+          chave_pix?: string | null
+          conta: string
+          conta_dv?: string | null
+          created_at?: string
+          data_verificacao?: string | null
+          deleted_at?: string | null
+          documento_titular: string
+          documento_verificacao_url?: string | null
+          empresa_id?: string | null
+          id?: string
+          is_verificada?: boolean | null
+          metadata?: Json | null
+          principal?: boolean | null
+          profile_id?: string | null
+          tipo_chave_pix?: string | null
+          tipo_conta?: Database["public"]["Enums"]["tipo_conta"]
+          titular: string
+          updated_at?: string
+        }
+        Update: {
+          afiliado_id?: string | null
+          agencia?: string
+          agencia_dv?: string | null
+          banco_codigo?: string
+          banco_nome?: string
+          chave_pix?: string | null
+          conta?: string
+          conta_dv?: string | null
+          created_at?: string
+          data_verificacao?: string | null
+          deleted_at?: string | null
+          documento_titular?: string
+          documento_verificacao_url?: string | null
+          empresa_id?: string | null
+          id?: string
+          is_verificada?: boolean | null
+          metadata?: Json | null
+          principal?: boolean | null
+          profile_id?: string | null
+          tipo_chave_pix?: string | null
+          tipo_conta?: Database["public"]["Enums"]["tipo_conta"]
+          titular?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_bancarias_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_bancarias_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_bancarias_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cupons: {
         Row: {
           categoria_ids: string[] | null
@@ -1041,6 +1260,171 @@ export type Database = {
         }
         Relationships: []
       }
+      estornos: {
+        Row: {
+          analisado_por: string | null
+          aprovado_por: string | null
+          cliente_id: string | null
+          comprovantes_urls: string[] | null
+          created_at: string
+          dados_estorno_alternativo: Json | null
+          data_analise: string | null
+          data_aprovacao: string | null
+          data_cancelamento: string | null
+          data_conclusao: string | null
+          data_solicitacao: string
+          detalhamento_motivo: string | null
+          empresa_id: string
+          id: string
+          id_estorno_gateway: string | null
+          metadata: Json | null
+          metodo_estorno: string | null
+          motivo: string
+          observacoes_internas: string | null
+          pedido_cliente_motivo: string | null
+          protocolo: string
+          rejeitado_por: string | null
+          saque_relacionado_id: string | null
+          solicitado_por: string | null
+          status: Database["public"]["Enums"]["status_estorno"]
+          taxa_estorno: number | null
+          tipo_estorno: string
+          transacao_id: string
+          updated_at: string
+          valor_aprovado_estorno: number | null
+          valor_efetivamente_estornado: number | null
+          valor_original: number
+          valor_solicitado_estorno: number
+        }
+        Insert: {
+          analisado_por?: string | null
+          aprovado_por?: string | null
+          cliente_id?: string | null
+          comprovantes_urls?: string[] | null
+          created_at?: string
+          dados_estorno_alternativo?: Json | null
+          data_analise?: string | null
+          data_aprovacao?: string | null
+          data_cancelamento?: string | null
+          data_conclusao?: string | null
+          data_solicitacao?: string
+          detalhamento_motivo?: string | null
+          empresa_id: string
+          id?: string
+          id_estorno_gateway?: string | null
+          metadata?: Json | null
+          metodo_estorno?: string | null
+          motivo: string
+          observacoes_internas?: string | null
+          pedido_cliente_motivo?: string | null
+          protocolo: string
+          rejeitado_por?: string | null
+          saque_relacionado_id?: string | null
+          solicitado_por?: string | null
+          status?: Database["public"]["Enums"]["status_estorno"]
+          taxa_estorno?: number | null
+          tipo_estorno?: string
+          transacao_id: string
+          updated_at?: string
+          valor_aprovado_estorno?: number | null
+          valor_efetivamente_estornado?: number | null
+          valor_original: number
+          valor_solicitado_estorno: number
+        }
+        Update: {
+          analisado_por?: string | null
+          aprovado_por?: string | null
+          cliente_id?: string | null
+          comprovantes_urls?: string[] | null
+          created_at?: string
+          dados_estorno_alternativo?: Json | null
+          data_analise?: string | null
+          data_aprovacao?: string | null
+          data_cancelamento?: string | null
+          data_conclusao?: string | null
+          data_solicitacao?: string
+          detalhamento_motivo?: string | null
+          empresa_id?: string
+          id?: string
+          id_estorno_gateway?: string | null
+          metadata?: Json | null
+          metodo_estorno?: string | null
+          motivo?: string
+          observacoes_internas?: string | null
+          pedido_cliente_motivo?: string | null
+          protocolo?: string
+          rejeitado_por?: string | null
+          saque_relacionado_id?: string | null
+          solicitado_por?: string | null
+          status?: Database["public"]["Enums"]["status_estorno"]
+          taxa_estorno?: number | null
+          tipo_estorno?: string
+          transacao_id?: string
+          updated_at?: string
+          valor_aprovado_estorno?: number | null
+          valor_efetivamente_estornado?: number | null
+          valor_original?: number
+          valor_solicitado_estorno?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estornos_analisado_por_fkey"
+            columns: ["analisado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_aprovado_por_fkey"
+            columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_rejeitado_por_fkey"
+            columns: ["rejeitado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_saque_relacionado_id_fkey"
+            columns: ["saque_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "saques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_solicitado_por_fkey"
+            columns: ["solicitado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_transacao_id_fkey"
+            columns: ["transacao_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           aceito_em: string | null
@@ -1125,6 +1509,148 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lancamentos_contabeis: {
+        Row: {
+          afiliado_id: string | null
+          automatico: boolean | null
+          comissao_id: string | null
+          competencia: string
+          conta_contabil: string
+          created_at: string
+          criado_por: string | null
+          data_lancamento: string
+          descricao: string
+          documento_referencia: string | null
+          empresa_id: string | null
+          estorno_id: string | null
+          id: string
+          moeda: string | null
+          motivo_manual: string | null
+          profile_id: string | null
+          repasse_id: string | null
+          saldo_anterior: number | null
+          saldo_atual: number | null
+          saque_id: string | null
+          tipo_lancamento: string
+          transacao_id: string | null
+          valor: number
+        }
+        Insert: {
+          afiliado_id?: string | null
+          automatico?: boolean | null
+          comissao_id?: string | null
+          competencia: string
+          conta_contabil: string
+          created_at?: string
+          criado_por?: string | null
+          data_lancamento?: string
+          descricao: string
+          documento_referencia?: string | null
+          empresa_id?: string | null
+          estorno_id?: string | null
+          id?: string
+          moeda?: string | null
+          motivo_manual?: string | null
+          profile_id?: string | null
+          repasse_id?: string | null
+          saldo_anterior?: number | null
+          saldo_atual?: number | null
+          saque_id?: string | null
+          tipo_lancamento: string
+          transacao_id?: string | null
+          valor: number
+        }
+        Update: {
+          afiliado_id?: string | null
+          automatico?: boolean | null
+          comissao_id?: string | null
+          competencia?: string
+          conta_contabil?: string
+          created_at?: string
+          criado_por?: string | null
+          data_lancamento?: string
+          descricao?: string
+          documento_referencia?: string | null
+          empresa_id?: string | null
+          estorno_id?: string | null
+          id?: string
+          moeda?: string | null
+          motivo_manual?: string | null
+          profile_id?: string | null
+          repasse_id?: string | null
+          saldo_anterior?: number | null
+          saldo_atual?: number | null
+          saque_id?: string | null
+          tipo_lancamento?: string
+          transacao_id?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lancamentos_contabeis_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_contabeis_comissao_id_fkey"
+            columns: ["comissao_id"]
+            isOneToOne: false
+            referencedRelation: "comissoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_contabeis_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_contabeis_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_contabeis_estorno_id_fkey"
+            columns: ["estorno_id"]
+            isOneToOne: false
+            referencedRelation: "estornos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_contabeis_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_contabeis_repasse_id_fkey"
+            columns: ["repasse_id"]
+            isOneToOne: false
+            referencedRelation: "repasses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_contabeis_saque_id_fkey"
+            columns: ["saque_id"]
+            isOneToOne: false
+            referencedRelation: "saques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_contabeis_transacao_id_fkey"
+            columns: ["transacao_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -2182,6 +2708,126 @@ export type Database = {
           },
         ]
       }
+      repasses: {
+        Row: {
+          comprovante_url: string | null
+          conta_bancaria_id: string | null
+          created_at: string
+          data_agendada: string | null
+          data_confirmacao: string | null
+          data_envio: string | null
+          data_recebimento: string | null
+          destinatario_documento: string
+          destinatario_nome: string
+          empresa_id: string
+          enviado_por: string | null
+          id: string
+          id_repasse_externo: string | null
+          metadata: Json | null
+          metodo_repasse: string | null
+          moeda: string | null
+          observacoes: string | null
+          parcela_id: string | null
+          percentual_acordado: number | null
+          status: Database["public"]["Enums"]["status_repasse"]
+          taxa_administrativa: number | null
+          transacao_id: string | null
+          updated_at: string
+          valor_bruto: number
+          valor_liquido: number
+        }
+        Insert: {
+          comprovante_url?: string | null
+          conta_bancaria_id?: string | null
+          created_at?: string
+          data_agendada?: string | null
+          data_confirmacao?: string | null
+          data_envio?: string | null
+          data_recebimento?: string | null
+          destinatario_documento: string
+          destinatario_nome: string
+          empresa_id: string
+          enviado_por?: string | null
+          id?: string
+          id_repasse_externo?: string | null
+          metadata?: Json | null
+          metodo_repasse?: string | null
+          moeda?: string | null
+          observacoes?: string | null
+          parcela_id?: string | null
+          percentual_acordado?: number | null
+          status?: Database["public"]["Enums"]["status_repasse"]
+          taxa_administrativa?: number | null
+          transacao_id?: string | null
+          updated_at?: string
+          valor_bruto: number
+          valor_liquido: number
+        }
+        Update: {
+          comprovante_url?: string | null
+          conta_bancaria_id?: string | null
+          created_at?: string
+          data_agendada?: string | null
+          data_confirmacao?: string | null
+          data_envio?: string | null
+          data_recebimento?: string | null
+          destinatario_documento?: string
+          destinatario_nome?: string
+          empresa_id?: string
+          enviado_por?: string | null
+          id?: string
+          id_repasse_externo?: string | null
+          metadata?: Json | null
+          metodo_repasse?: string | null
+          moeda?: string | null
+          observacoes?: string | null
+          parcela_id?: string | null
+          percentual_acordado?: number | null
+          status?: Database["public"]["Enums"]["status_repasse"]
+          taxa_administrativa?: number | null
+          transacao_id?: string | null
+          updated_at?: string
+          valor_bruto?: number
+          valor_liquido?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repasses_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repasses_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repasses_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repasses_parcela_id_fkey"
+            columns: ["parcela_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes_parcelas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repasses_transacao_id_fkey"
+            columns: ["transacao_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -2261,6 +2907,348 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "roles_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saldos: {
+        Row: {
+          afiliado_id: string | null
+          atualizado_em: string
+          created_at: string
+          empresa_id: string | null
+          id: string
+          moeda: string | null
+          profile_id: string | null
+          saldo_bloqueado: number
+          saldo_bruto: number
+          saldo_disponivel: number
+          saldo_em_analise: number
+          saldo_estornado: number
+          saldo_previsao_liberar: number
+          total_com_impostos: number | null
+          total_entrado_historico: number
+          total_sacado: number
+          total_saido_historico: number
+          ultimo_movimento: string | null
+        }
+        Insert: {
+          afiliado_id?: string | null
+          atualizado_em?: string
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          moeda?: string | null
+          profile_id?: string | null
+          saldo_bloqueado?: number
+          saldo_bruto?: number
+          saldo_disponivel?: number
+          saldo_em_analise?: number
+          saldo_estornado?: number
+          saldo_previsao_liberar?: number
+          total_com_impostos?: number | null
+          total_entrado_historico?: number
+          total_sacado?: number
+          total_saido_historico?: number
+          ultimo_movimento?: string | null
+        }
+        Update: {
+          afiliado_id?: string | null
+          atualizado_em?: string
+          created_at?: string
+          empresa_id?: string | null
+          id?: string
+          moeda?: string | null
+          profile_id?: string | null
+          saldo_bloqueado?: number
+          saldo_bruto?: number
+          saldo_disponivel?: number
+          saldo_em_analise?: number
+          saldo_estornado?: number
+          saldo_previsao_liberar?: number
+          total_com_impostos?: number | null
+          total_entrado_historico?: number
+          total_sacado?: number
+          total_saido_historico?: number
+          ultimo_movimento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saldos_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saldos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saldos_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saques: {
+        Row: {
+          afiliado_id: string | null
+          analisado_por: string | null
+          aprovado_por: string | null
+          autenticacao_bancaria: string | null
+          cancelado_por: string | null
+          comissoes_ids: string[] | null
+          comprovante_url: string | null
+          conta_bancaria_id: string | null
+          created_at: string
+          data_analise: string | null
+          data_aprovacao: string | null
+          data_cancelamento: string | null
+          data_envio: string | null
+          data_pagamento: string | null
+          data_rejeicao: string | null
+          data_solicitacao: string
+          empresa_id: string | null
+          id: string
+          id_transferencia_externa: string | null
+          metadata: Json | null
+          metodo_saque: string
+          moeda: string | null
+          motivo_cancelamento: string | null
+          motivo_rejeicao: string | null
+          observacoes: string | null
+          profile_id: string | null
+          protocolo: string
+          rejeitado_por: string | null
+          status: Database["public"]["Enums"]["status_saque"]
+          taxa_saque: number | null
+          transacoes_ids: string[] | null
+          updated_at: string
+          valor_liquido: number
+          valor_solicitado: number
+        }
+        Insert: {
+          afiliado_id?: string | null
+          analisado_por?: string | null
+          aprovado_por?: string | null
+          autenticacao_bancaria?: string | null
+          cancelado_por?: string | null
+          comissoes_ids?: string[] | null
+          comprovante_url?: string | null
+          conta_bancaria_id?: string | null
+          created_at?: string
+          data_analise?: string | null
+          data_aprovacao?: string | null
+          data_cancelamento?: string | null
+          data_envio?: string | null
+          data_pagamento?: string | null
+          data_rejeicao?: string | null
+          data_solicitacao?: string
+          empresa_id?: string | null
+          id?: string
+          id_transferencia_externa?: string | null
+          metadata?: Json | null
+          metodo_saque?: string
+          moeda?: string | null
+          motivo_cancelamento?: string | null
+          motivo_rejeicao?: string | null
+          observacoes?: string | null
+          profile_id?: string | null
+          protocolo: string
+          rejeitado_por?: string | null
+          status?: Database["public"]["Enums"]["status_saque"]
+          taxa_saque?: number | null
+          transacoes_ids?: string[] | null
+          updated_at?: string
+          valor_liquido: number
+          valor_solicitado: number
+        }
+        Update: {
+          afiliado_id?: string | null
+          analisado_por?: string | null
+          aprovado_por?: string | null
+          autenticacao_bancaria?: string | null
+          cancelado_por?: string | null
+          comissoes_ids?: string[] | null
+          comprovante_url?: string | null
+          conta_bancaria_id?: string | null
+          created_at?: string
+          data_analise?: string | null
+          data_aprovacao?: string | null
+          data_cancelamento?: string | null
+          data_envio?: string | null
+          data_pagamento?: string | null
+          data_rejeicao?: string | null
+          data_solicitacao?: string
+          empresa_id?: string | null
+          id?: string
+          id_transferencia_externa?: string | null
+          metadata?: Json | null
+          metodo_saque?: string
+          moeda?: string | null
+          motivo_cancelamento?: string | null
+          motivo_rejeicao?: string | null
+          observacoes?: string | null
+          profile_id?: string | null
+          protocolo?: string
+          rejeitado_por?: string | null
+          status?: Database["public"]["Enums"]["status_saque"]
+          taxa_saque?: number | null
+          transacoes_ids?: string[] | null
+          updated_at?: string
+          valor_liquido?: number
+          valor_solicitado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saques_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_analisado_por_fkey"
+            columns: ["analisado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_aprovado_por_fkey"
+            columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_cancelado_por_fkey"
+            columns: ["cancelado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_rejeitado_por_fkey"
+            columns: ["rejeitado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxas_plataforma: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          data_fim_vigencia: string | null
+          data_inicio_vigencia: string
+          dias_liquidacao: number | null
+          empresa_id: string | null
+          id: string
+          is_padrao: boolean | null
+          max_parcelas_sem_juros: number | null
+          metodo_pagamento: Database["public"]["Enums"]["metodo_pagamento"]
+          plano: string
+          taxa_antecipacao_percentual: number | null
+          taxa_boleto: number | null
+          taxa_fixa: number
+          taxa_maxima: number | null
+          taxa_minima: number | null
+          taxa_minima_saque: number | null
+          taxa_parcelamento_por_parcela: number | null
+          taxa_percentual: number
+          taxa_pix_fixa: number | null
+          taxa_pix_percentual: number | null
+          taxa_saque_fixa: number | null
+          taxa_saque_percentual: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          data_fim_vigencia?: string | null
+          data_inicio_vigencia?: string
+          dias_liquidacao?: number | null
+          empresa_id?: string | null
+          id?: string
+          is_padrao?: boolean | null
+          max_parcelas_sem_juros?: number | null
+          metodo_pagamento: Database["public"]["Enums"]["metodo_pagamento"]
+          plano?: string
+          taxa_antecipacao_percentual?: number | null
+          taxa_boleto?: number | null
+          taxa_fixa?: number
+          taxa_maxima?: number | null
+          taxa_minima?: number | null
+          taxa_minima_saque?: number | null
+          taxa_parcelamento_por_parcela?: number | null
+          taxa_percentual?: number
+          taxa_pix_fixa?: number | null
+          taxa_pix_percentual?: number | null
+          taxa_saque_fixa?: number | null
+          taxa_saque_percentual?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          data_fim_vigencia?: string | null
+          data_inicio_vigencia?: string
+          dias_liquidacao?: number | null
+          empresa_id?: string | null
+          id?: string
+          is_padrao?: boolean | null
+          max_parcelas_sem_juros?: number | null
+          metodo_pagamento?: Database["public"]["Enums"]["metodo_pagamento"]
+          plano?: string
+          taxa_antecipacao_percentual?: number | null
+          taxa_boleto?: number | null
+          taxa_fixa?: number
+          taxa_maxima?: number | null
+          taxa_minima?: number | null
+          taxa_minima_saque?: number | null
+          taxa_parcelamento_por_parcela?: number | null
+          taxa_percentual?: number
+          taxa_pix_fixa?: number | null
+          taxa_pix_percentual?: number | null
+          taxa_saque_fixa?: number | null
+          taxa_saque_percentual?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxas_plataforma_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
@@ -2432,6 +3420,355 @@ export type Database = {
           },
         ]
       }
+      transacoes: {
+        Row: {
+          afiliado_id: string | null
+          assinatura_id: string | null
+          autorizacao_codigo: string | null
+          cartao_bandeira: string | null
+          cartao_final: string | null
+          cartao_parcelado_mercado: boolean | null
+          cartao_titular: string | null
+          checkout_id: string | null
+          cliente_id: string | null
+          codigo_boleto_barras: string | null
+          codigo_boleto_linha: string | null
+          codigo_externo: string | null
+          created_at: string
+          criado_por: string | null
+          cupom_id: string | null
+          dados_entrega: Json | null
+          data_disponivel: string | null
+          data_estorno: string | null
+          data_expiracao: string | null
+          data_pagamento: string | null
+          data_vencimento: string | null
+          empresa_id: string
+          endereco_cobranca: Json | null
+          id: string
+          id_transacao_gateway: string | null
+          ip_cliente: string | null
+          link_pagamento_id: string | null
+          metadata: Json | null
+          metodo_pagamento:
+            | Database["public"]["Enums"]["metodo_pagamento"]
+            | null
+          moeda: string | null
+          moeda_original: string | null
+          notas_internas: string | null
+          nsu: string | null
+          origem_dispositivo: string | null
+          parcela_atual: number | null
+          parcelas: number | null
+          pedido_numero: string | null
+          pix_copia_cola: string | null
+          pix_expiracao: string | null
+          pix_qrcode: string | null
+          produto_id: string | null
+          profile_id: string | null
+          regras_antifraude: Json | null
+          risco_nivel: string | null
+          risco_score: number | null
+          split_pagamento: Json | null
+          status: Database["public"]["Enums"]["status_transacao"]
+          taxa_cambio: number | null
+          tid: string | null
+          tipo: Database["public"]["Enums"]["tipo_transacao"]
+          updated_at: string
+          url_callback: string | null
+          valor_bruto: number
+          valor_descontos: number | null
+          valor_impostos: number | null
+          valor_juros: number | null
+          valor_liquido: number
+          valor_multa: number | null
+          valor_original_moeda: number | null
+          valor_parcela: number | null
+          valor_taxa_antecipacao: number | null
+          valor_taxa_plataforma: number | null
+          valor_taxa_processamento: number | null
+        }
+        Insert: {
+          afiliado_id?: string | null
+          assinatura_id?: string | null
+          autorizacao_codigo?: string | null
+          cartao_bandeira?: string | null
+          cartao_final?: string | null
+          cartao_parcelado_mercado?: boolean | null
+          cartao_titular?: string | null
+          checkout_id?: string | null
+          cliente_id?: string | null
+          codigo_boleto_barras?: string | null
+          codigo_boleto_linha?: string | null
+          codigo_externo?: string | null
+          created_at?: string
+          criado_por?: string | null
+          cupom_id?: string | null
+          dados_entrega?: Json | null
+          data_disponivel?: string | null
+          data_estorno?: string | null
+          data_expiracao?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          empresa_id: string
+          endereco_cobranca?: Json | null
+          id?: string
+          id_transacao_gateway?: string | null
+          ip_cliente?: string | null
+          link_pagamento_id?: string | null
+          metadata?: Json | null
+          metodo_pagamento?:
+            | Database["public"]["Enums"]["metodo_pagamento"]
+            | null
+          moeda?: string | null
+          moeda_original?: string | null
+          notas_internas?: string | null
+          nsu?: string | null
+          origem_dispositivo?: string | null
+          parcela_atual?: number | null
+          parcelas?: number | null
+          pedido_numero?: string | null
+          pix_copia_cola?: string | null
+          pix_expiracao?: string | null
+          pix_qrcode?: string | null
+          produto_id?: string | null
+          profile_id?: string | null
+          regras_antifraude?: Json | null
+          risco_nivel?: string | null
+          risco_score?: number | null
+          split_pagamento?: Json | null
+          status?: Database["public"]["Enums"]["status_transacao"]
+          taxa_cambio?: number | null
+          tid?: string | null
+          tipo: Database["public"]["Enums"]["tipo_transacao"]
+          updated_at?: string
+          url_callback?: string | null
+          valor_bruto: number
+          valor_descontos?: number | null
+          valor_impostos?: number | null
+          valor_juros?: number | null
+          valor_liquido: number
+          valor_multa?: number | null
+          valor_original_moeda?: number | null
+          valor_parcela?: number | null
+          valor_taxa_antecipacao?: number | null
+          valor_taxa_plataforma?: number | null
+          valor_taxa_processamento?: number | null
+        }
+        Update: {
+          afiliado_id?: string | null
+          assinatura_id?: string | null
+          autorizacao_codigo?: string | null
+          cartao_bandeira?: string | null
+          cartao_final?: string | null
+          cartao_parcelado_mercado?: boolean | null
+          cartao_titular?: string | null
+          checkout_id?: string | null
+          cliente_id?: string | null
+          codigo_boleto_barras?: string | null
+          codigo_boleto_linha?: string | null
+          codigo_externo?: string | null
+          created_at?: string
+          criado_por?: string | null
+          cupom_id?: string | null
+          dados_entrega?: Json | null
+          data_disponivel?: string | null
+          data_estorno?: string | null
+          data_expiracao?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          empresa_id?: string
+          endereco_cobranca?: Json | null
+          id?: string
+          id_transacao_gateway?: string | null
+          ip_cliente?: string | null
+          link_pagamento_id?: string | null
+          metadata?: Json | null
+          metodo_pagamento?:
+            | Database["public"]["Enums"]["metodo_pagamento"]
+            | null
+          moeda?: string | null
+          moeda_original?: string | null
+          notas_internas?: string | null
+          nsu?: string | null
+          origem_dispositivo?: string | null
+          parcela_atual?: number | null
+          parcelas?: number | null
+          pedido_numero?: string | null
+          pix_copia_cola?: string | null
+          pix_expiracao?: string | null
+          pix_qrcode?: string | null
+          produto_id?: string | null
+          profile_id?: string | null
+          regras_antifraude?: Json | null
+          risco_nivel?: string | null
+          risco_score?: number | null
+          split_pagamento?: Json | null
+          status?: Database["public"]["Enums"]["status_transacao"]
+          taxa_cambio?: number | null
+          tid?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_transacao"]
+          updated_at?: string
+          url_callback?: string | null
+          valor_bruto?: number
+          valor_descontos?: number | null
+          valor_impostos?: number | null
+          valor_juros?: number | null
+          valor_liquido?: number
+          valor_multa?: number | null
+          valor_original_moeda?: number | null
+          valor_parcela?: number | null
+          valor_taxa_antecipacao?: number | null
+          valor_taxa_plataforma?: number | null
+          valor_taxa_processamento?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transacoes_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_cupom_id_fkey"
+            columns: ["cupom_id"]
+            isOneToOne: false
+            referencedRelation: "cupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_link_pagamento_id_fkey"
+            columns: ["link_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "links_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transacoes_parcelas: {
+        Row: {
+          created_at: string
+          data_disponivel: string | null
+          data_pagamento: string | null
+          data_vencimento: string
+          empresa_id: string
+          id: string
+          id_parcela_gateway: string | null
+          numero_parcela: number
+          saldo_devedor: number | null
+          status: Database["public"]["Enums"]["status_transacao"]
+          taxa_antecipacao: number | null
+          total_parcelas: number
+          transacao_id: string
+          updated_at: string
+          valor_amortizado: number | null
+          valor_juros: number | null
+          valor_liquido_parcela: number | null
+          valor_parcela: number
+          valor_taxa_processamento: number | null
+        }
+        Insert: {
+          created_at?: string
+          data_disponivel?: string | null
+          data_pagamento?: string | null
+          data_vencimento: string
+          empresa_id: string
+          id?: string
+          id_parcela_gateway?: string | null
+          numero_parcela: number
+          saldo_devedor?: number | null
+          status?: Database["public"]["Enums"]["status_transacao"]
+          taxa_antecipacao?: number | null
+          total_parcelas: number
+          transacao_id: string
+          updated_at?: string
+          valor_amortizado?: number | null
+          valor_juros?: number | null
+          valor_liquido_parcela?: number | null
+          valor_parcela: number
+          valor_taxa_processamento?: number | null
+        }
+        Update: {
+          created_at?: string
+          data_disponivel?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string
+          empresa_id?: string
+          id?: string
+          id_parcela_gateway?: string | null
+          numero_parcela?: number
+          saldo_devedor?: number | null
+          status?: Database["public"]["Enums"]["status_transacao"]
+          taxa_antecipacao?: number | null
+          total_parcelas?: number
+          transacao_id?: string
+          updated_at?: string
+          valor_amortizado?: number | null
+          valor_juros?: number | null
+          valor_liquido_parcela?: number | null
+          valor_parcela?: number
+          valor_taxa_processamento?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transacoes_parcelas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_parcelas_transacao_id_fkey"
+            columns: ["transacao_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2441,6 +3778,19 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
+      metodo_pagamento:
+        | "pix"
+        | "cartao_credito"
+        | "cartao_debito"
+        | "boleto"
+        | "ted"
+        | "doc"
+        | "picpay"
+        | "mercadopago"
+        | "paypal"
+        | "transferencia"
+        | "saldo_conta"
+        | "outro"
       status_afiliado: "pendente" | "ativo" | "inativo" | "suspenso" | "banido"
       status_ativo: "ativo" | "inativo" | "suspenso" | "bloqueado"
       status_checkout: "rascunho" | "publicado" | "arquivado"
@@ -2452,6 +3802,15 @@ export type Database = {
         | "cancelada"
         | "estornada"
       status_cupom: "ativo" | "inativo" | "expirado"
+      status_estorno:
+        | "solicitado"
+        | "processando"
+        | "aprovado_parcial"
+        | "aprovado_total"
+        | "concluido"
+        | "rejeitado"
+        | "cancelado"
+        | "em_disputa"
       status_link_pagamento: "ativo" | "expirado" | "usado" | "desativado"
       status_marketplace_produto:
         | "pendente_aprovacao"
@@ -2459,6 +3818,43 @@ export type Database = {
         | "rejeitado"
         | "arquivado"
       status_produto: "rascunho" | "publicado" | "arquivado" | "indisponivel"
+      status_repasse:
+        | "agendado"
+        | "processando"
+        | "enviado"
+        | "recebido"
+        | "confirmado"
+        | "cancelado"
+        | "falhou"
+      status_saque:
+        | "solicitado"
+        | "em_analise"
+        | "aprovado"
+        | "processando"
+        | "enviado"
+        | "pago"
+        | "cancelado"
+        | "rejeitado"
+        | "falhou"
+      status_transacao:
+        | "pendente"
+        | "processando"
+        | "aprovada"
+        | "autorizada"
+        | "capturada"
+        | "paga"
+        | "disponivel"
+        | "atrasada"
+        | "cancelada"
+        | "rejeitada"
+        | "estornada_parcial"
+        | "estornada_total"
+        | "reembolsada"
+        | "chargeback"
+        | "em_disputa"
+        | "falhou"
+        | "expirada"
+      tipo_conta: "corrente" | "poupanca" | "pagamento" | "juridica"
       tipo_cupom: "percentual" | "valor_fixo" | "frete_gratis"
       tipo_desconto: "percentual" | "valor_fixo"
       tipo_link_pagamento:
@@ -2476,6 +3872,24 @@ export type Database = {
         | "manage"
       tipo_produto: "fisico" | "digital" | "assinatura" | "servico" | "ingresso"
       tipo_rede_afiliado: "uninivel" | "binario" | "matriz"
+      tipo_transacao:
+        | "venda"
+        | "assinatura"
+        | "saque"
+        | "transferencia_entrada"
+        | "transferencia_saida"
+        | "estorno"
+        | "reembolso"
+        | "chargeback"
+        | "taxa_plataforma"
+        | "ajuste_credito"
+        | "ajuste_debito"
+        | "pagamento_comissao"
+        | "recolhimento_imposto"
+        | "boleto_gerado"
+        | "link_pagamento"
+        | "recarga_saldo"
+        | "cancelamento"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2603,6 +4017,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      metodo_pagamento: [
+        "pix",
+        "cartao_credito",
+        "cartao_debito",
+        "boleto",
+        "ted",
+        "doc",
+        "picpay",
+        "mercadopago",
+        "paypal",
+        "transferencia",
+        "saldo_conta",
+        "outro",
+      ],
       status_afiliado: ["pendente", "ativo", "inativo", "suspenso", "banido"],
       status_ativo: ["ativo", "inativo", "suspenso", "bloqueado"],
       status_checkout: ["rascunho", "publicado", "arquivado"],
@@ -2615,6 +4043,16 @@ export const Constants = {
         "estornada",
       ],
       status_cupom: ["ativo", "inativo", "expirado"],
+      status_estorno: [
+        "solicitado",
+        "processando",
+        "aprovado_parcial",
+        "aprovado_total",
+        "concluido",
+        "rejeitado",
+        "cancelado",
+        "em_disputa",
+      ],
       status_link_pagamento: ["ativo", "expirado", "usado", "desativado"],
       status_marketplace_produto: [
         "pendente_aprovacao",
@@ -2623,6 +4061,46 @@ export const Constants = {
         "arquivado",
       ],
       status_produto: ["rascunho", "publicado", "arquivado", "indisponivel"],
+      status_repasse: [
+        "agendado",
+        "processando",
+        "enviado",
+        "recebido",
+        "confirmado",
+        "cancelado",
+        "falhou",
+      ],
+      status_saque: [
+        "solicitado",
+        "em_analise",
+        "aprovado",
+        "processando",
+        "enviado",
+        "pago",
+        "cancelado",
+        "rejeitado",
+        "falhou",
+      ],
+      status_transacao: [
+        "pendente",
+        "processando",
+        "aprovada",
+        "autorizada",
+        "capturada",
+        "paga",
+        "disponivel",
+        "atrasada",
+        "cancelada",
+        "rejeitada",
+        "estornada_parcial",
+        "estornada_total",
+        "reembolsada",
+        "chargeback",
+        "em_disputa",
+        "falhou",
+        "expirada",
+      ],
+      tipo_conta: ["corrente", "poupanca", "pagamento", "juridica"],
       tipo_cupom: ["percentual", "valor_fixo", "frete_gratis"],
       tipo_desconto: ["percentual", "valor_fixo"],
       tipo_link_pagamento: [
@@ -2642,6 +4120,25 @@ export const Constants = {
       ],
       tipo_produto: ["fisico", "digital", "assinatura", "servico", "ingresso"],
       tipo_rede_afiliado: ["uninivel", "binario", "matriz"],
+      tipo_transacao: [
+        "venda",
+        "assinatura",
+        "saque",
+        "transferencia_entrada",
+        "transferencia_saida",
+        "estorno",
+        "reembolso",
+        "chargeback",
+        "taxa_plataforma",
+        "ajuste_credito",
+        "ajuste_debito",
+        "pagamento_comissao",
+        "recolhimento_imposto",
+        "boleto_gerado",
+        "link_pagamento",
+        "recarga_saldo",
+        "cancelamento",
+      ],
     },
   },
 } as const
