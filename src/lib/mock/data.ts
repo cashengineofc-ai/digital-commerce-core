@@ -1855,8 +1855,8 @@ export type SaleRecord = {
   platformFeeAmount: number;
   gatewayFeeAmount: number;
   producerAmount: number;
-  affiliateId?: string;
-  affiliateName?: string;
+  affiliateId?: string | undefined;
+  affiliateName?: string | undefined;
   date: string;
 };
 
