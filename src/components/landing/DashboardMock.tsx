@@ -72,8 +72,10 @@ export function DashboardMock() {
               strokeWidth="2.5"
               strokeLinecap="round"
               initial={reduced ? false : { pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1.8, ease: "easeInOut" }}
+              animate={reduced ? { pathLength: 1 } : { pathLength: [0.08, 1, 0.92, 1] }}
+              {...(reduced
+                ? {}
+                : { transition: { duration: 4.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.8 } })}
             />
           </svg>
 
@@ -82,9 +84,15 @@ export function DashboardMock() {
               <motion.span
                 key={i}
                 className="flex-1 rounded-sm bg-primary/45"
-                initial={reduced ? false : { height: 0 }}
-                animate={{ height: `${h}%` }}
-                transition={{ duration: 0.7, delay: 0.15 * i, ease: "easeOut" }}
+                initial={reduced ? { height: `${h}%` } : { height: 0 }}
+                animate={
+                  reduced
+                    ? { height: `${h}%` }
+                    : { height: [`${Math.max(h - 10, 18)}%`, `${h}%`, `${Math.min(h + 5, 100)}%`, `${h}%`] }
+                }
+                {...(reduced
+                  ? {}
+                  : { transition: { duration: 3.2, delay: 0.12 * i, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.6 } })}
               />
             ))}
           </div>
