@@ -73,11 +73,9 @@ export function DashboardMock() {
               strokeLinecap="round"
               initial={reduced ? false : { pathLength: 0 }}
               animate={reduced ? { pathLength: 1 } : { pathLength: [0.08, 1, 0.92, 1] }}
-              transition={
-                reduced
-                  ? undefined
-                  : { duration: 4.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.8 }
-              }
+              {...(reduced
+                ? {}
+                : { transition: { duration: 4.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.8 } })}
             />
           </svg>
 
@@ -92,11 +90,9 @@ export function DashboardMock() {
                     ? { height: `${h}%` }
                     : { height: [`${Math.max(h - 10, 18)}%`, `${h}%`, `${Math.min(h + 5, 100)}%`, `${h}%`] }
                 }
-                transition={
-                  reduced
-                    ? undefined
-                    : { duration: 3.2, delay: 0.12 * i, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.6 }
-                }
+                {...(reduced
+                  ? {}
+                  : { transition: { duration: 3.2, delay: 0.12 * i, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.6 } })}
               />
             ))}
           </div>

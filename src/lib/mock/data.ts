@@ -2350,4 +2350,4 @@ export const trainings: Training[] = [
   },
 ];
 
-export type RoleKey = "super-admin" | "produtor" | "afiliado";
+export type RoleKey = "admin_global" | "super-admin" | "produtor" | "afiliado";
