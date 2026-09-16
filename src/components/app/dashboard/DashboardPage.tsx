@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, CreditCard, Download, Plus, ShoppingBag, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { periodLabel, useAppShell } from "@/components/app/app-shell-context";
@@ -6,7 +7,7 @@ import { KpiCard } from "@/components/app/dashboard/KpiCard";
 import { SalesChart } from "@/components/app/dashboard/SalesChart";
 import { RecentTransactions } from "@/components/app/dashboard/RecentTransactions";
 import { TopProducts } from "@/components/app/dashboard/TopProducts";
-import { kpisByPeriod, sparkline } from "@/lib/mock/dashboard";
+import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatInt, formatPct } from "@/lib/format";
 
 const fade = {
@@ -16,16 +17,31 @@ const fade = {
 
 export function DashboardPage() {
   const { period } = useAppShell();
-  const kpis = kpisByPeriod[period];
-  const volumePoints = sparkline(period, "volume");
-  const salesPoints = sparkline(period, "sales");
+  const [kpis, setKpis] = useState({ volume: 0, sales: 0, revenue: 0, approvalRate: 0 });
+  const volumePoints: number[] = [];
+  const salesPoints: number[] = [];
+  useEffect(() => {
+    let active = true;
+    const days = ({ hoje: 1, "7d": 7, "30d": 30, "90d": 90, "12m": 365 } as const)[period];
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data: profile } = await supabase.from("profiles").select("empresa_id").eq("id", auth.user.id).maybeSingle();
+      if (!profile?.empresa_id) return;
+      const end = new Date(); const start = new Date(end.getTime() - days * 86400000);
+      const { data } = await (supabase as any).rpc("fn_dashboard_operacional", { p_empresa_id: profile.empresa_id, p_inicio: start.toISOString(), p_fim: end.toISOString() });
+      const row = data?.[0];
+      if (active && row) setKpis({ volume: Number(row.volume_processado ?? 0), sales: Number(row.vendas_pagas ?? 0), revenue: Number(row.receita_liquida ?? 0), approvalRate: Number(row.tentativas_validas ?? 0) ? Number(row.pagamentos_aprovados ?? 0) / Number(row.tentativas_validas) : 0 });
+    })();
+    return () => { active = false; };
+  }, [period]);
 
   const cards = [
     {
       label: "Volume processado",
       value: formatBRL(kpis.volume, { compact: true }),
       hint: formatBRL(kpis.volume),
-      delta: kpis.deltas.volume,
+      delta: null,
       icon: CreditCard,
       points: volumePoints,
     },
@@ -33,7 +49,7 @@ export function DashboardPage() {
       label: "Vendas",
       value: formatInt(kpis.sales),
       hint: "Pedidos pagos no período",
-      delta: kpis.deltas.sales,
+      delta: null,
       icon: ShoppingBag,
       points: salesPoints,
     },
@@ -41,7 +57,7 @@ export function DashboardPage() {
       label: "Receita",
       value: formatBRL(kpis.revenue, { compact: true }),
       hint: "Líquida após taxas e comissões",
-      delta: kpis.deltas.revenue,
+      delta: null,
       icon: Wallet,
       points: volumePoints,
     },
@@ -49,7 +65,7 @@ export function DashboardPage() {
       label: "Taxa de aprovação",
       value: formatPct(kpis.approvalRate),
       hint: "Média ponderada por método",
-      delta: kpis.deltas.approvalRate,
+      delta: null,
       icon: CheckCircle2,
       points: salesPoints,
     },
