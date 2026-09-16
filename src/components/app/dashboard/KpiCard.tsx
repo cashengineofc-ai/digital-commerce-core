@@ -51,12 +51,12 @@ export function KpiCard({
 }: {
   label: string;
   value: string;
-  delta: number;
+  delta?: number | null;
   icon: LucideIcon;
   points: number[];
   hint: string;
 }) {
-  const positive = delta >= 0;
+  const positive = (delta ?? 0) >= 0;
   return (
     <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-center gap-2.5">
@@ -72,7 +72,7 @@ export function KpiCard({
         <p className="text-2xl font-semibold tracking-tight text-foreground tabular-nums sm:text-[1.7rem]">
           {value}
         </p>
-        <span
+        {delta !== null && delta !== undefined && <span
           className={cn(
             "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
             positive ? "bg-success/12 text-success" : "bg-destructive/12 text-destructive",
@@ -80,7 +80,7 @@ export function KpiCard({
         >
           {positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
           {formatDelta(delta)}
-        </span>
+        </span>}
       </div>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
 
