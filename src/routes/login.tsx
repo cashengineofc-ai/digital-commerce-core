@@ -34,8 +34,8 @@ function LoginPage() {
   const { user, isAuthed, isLoading, login } = useTempAuth();
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState("nightmare");
-  const [password, setPassword] = useState("Ke170707");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -92,14 +92,14 @@ function LoginPage() {
               <CardContent className="space-y-5 px-0">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium">
-                    Usuário
+                    E-mail
                   </Label>
                   <Input
                     id="username"
-                    type="text"
+                    type="email"
                     autoCapitalize="none"
                     autoComplete="username"
-                    placeholder="nightmare"
+                    placeholder="voce@empresa.com"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
