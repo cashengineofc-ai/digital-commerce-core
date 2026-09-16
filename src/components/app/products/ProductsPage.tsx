@@ -1,14 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Package, PackagePlus, Search, Settings2 } from "lucide-react";
-import { products, type Product } from "@/lib/mock/data";
+import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatInt } from "@/lib/format";
 import { EmptyState } from "@/components/app/EmptyState";
-import { TableSkeleton, useFakeLoading } from "@/components/app/Skeletons";
+import { TableSkeleton } from "@/components/app/Skeletons";
 import { CheckoutBuilder } from "@/components/app/products/CheckoutBuilder";
 import { cn } from "@/lib/utils";
 
 const statusOptions = ["todos", "ativo", "pausado", "rascunho"] as const;
 type StatusFilter = (typeof statusOptions)[number];
+
+type Product = { id: string; name: string; price: number; commission: number; sales: number; revenue: number; status: "ativo" | "pausado" | "rascunho" };
 
 function StatusPill({ status }: { status: Product["status"] }) {
   const map: Record<Product["status"], string> = {
@@ -26,13 +28,46 @@ function StatusPill({ status }: { status: Product["status"] }) {
 }
 
 export function ProductsPage() {
-  const loading = useFakeLoading();
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("todos");
   const [builder, setBuilder] = useState<{ open: boolean; product: Product | null }>({
     open: false,
     product: null,
   });
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      setLoading(true);
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) { if (active) { setProducts([]); setLoading(false); } return; }
+      const { data: profile } = await supabase.from("profiles").select("empresa_id").eq("id", auth.user.id).maybeSingle();
+      if (!profile?.empresa_id) { if (active) { setProducts([]); setLoading(false); } return; }
+      const [{ data: productRows, error }, { data: transactions }] = await Promise.all([
+        supabase.from("produtos").select("id, nome, preco, taxa_comissao_afiliado, status").eq("empresa_id", profile.empresa_id).is("deleted_at", null).order("created_at", { ascending: false }),
+        supabase.from("transacoes").select("produto_id, valor_bruto, status").eq("empresa_id", profile.empresa_id),
+      ]);
+      if (error || !active) { if (active) { setProducts([]); setLoading(false); } return; }
+      const paid = new Set(["aprovada", "autorizada", "capturada", "paga", "disponivel"]);
+      const next = (productRows ?? []).map((row) => {
+        const entries = (transactions ?? []).filter((item) => item.produto_id === row.id && paid.has(item.status));
+        return {
+          id: row.id,
+          name: row.nome,
+          price: Number(row.preco ?? 0),
+          commission: Number(row.taxa_comissao_afiliado ?? 0),
+          sales: entries.length,
+          revenue: entries.reduce((sum, item) => sum + Number(item.valor_bruto ?? 0), 0),
+          status: row.status === "publicado" ? "ativo" : row.status === "arquivado" || row.status === "indisponivel" ? "pausado" : "rascunho",
+        } satisfies Product;
+      });
+      if (active) { setProducts(next); setLoading(false); }
+    }
+    load();
+    return () => { active = false; };
+  }, []);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
