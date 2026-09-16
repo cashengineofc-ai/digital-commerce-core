@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { ArrowLeft, CreditCard, FileText, Lock, QrCode, ShieldCheck } from "lucide-react";
-import type { Product } from "@/lib/mock/data";
 import { splitOf } from "@/lib/mock/transactions";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -18,6 +17,8 @@ type Config = {
   askPhone: boolean;
   askDocument: boolean;
 };
+
+type Product = { id: string; name: string; price: number; commission: number };
 
 const accents = [
   { id: "azul", label: "Azul", color: "#1d4ed8" },
