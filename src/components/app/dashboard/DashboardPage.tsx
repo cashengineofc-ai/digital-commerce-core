@@ -31,7 +31,16 @@ export function DashboardPage() {
       const end = new Date(); const start = new Date(end.getTime() - days * 86400000);
       const { data } = await (supabase as any).rpc("fn_dashboard_operacional", { p_empresa_id: profile.empresa_id, p_inicio: start.toISOString(), p_fim: end.toISOString() });
       const row = data?.[0];
-      if (active && row) setKpis({ volume: Number(row.volume_processado ?? 0), sales: Number(row.vendas_pagas ?? 0), revenue: Number(row.receita_liquida ?? 0), approvalRate: Number(row.tentativas_validas ?? 0) ? Number(row.pagamentos_aprovados ?? 0) / Number(row.tentativas_validas) : 0 });
+      if (active && row) {
+        const attempts = Number(row.tentativas_validas ?? 0);
+        const approved = Number(row.pagamentos_aprovados ?? 0);
+        setKpis({
+          volume: Number(row.volume_processado ?? 0),
+          sales: Number(row.vendas_pagas ?? 0),
+          revenue: Number(row.receita_liquida ?? 0),
+          approvalRate: attempts > 0 ? (approved / attempts) * 100 : 0,
+        });
+      }
     })();
     return () => { active = false; };
   }, [period]);
