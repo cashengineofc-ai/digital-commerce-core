@@ -1,48 +1,30 @@
+import { useCallback, useEffect, useState } from "react";
 import { Clock, Lock, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { availableSpark, balances, pendingSpark, reservedSpark } from "@/lib/mock/finance";
+import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
-import { CardsSkeleton, useFakeLoading } from "@/components/app/Skeletons";
+import { CardsSkeleton } from "@/components/app/Skeletons";
 import { StatementTable } from "@/components/app/finance/StatementTable";
 import { WithdrawDialog } from "@/components/app/finance/WithdrawDialog";
 import type { LucideIcon } from "lucide-react";
 
-function Spark({ data }: { data: number[] }) {
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const points = data
-    .map((v, i) => {
-      const x = (i / (data.length - 1)) * 100;
-      const y = 28 - ((v - min) / Math.max(1, max - min)) * 24;
-      return `${x},${y}`;
-    })
-    .join(" ");
-  return (
-    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="mt-4 h-8 w-full">
-      <polyline
-        points={points}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
-  );
-}
+type WalletBalance = {
+  available: number;
+  pending: number;
+  reserved: number;
+};
 
 function BalanceCard({
   icon: Icon,
   label,
   value,
   hint,
-  data,
   accent,
 }: {
   icon: LucideIcon;
   label: string;
   value: number;
   hint: string;
-  data: number[];
   accent?: boolean;
 }) {
   return (
@@ -63,15 +45,55 @@ function BalanceCard({
         {formatBRL(value)}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-      <div className={accent ? "text-primary" : "text-muted-foreground/50"}>
-        <Spark data={data} />
-      </div>
     </div>
   );
 }
 
 export function BalancePage() {
-  const loading = useFakeLoading();
+  const [loading, setLoading] = useState(true);
+  const [balances, setBalances] = useState<WalletBalance>({
+    available: 0,
+    pending: 0,
+    reserved: 0,
+  });
+
+  const loadBalance = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("empresa_id")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      if (!profile?.empresa_id) return;
+
+      const { data, error } = await supabase
+        .from("saldos")
+        .select("saldo_disponivel,saldo_em_analise,saldo_previsao_liberar,saldo_bloqueado")
+        .eq("empresa_id", profile.empresa_id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      setBalances({
+        available: Number(data?.saldo_disponivel ?? 0),
+        pending: Number(data?.saldo_em_analise ?? 0) + Number(data?.saldo_previsao_liberar ?? 0),
+        reserved: Number(data?.saldo_bloqueado ?? 0),
+      });
+    } catch (error) {
+      console.error("Falha ao carregar saldo", error);
+      setBalances({ available: 0, pending: 0, reserved: 0 });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadBalance();
+  }, [loadBalance]);
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
@@ -82,7 +104,7 @@ export function BalancePage() {
             Carteira da operação, liberações futuras e saques.
           </p>
         </div>
-        <WithdrawDialog />
+        <WithdrawDialog onSuccess={loadBalance} />
       </header>
 
       <div className="mt-6">
@@ -94,23 +116,20 @@ export function BalancePage() {
               icon={Wallet}
               label="Saldo disponível"
               value={balances.available}
-              hint="Pronto para saque imediato"
-              data={availableSpark}
+              hint="Valor efetivamente disponível na carteira"
               accent
             />
             <BalanceCard
               icon={Clock}
               label="Pendente"
               value={balances.pending}
-              hint="Liberação em D+2 a D+30"
-              data={pendingSpark}
+              hint="Valores em análise ou aguardando liberação"
             />
             <BalanceCard
               icon={Lock}
               label="Reservado"
               value={balances.reserved}
-              hint="Reserva de segurança para estornos"
-              data={reservedSpark}
+              hint="Valores bloqueados ou reservados para operações"
             />
           </div>
         )}
@@ -131,7 +150,7 @@ export function BalancePage() {
       </div>
 
       <div className="mt-3">
-        <StatementTable loading={loading} pageSize={8} limit={30} />
+        <StatementTable pageSize={8} limit={30} />
       </div>
     </div>
   );
