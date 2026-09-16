@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Search, SlidersHorizontal } from "lucide-react";
 import { StatusBadge } from "@/components/app/dashboard/RecentTransactions";
 import { TransactionDrawer } from "@/components/app/transactions/TransactionDrawer";
-import { allTransactions } from "@/lib/mock/transactions";
+import { supabase } from "@/integrations/supabase/client";
 import type { PaymentMethod, Transaction, TransactionStatus } from "@/lib/mock/data";
 import { formatBRL, formatDateTime, formatInt } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -19,11 +19,31 @@ const methodOptions: (PaymentMethod | "todos")[] = ["todos", "Pix", "Cartão", "
 const PAGE_SIZE = 12;
 
 export function TransactionsPage() {
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<TransactionStatus | "todos">("todos");
   const [method, setMethod] = useState<PaymentMethod | "todos">("todos");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Transaction | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data: profile } = await supabase.from("profiles").select("empresa_id").eq("id", auth.user.id).maybeSingle();
+      if (!profile?.empresa_id) return;
+      const { data } = await supabase.from("transacoes")
+        .select("id,pedido_numero,valor_bruto,status,metodo_pagamento,created_at,clientes(nome_completo),produtos(nome),afiliados(codigo)")
+        .eq("empresa_id", profile.empresa_id).order("created_at", { ascending: false });
+      if (!active) return;
+      const statusMap: Record<string, TransactionStatus> = { aprovada: "aprovada", autorizada: "aprovada", capturada: "aprovada", paga: "aprovada", disponivel: "aprovada", estornada_parcial: "estornada", estornada_total: "estornada", reembolsada: "estornada", rejeitada: "recusada", falhou: "recusada" };
+      const methodMap: Record<string, PaymentMethod> = { pix: "Pix", cartao_credito: "Cartão", cartao_debito: "Cartão", boleto: "Boleto" };
+      setAllTransactions(((data ?? []) as unknown as Array<any>).map((row) => ({ id: row.pedido_numero ?? row.id, customer: row.clientes?.nome_completo ?? "Cliente não identificado", product: row.produtos?.nome ?? "Produto removido", amount: Number(row.valor_bruto ?? 0), method: methodMap[row.metodo_pagamento] ?? "Pix", status: statusMap[row.status] ?? "pendente", affiliate: row.afiliados?.codigo ?? null, date: row.created_at })));
+    }
+    load();
+    return () => { active = false; };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
