@@ -163,10 +163,11 @@ Deno.serve(async (request) => {
   const signatureHeader = request.headers.get("x-signature");
   const { ts, v1 } = parseSignature(signatureHeader);
 
-  const queryDataId = url.searchParams.get("data.id") ?? url.searchParams.get("data_id");
+  const rawQueryDataId = url.searchParams.get("data.id") ?? url.searchParams.get("data_id");
+  const signatureDataId = rawQueryDataId ? rawQueryDataId.toLowerCase() : null;
   const bodyDataId = notification.data?.id != null ? String(notification.data.id) : null;
-  const dataId = queryDataId ?? bodyDataId;
-  const manifest = buildManifest(queryDataId ?? dataId, requestId, ts);
+  const dataId = rawQueryDataId ?? bodyDataId;
+  const manifest = buildManifest(signatureDataId, requestId, ts);
 
   if (!v1 || !ts || !manifest) {
     return jsonResponse({ error: "missing_signature_data" }, 401);
@@ -236,8 +237,6 @@ Deno.serve(async (request) => {
       .single();
 
     if (error) {
-      // Another delivery may have won the unique-key race. Returning 200 avoids
-      // unnecessary retries; the winning request will process the event.
       if (error.code === "23505") {
         return jsonResponse({ ok: true, duplicate: true });
       }
