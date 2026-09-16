@@ -1,14 +1,24 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
-import { customers, customerDocumentMasked, type Customer } from "@/lib/mock/data";
+import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime, formatInt } from "@/lib/format";
-import { TableSkeleton, useFakeLoading } from "@/components/app/Skeletons";
+import { TableSkeleton } from "@/components/app/Skeletons";
 import { EmptyState } from "@/components/app/EmptyState";
 import { cn } from "@/lib/utils";
 
 const segmentOptions = ["todos", "VIP", "Recorrente", "Novo", "Inativo"] as const;
 type SegmentFilter = (typeof segmentOptions)[number];
 const PAGE_SIZE = 12;
+
+type Customer = {
+  id: string;
+  name: string;
+  email: string;
+  document: string | null;
+  purchases: number;
+  totalSpent: number;
+  lastPurchase: string | null;
+};
 
 function getSegment(c: Customer): (typeof segmentOptions)[number] {
   if (c.totalSpent >= 2000) return "VIP";
@@ -20,11 +30,71 @@ function getSegment(c: Customer): (typeof segmentOptions)[number] {
   return days <= 30 ? "Novo" : "Inativo";
 }
 
+function maskDocument(value: string | null) {
+  if (!value) return "—";
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 11) return `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`;
+  if (digits.length === 14) return `**.${digits.slice(2, 5)}.${digits.slice(5, 8)}/****-${digits.slice(-2)}`;
+  return "••••••••";
+}
+
 export function ClientesPage() {
-  const loading = useFakeLoading();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [segment, setSegment] = useState<SegmentFilter>("todos");
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user) return;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("empresa_id")
+          .eq("id", auth.user.id)
+          .maybeSingle();
+        if (!profile?.empresa_id) return;
+
+        const { data, error } = await supabase
+          .from("clientes")
+          .select("id,nome_completo,email,cpf,cnpj,total_pedidos,total_gasto,data_ultima_compra")
+          .eq("empresa_id", profile.empresa_id)
+          .is("deleted_at", null)
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+        if (!active) return;
+
+        setCustomers(
+          (data ?? []).map((row) => ({
+            id: row.id,
+            name: row.nome_completo,
+            email: row.email,
+            document: row.cpf ?? row.cnpj ?? null,
+            purchases: Number(row.total_pedidos ?? 0),
+            totalSpent: Number(row.total_gasto ?? 0),
+            lastPurchase: row.data_ultima_compra ?? null,
+          })),
+        );
+      } catch (error) {
+        console.error("Falha ao carregar clientes", error);
+        if (active) setCustomers([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -37,7 +107,7 @@ export function ClientesPage() {
         c.id.toLowerCase().includes(q)
       );
     });
-  }, [query, segment]);
+  }, [customers, query, segment]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
@@ -97,7 +167,7 @@ export function ClientesPage() {
           <EmptyState
             icon={Users}
             title="Nenhum cliente encontrado"
-            description="Ajuste a busca ou os filtros de segmento para encontrar o que procura."
+            description="Clientes reais aparecerão aqui conforme forem cadastrados ou comprarem pela operação."
           />
         ) : (
           <>
@@ -114,16 +184,14 @@ export function ClientesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {rows.map((c: Customer) => (
+                  {rows.map((c) => (
                     <tr key={c.id} className="transition-colors hover:bg-muted/50">
                       <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{c.id}</td>
                       <td className="px-5 py-3">
                         <p className="font-medium text-foreground">{c.name}</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">{c.email}</p>
                       </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        {customerDocumentMasked(c.document)}
-                      </td>
+                      <td className="px-5 py-3 text-muted-foreground">{maskDocument(c.document)}</td>
                       <td className="px-5 py-3 text-right tabular-nums text-muted-foreground">
                         {formatInt(c.purchases)}
                       </td>
