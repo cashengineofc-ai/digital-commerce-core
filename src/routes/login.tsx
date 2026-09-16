@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, ArrowRight, Zap, TrendingUp, CreditCard, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -175,7 +175,7 @@ function LoginPage() {
             <CardFooter className="px-0 pt-6 text-center">
               <p className="w-full text-xs text-muted-foreground">
                 Primeiro acesso?{" "}
-                <span className="text-foreground font-medium">Contate o administrador.</span>
+                <Link to="/cadastro" className="font-medium text-primary">Criar minha conta.</Link>
               </p>
             </CardFooter>
           </Card>
