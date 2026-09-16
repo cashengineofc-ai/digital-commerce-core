@@ -148,6 +148,14 @@ export function MarketplacePage() {
       if (authError) throw authError;
       if (!auth.user) throw new Error("Faça login para promover um produto.");
 
+      const { data: currentProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("empresa_id")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      if (!currentProfile?.empresa_id) throw new Error("Sua conta ainda não possui uma empresa vinculada.");
+
       const { data: affiliate, error: affiliateError } = await supabase
         .from("afiliados")
         .select("id")
@@ -162,7 +170,7 @@ export function MarketplacePage() {
       const { error } = await supabase.from("marketplace_inscricoes").upsert({
         marketplace_produto_id: product.id,
         afiliado_id: affiliate.id,
-        empresa_id: product.sellerCompanyId,
+        empresa_id: currentProfile.empresa_id,
         produto_id: product.productId,
         status: "pendente",
         ativa: true,
