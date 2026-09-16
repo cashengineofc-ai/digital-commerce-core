@@ -10,11 +10,6 @@ import { ArrowLeftToLine } from "lucide-react";
 import { useTempAuth } from "@/lib/auth-temp";
 import { Skeleton } from "@/components/ui/skeleton";
 
-declare global {
-  interface Window {
-    is_admin_global?: boolean;
-  }
-}
 
 function AdminTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   return (
@@ -104,7 +99,7 @@ function AccessRestrictedPage() {
 function AdminShellInner() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, isAuthed, isLoading, isAdminGlobal: tempIsAdminGlobal } = useTempAuth();
-  const { role, setRole } = useAppShell();
+  const { setRole } = useAppShell();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -120,14 +115,8 @@ function AdminShellInner() {
     }
   }, [user?.role, setRole]);
 
-  const windowIsAdmin =
-    typeof window !== "undefined" && window.is_admin_global === true;
-
-  const isAdminGlobal =
-    windowIsAdmin ||
-    tempIsAdminGlobal ||
-    user?.role === "admin_global" ||
-    role === "admin_global";
+  // UI guard only: database policies must independently enforce authorization.
+  const isAdminGlobal = tempIsAdminGlobal;
 
   if (isLoading) {
     return (
