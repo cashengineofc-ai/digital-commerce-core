@@ -1,12 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Receipt, Search } from "lucide-react";
-import { categoryLabel, statement, type LedgerCategory } from "@/lib/mock/finance";
+import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime, formatInt } from "@/lib/format";
 import { EmptyState } from "@/components/app/EmptyState";
 import { TableSkeleton } from "@/components/app/Skeletons";
 import { cn } from "@/lib/utils";
 
 const typeOptions = ["todos", "credito", "debito"] as const;
+type LedgerType = Exclude<(typeof typeOptions)[number], "todos">;
+type LedgerCategory = "venda" | "taxa" | "comissao" | "saque" | "estorno" | "outro";
 const categoryOptions: (LedgerCategory | "todas")[] = [
   "todas",
   "venda",
@@ -14,32 +16,115 @@ const categoryOptions: (LedgerCategory | "todas")[] = [
   "comissao",
   "saque",
   "estorno",
+  "outro",
 ];
 
+const categoryLabel: Record<LedgerCategory, string> = {
+  venda: "Venda",
+  taxa: "Taxa",
+  comissao: "Comissão",
+  saque: "Saque",
+  estorno: "Estorno",
+  outro: "Outro",
+};
+
+type LedgerRow = {
+  id: string;
+  date: string;
+  description: string;
+  category: LedgerCategory;
+  type: LedgerType;
+  amount: number;
+  balance: number | null;
+};
+
+function resolveCategory(row: any): LedgerCategory {
+  const account = String(row.conta_contabil ?? "").toLowerCase();
+  if (row.saque_id) return "saque";
+  if (row.estorno_id) return "estorno";
+  if (row.comissao_id) return "comissao";
+  if (account.includes("taxa") || account.includes("fee")) return "taxa";
+  if (row.transacao_id) return "venda";
+  return "outro";
+}
+
 export function StatementTable({
-  loading,
   pageSize = 12,
   limit,
 }: {
-  loading: boolean;
   pageSize?: number;
   limit?: number;
 }) {
+  const [statement, setStatement] = useState<LedgerRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [type, setType] = useState<(typeof typeOptions)[number]>("todos");
   const [category, setCategory] = useState<(typeof categoryOptions)[number]>("todas");
   const [page, setPage] = useState(1);
 
-  const source = useMemo(() => (limit ? statement.slice(0, limit) : statement), [limit]);
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user) return;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("empresa_id")
+          .eq("id", auth.user.id)
+          .maybeSingle();
+        if (!profile?.empresa_id) return;
+
+        let queryBuilder = supabase
+          .from("lancamentos_contabeis")
+          .select(
+            "id,descricao,tipo_lancamento,valor,data_lancamento,saldo_atual,conta_contabil,saque_id,estorno_id,comissao_id,transacao_id",
+          )
+          .eq("empresa_id", profile.empresa_id)
+          .order("data_lancamento", { ascending: false });
+
+        if (limit) queryBuilder = queryBuilder.limit(limit);
+
+        const { data, error } = await queryBuilder;
+        if (error) throw error;
+        if (!active) return;
+
+        setStatement(
+          ((data ?? []) as unknown as Array<any>).map((row) => ({
+            id: row.id,
+            date: row.data_lancamento,
+            description: row.descricao,
+            category: resolveCategory(row),
+            type: row.tipo_lancamento === "C" ? "credito" : "debito",
+            amount: Math.abs(Number(row.valor ?? 0)),
+            balance: row.saldo_atual == null ? null : Number(row.saldo_atual),
+          })),
+        );
+      } catch (error) {
+        console.error("Falha ao carregar extrato", error);
+        if (active) setStatement([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [limit]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return source.filter((r) => {
+    return statement.filter((r) => {
       if (type !== "todos" && r.type !== type) return false;
       if (category !== "todas" && r.category !== category) return false;
       return !q || r.description.toLowerCase().includes(q) || r.id.toLowerCase().includes(q);
     });
-  }, [source, query, type, category]);
+  }, [statement, query, type, category]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const current = Math.min(page, totalPages);
@@ -101,7 +186,7 @@ export function StatementTable({
         <EmptyState
           icon={Receipt}
           title="Nenhum lançamento encontrado"
-          description="Nenhuma movimentação corresponde aos filtros selecionados. Tente outra categoria ou período."
+          description="Os lançamentos reais da operação aparecerão aqui conforme forem registrados no livro contábil."
         />
       ) : (
         <>
@@ -141,7 +226,7 @@ export function StatementTable({
                       {formatBRL(r.amount)}
                     </td>
                     <td className="px-5 py-3.5 text-right tabular-nums text-muted-foreground">
-                      {formatBRL(r.balance)}
+                      {r.balance == null ? "—" : formatBRL(r.balance)}
                     </td>
                   </tr>
                 ))}
