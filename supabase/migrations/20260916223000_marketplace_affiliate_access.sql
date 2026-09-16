@@ -5,8 +5,8 @@
 ALTER TABLE public.afiliados ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketplace_inscricoes ENABLE ROW LEVEL SECURITY;
 
--- O afiliado pode enxergar apenas o próprio vínculo, mesmo quando ele pertence
--- a uma empresa produtora diferente da empresa principal do seu profile.
+-- O afiliado pode enxergar apenas o próprio vínculo, mesmo quando o vínculo
+-- estiver associado a uma operação diferente da empresa principal do profile.
 DROP POLICY IF EXISTS "afiliados_select_self" ON public.afiliados;
 CREATE POLICY "afiliados_select_self"
 ON public.afiliados
@@ -34,14 +34,16 @@ USING (
 );
 
 -- O próprio afiliado ativo pode solicitar promoção de um produto publicado.
--- A empresa_id da inscrição precisa ser a empresa vendedora do item do marketplace.
+-- empresa_id identifica a empresa/tenant do usuário que está fazendo a inscrição;
+-- a empresa vendedora continua sendo identificada pelo marketplace_produto_id.
 DROP POLICY IF EXISTS "marketplace_inscricoes_insert_self" ON public.marketplace_inscricoes;
 CREATE POLICY "marketplace_inscricoes_insert_self"
 ON public.marketplace_inscricoes
 FOR INSERT
 TO authenticated
 WITH CHECK (
-    EXISTS (
+    empresa_id = public.fn_get_empresa_usuario()
+    AND EXISTS (
         SELECT 1
         FROM public.afiliados a
         WHERE a.id = marketplace_inscricoes.afiliado_id
@@ -54,7 +56,6 @@ WITH CHECK (
         FROM public.marketplace_produtos mp
         WHERE mp.id = marketplace_inscricoes.marketplace_produto_id
           AND mp.produto_id = marketplace_inscricoes.produto_id
-          AND mp.empresa_vendedora_id = marketplace_inscricoes.empresa_id
           AND mp.status = 'publicado'
           AND mp.deleted_at IS NULL
     )
