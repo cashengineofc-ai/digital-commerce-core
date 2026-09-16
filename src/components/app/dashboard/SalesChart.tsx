@@ -9,79 +9,64 @@ import {
   YAxis,
   type TooltipProps,
 } from "recharts";
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Calculator,
-  CreditCard,
-  ShoppingBag,
-  TrendingUp,
-} from "lucide-react";
+import { Calculator, CreditCard, ShoppingBag, TrendingUp } from "lucide-react";
 import { periods, useAppShell, type PeriodKey } from "@/components/app/app-shell-context";
-import { seriesByPeriod } from "@/lib/mock/dashboard";
-import { formatBRL, formatInt, formatPct } from "@/lib/format";
+import { supabase } from "@/integrations/supabase/client";
+import { formatBRL, formatInt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
+type Point = {
+  bucket_start: string;
+  label: string;
+  volume: number;
+  sales: number;
+};
+
+function periodWindow(period: PeriodKey) {
+  const end = new Date();
+  if (period === "hoje") {
+    const start = new Date(end);
+    start.setHours(0, 0, 0, 0);
+    return { start, end, granularity: "hour" as const };
+  }
+  const days = period === "7d" ? 7 : period === "30d" ? 30 : period === "90d" ? 90 : 365;
+  return {
+    start: new Date(end.getTime() - days * 86400000),
+    end,
+    granularity: period === "12m" ? ("month" as const) : ("day" as const),
+  };
+}
+
+function labelForBucket(value: string, granularity: "hour" | "day" | "month") {
+  const date = new Date(value);
+  if (granularity === "hour") return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  if (granularity === "month") return date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
 function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
-  const point = payload[0]?.payload as { volume: number; sales: number };
+  const point = payload[0]?.payload as Point;
   return (
     <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-lg">
-      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-semibold tabular-nums text-foreground">
-        {formatBRL(point.volume)}
-      </p>
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold tabular-nums text-foreground">{formatBRL(point.volume)}</p>
       <p className="text-xs text-muted-foreground">{formatInt(point.sales)} vendas</p>
     </div>
   );
 }
 
-type DeltaBadgeProps = { value: number; suffix?: string };
-
-function DeltaBadge({ value, suffix = "%" }: DeltaBadgeProps) {
-  const positive = value >= 0;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-        positive ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600",
-      )}
-    >
-      {positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-      {positive ? "+" : ""}
-      {value.toFixed(1)}
-      {suffix}
-    </span>
-  );
-}
-
-function MiniKpi({
-  icon: Icon,
-  label,
-  value,
-  badge,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  badge?: React.ReactNode;
-}) {
+function MiniKpi({ icon: Icon, label, value, hint }: { icon: LucideIcon; label: string; value: string; hint: string }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-background/60 p-3">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <div className="mt-0.5 flex items-center gap-2">
-          <p className="truncate text-sm font-semibold tabular-nums text-foreground">{value}</p>
-          {badge}
-        </div>
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="mt-0.5 truncate text-sm font-semibold tabular-nums text-foreground">{value}</p>
+        <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{hint}</p>
       </div>
     </div>
   );
@@ -90,99 +75,89 @@ function MiniKpi({
 export function SalesChart() {
   const { period, setPeriod } = useAppShell();
   const [mounted, setMounted] = useState(false);
+  const [data, setData] = useState<Point[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => setMounted(true), []);
 
-  const data = seriesByPeriod[period];
-  const totalRevenue = useMemo(() => data.reduce((acc, p) => acc + p.volume, 0), [data]);
-  const totalSales = useMemo(() => data.reduce((acc, p) => acc + p.sales, 0), [data]);
-  const avgTicket = useMemo(
-    () => (totalSales > 0 ? totalRevenue / totalSales : 0),
-    [totalRevenue, totalSales],
-  );
+  useEffect(() => {
+    let active = true;
+    const { start, end, granularity } = periodWindow(period);
+    setLoading(true);
 
-  const { growthRevenue, growthSales } = useMemo(() => {
-    const deltasByPeriod: Record<PeriodKey, { revenue: number; sales: number }> = {
-      hoje: { revenue: 12.6, sales: 9.8 },
-      "7d": { revenue: 18.4, sales: 14.2 },
-      "30d": { revenue: 24.7, sales: 19.3 },
-      "90d": { revenue: 41.2, sales: 33.7 },
-      "12m": { revenue: 62.1, sales: 54.3 },
-    };
-    return {
-      growthRevenue: deltasByPeriod[period]?.revenue ?? 0,
-      growthSales: deltasByPeriod[period]?.sales ?? 0,
+    (async () => {
+      const { data: rows, error } = await (supabase as any).rpc("fn_dashboard_series", {
+        p_inicio: start.toISOString(),
+        p_fim: end.toISOString(),
+        p_granularidade: granularity,
+      });
+
+      if (!active) return;
+      if (error) {
+        console.error("Falha ao carregar série do dashboard", error);
+        setData([]);
+      } else {
+        setData(
+          (rows ?? []).map((row: any) => ({
+            bucket_start: row.bucket_start,
+            label: labelForBucket(row.bucket_start, granularity),
+            volume: Number(row.volume ?? 0),
+            sales: Number(row.sales ?? 0),
+          })),
+        );
+      }
+      setLoading(false);
+    })();
+
+    return () => {
+      active = false;
     };
   }, [period]);
 
+  const totalRevenue = useMemo(() => data.reduce((acc, point) => acc + point.volume, 0), [data]);
+  const totalSales = useMemo(() => data.reduce((acc, point) => acc + point.sales, 0), [data]);
+  const avgTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
+  const activeDays = data.filter((point) => point.sales > 0).length;
   const tickInterval = Math.max(0, Math.floor(data.length / 7) - 1);
 
   return (
     <section className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold tracking-tight text-foreground">
-              Evolução de faturamento
-            </h2>
-            <DeltaBadge value={growthRevenue} />
-          </div>
+          <h2 className="text-base font-semibold tracking-tight text-foreground">Evolução de faturamento</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {formatBRL(totalRevenue)} processados no período · comparativo vs período anterior
+            {formatBRL(totalRevenue)} processados no período · dados reais da operação
           </p>
         </div>
 
         <div className="inline-flex rounded-lg border border-border bg-muted/60 p-0.5">
-          {periods.map((p) => (
+          {periods.map((item) => (
             <button
-              key={p.key}
+              key={item.key}
               type="button"
-              onClick={() => setPeriod(p.key as PeriodKey)}
+              onClick={() => setPeriod(item.key as PeriodKey)}
               className={cn(
                 "rounded-[7px] px-3 py-1.5 text-xs font-medium transition-colors",
-                period === p.key
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+                period === item.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {p.label}
+              {item.label}
             </button>
           ))}
         </div>
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MiniKpi
-          icon={CreditCard}
-          label="Faturamento bruto"
-          value={formatBRL(totalRevenue)}
-          badge={<DeltaBadge value={growthRevenue} />}
-        />
-        <MiniKpi
-          icon={ShoppingBag}
-          label="Número de vendas"
-          value={formatInt(totalSales)}
-          badge={<DeltaBadge value={growthSales} />}
-        />
-        <MiniKpi
-          icon={Calculator}
-          label="Ticket médio"
-          value={formatBRL(avgTicket)}
-          badge={
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-              R$ / venda
-            </span>
-          }
-        />
-        <MiniKpi
-          icon={TrendingUp}
-          label="Crescimento acum."
-          value={formatPct(growthRevenue)}
-          badge={<DeltaBadge value={growthSales} suffix=" pp" />}
-        />
+        <MiniKpi icon={CreditCard} label="Faturamento bruto" value={formatBRL(totalRevenue)} hint="Pagamentos aprovados" />
+        <MiniKpi icon={ShoppingBag} label="Número de vendas" value={formatInt(totalSales)} hint="Transações aprovadas" />
+        <MiniKpi icon={Calculator} label="Ticket médio" value={formatBRL(avgTicket)} hint="Valor médio por venda" />
+        <MiniKpi icon={TrendingUp} label="Períodos ativos" value={formatInt(activeDays)} hint="Faixas com pelo menos 1 venda" />
       </div>
 
       <div className="mt-6 h-[320px] w-full">
-        {mounted ? (
+        {loading ? (
+          <div className="h-full w-full animate-pulse rounded-lg bg-muted/50" />
+        ) : mounted && data.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
@@ -192,40 +167,16 @@ export function SalesChart() {
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke="var(--color-border)" strokeDasharray="4 6" />
-              <XAxis
-                dataKey="label"
-                axisLine={false}
-                tickLine={false}
-                interval={tickInterval}
-                tickMargin={12}
-                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                width={78}
-                tickMargin={8}
-                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-                tickFormatter={(v: number) =>
-                  formatBRL(v, { compact: true }).replace(/ /g, "\u00a0")
-                }
-              />
-              <Tooltip
-                content={<ChartTooltip />}
-                cursor={{ stroke: "var(--color-primary)", strokeOpacity: 0.35, strokeWidth: 1 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="volume"
-                stroke="var(--color-primary)"
-                strokeWidth={2.2}
-                fill="url(#volumeFill)"
-                activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--color-card)" }}
-              />
+              <XAxis dataKey="label" axisLine={false} tickLine={false} interval={tickInterval} tickMargin={12} tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} />
+              <YAxis axisLine={false} tickLine={false} width={78} tickMargin={8} tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} tickFormatter={(value: number) => formatBRL(value, { compact: true }).replace(/ /g, "\u00a0")} />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--color-primary)", strokeOpacity: 0.35, strokeWidth: 1 }} />
+              <Area type="monotone" dataKey="volume" stroke="var(--color-primary)" strokeWidth={2.2} fill="url(#volumeFill)" activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--color-card)" }} />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-full w-full rounded-lg bg-muted/50" />
+          <div className="grid h-full place-items-center rounded-lg border border-dashed border-border bg-muted/20 text-center">
+            <div><p className="text-sm font-medium text-foreground">Nenhuma venda no período</p><p className="mt-1 text-xs text-muted-foreground">O gráfico será preenchido quando pagamentos forem aprovados.</p></div>
+          </div>
         )}
       </div>
     </section>
