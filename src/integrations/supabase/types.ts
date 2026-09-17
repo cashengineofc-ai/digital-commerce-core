@@ -3677,6 +3677,67 @@ export type Database = {
         }
         Relationships: []
       }
+      pix_confirmacoes_manuais: {
+        Row: {
+          confirmado_em: string
+          confirmado_por: string
+          empresa_id: string
+          evidencia: string
+          id: string
+          metadata: Json
+          recebedor_snapshot: Json
+          referencia_bancaria: string
+          transacao_id: string
+          valor_confirmado: number
+        }
+        Insert: {
+          confirmado_em?: string
+          confirmado_por: string
+          empresa_id: string
+          evidencia: string
+          id?: string
+          metadata?: Json
+          recebedor_snapshot?: Json
+          referencia_bancaria: string
+          transacao_id: string
+          valor_confirmado: number
+        }
+        Update: {
+          confirmado_em?: string
+          confirmado_por?: string
+          empresa_id?: string
+          evidencia?: string
+          id?: string
+          metadata?: Json
+          recebedor_snapshot?: Json
+          referencia_bancaria?: string
+          transacao_id?: string
+          valor_confirmado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_confirmacoes_manuais_confirmado_por_fkey"
+            columns: ["confirmado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pix_confirmacoes_manuais_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pix_confirmacoes_manuais_transacao_id_fkey"
+            columns: ["transacao_id"]
+            isOneToOne: true
+            referencedRelation: "transacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos: {
         Row: {
           altura: number | null
@@ -6252,9 +6313,15 @@ export type Database = {
           parcelas: number | null
           payload_provedor: Json
           pedido_numero: string | null
+          pix_chave_snapshot: string | null
           pix_copia_cola: string | null
           pix_expiracao: string | null
+          pix_gerado_em: string | null
+          pix_modo: string | null
           pix_qrcode: string | null
+          pix_recebedor_cidade: string | null
+          pix_recebedor_nome: string | null
+          pix_txid: string | null
           produto_id: string | null
           profile_id: string | null
           provedor_pagamento: string | null
@@ -6330,9 +6397,15 @@ export type Database = {
           parcelas?: number | null
           payload_provedor?: Json
           pedido_numero?: string | null
+          pix_chave_snapshot?: string | null
           pix_copia_cola?: string | null
           pix_expiracao?: string | null
+          pix_gerado_em?: string | null
+          pix_modo?: string | null
           pix_qrcode?: string | null
+          pix_recebedor_cidade?: string | null
+          pix_recebedor_nome?: string | null
+          pix_txid?: string | null
           produto_id?: string | null
           profile_id?: string | null
           provedor_pagamento?: string | null
@@ -6408,9 +6481,15 @@ export type Database = {
           parcelas?: number | null
           payload_provedor?: Json
           pedido_numero?: string | null
+          pix_chave_snapshot?: string | null
           pix_copia_cola?: string | null
           pix_expiracao?: string | null
+          pix_gerado_em?: string | null
+          pix_modo?: string | null
           pix_qrcode?: string | null
+          pix_recebedor_cidade?: string | null
+          pix_recebedor_nome?: string | null
+          pix_txid?: string | null
           produto_id?: string | null
           profile_id?: string | null
           provedor_pagamento?: string | null
@@ -7227,6 +7306,14 @@ export type Database = {
     Functions: {
       current_empresa_id: { Args: never; Returns: string }
       fn_cancelar_saque: { Args: { p_saque_id: string }; Returns: boolean }
+      fn_confirmar_pix_manual: {
+        Args: {
+          p_evidencia: string
+          p_referencia_bancaria: string
+          p_transacao_id: string
+        }
+        Returns: string
+      }
       fn_dashboard_operacional: {
         Args: { p_empresa_id: string; p_fim: string; p_inicio: string }
         Returns: {
@@ -7257,6 +7344,30 @@ export type Database = {
       }
       fn_get_empresa_usuario: { Args: never; Returns: string }
       fn_is_admin_global: { Args: never; Returns: boolean }
+      fn_listar_pix_manual_pendente: {
+        Args: never
+        Returns: {
+          cliente_email: string
+          cliente_nome: string
+          criado_em: string
+          pedido_numero: string
+          recebedor_cidade: string
+          recebedor_nome: string
+          transacao_id: string
+          txid: string
+          valor: number
+        }[]
+      }
+      fn_obter_config_pix_admin: {
+        Args: never
+        Returns: {
+          chave: string
+          configurado: boolean
+          modo: string
+          recebedor_cidade: string
+          recebedor_nome: string
+        }[]
+      }
       fn_pode_inscrever_marketplace: {
         Args: {
           p_afiliado_id: string
@@ -7275,6 +7386,15 @@ export type Database = {
           p_checkout_id?: string
           p_cliente_id?: string
           p_produto_id?: string
+        }
+        Returns: undefined
+      }
+      fn_salvar_config_pix: {
+        Args: {
+          p_chave?: string
+          p_modo: string
+          p_recebedor_cidade?: string
+          p_recebedor_nome?: string
         }
         Returns: undefined
       }
