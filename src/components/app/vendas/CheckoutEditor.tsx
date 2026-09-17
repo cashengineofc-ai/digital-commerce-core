@@ -419,7 +419,11 @@ export function CheckoutEditor({
       setError("Publique pelo menos um produto antes de adicionar order bumps.");
       return;
     }
-    const product = products[0];
+    const product = products.at(0);
+    if (!product) {
+      setError("Nenhum produto publicado está disponível.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -611,12 +615,12 @@ export function CheckoutEditor({
           <section className="rounded-xl border border-border bg-card p-5">
             <h2 className="font-semibold">Identidade visual</h2>
             <div className="mt-4 grid grid-cols-2 gap-3">
-              {[
+              {([
                 ["primary", "Cor principal"],
                 ["background", "Fundo"],
                 ["text", "Texto"],
                 ["secondary", "Secundária"],
-              ].map(([key, label]) => (
+              ] as const).map(([key, label]) => (
                 <label key={key}>
                   <span className="text-xs text-muted-foreground">{label}</span>
                   <div className="mt-1.5 flex gap-2">
@@ -628,11 +632,11 @@ export function CheckoutEditor({
             </div>
 
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              {[
+              {([
                 ["logo_url", "Logo"],
                 ["desktop_url", "Banner desktop"],
                 ["mobile_url", "Banner mobile"],
-              ].map(([target, label]) => (
+              ] as const).map(([target, label]) => (
                 <label key={target} className="flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border px-2 py-2 text-[11px] font-medium hover:bg-muted">
                   {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
                   {label}
@@ -649,11 +653,11 @@ export function CheckoutEditor({
           <section className="rounded-xl border border-border bg-card p-5">
             <h2 className="font-semibold">Dados do comprador</h2>
             <div className="mt-3 space-y-2">
-              {[
+              {([
                 ["cpf", "CPF"],
                 ["phone", "Telefone"],
                 ["address", "Endereço"],
-              ].map(([key,label]) => (
+              ] as const).map(([key,label]) => (
                 <label key={key} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
                   {label}
                   <input type="checkbox" checked={Boolean((config.buyer_fields as any)[key])} onChange={(e) => setConfig({ ...config, buyer_fields: { ...config.buyer_fields, [key]: e.target.checked } })} />
