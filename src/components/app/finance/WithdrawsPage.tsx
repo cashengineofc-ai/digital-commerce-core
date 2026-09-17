@@ -165,9 +165,9 @@ export function WithdrawsPage() {
             <th className="px-5 py-3">Protocolo</th><th className="px-5 py-3">Destino congelado</th><th className="px-5 py-3 text-right">Solicitado</th><th className="px-5 py-3 text-right">Taxa</th><th className="px-5 py-3 text-right">Líquido</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Data</th><th className="px-5 py-3 text-right">Ação</th>
           </tr></thead>
           <tbody className="divide-y divide-border">{rows.map(row=>{
-            const destination=row.destino?.chave_pix
-              ? `${row.destino.banco_nome??""} · Pix ${row.destino.chave_pix}`
-              : `${row.destino?.banco_nome??"Banco"} · Ag. ${row.destino?.agencia??"—"} · Conta ${row.destino?.conta??"—"}`;
+            const destination=row.destino?.["chave_pix"]
+              ? `${row.destino["banco_nome"]??""} · Pix ${row.destino["chave_pix"]}`
+              : `${row.destino?.["banco_nome"]??"Banco"} · Ag. ${row.destino?.["agencia"]??"—"} · Conta ${row.destino?.["conta"]??"—"}`;
             const cancellable=["solicitado","em_analise"].includes(row.status);
             return <tr key={row.id} className="hover:bg-muted/40">
               <td className="px-5 py-3.5 font-mono text-xs">{row.protocolo}</td>
