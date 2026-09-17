@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "@tanstack/react-router";
+import type { User } from "@supabase/supabase-js";
 import type { RoleKey } from "@/components/app/app-shell-context";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,15 +25,11 @@ type TempAuthContextValue = {
 
 const TempAuthContext = createContext<TempAuthContextValue | null>(null);
 
-async function loadUser(userId: string): Promise<TempUser | null> {
-  const { data: authData } = await supabase.auth.getUser();
-  const authUser = authData.user;
-  if (!authUser || authUser.id !== userId) return null;
-
+async function loadUser(authUser: User): Promise<TempUser> {
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, nome_completo, email, is_admin_global, is_owner, created_at")
-    .eq("id", userId)
+    .eq("id", authUser.id)
     .maybeSingle();
 
   const isAdminGlobal = profile?.is_admin_global === true;
@@ -58,7 +55,9 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
     let alive = true;
 
     supabase.auth.getSession().then(async ({ data }) => {
-      if (alive && data.session?.user) setUser(await loadUser(data.session.user.id));
+      if (alive && data.session?.user) {
+        setUser(await loadUser(data.session.user));
+      }
       if (alive) setIsLoading(false);
     });
 
@@ -67,7 +66,10 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         return;
       }
-      loadUser(session.user.id).then(setUser);
+
+      loadUser(session.user).then((nextUser) => {
+        if (alive) setUser(nextUser);
+      });
     });
 
     return () => {
@@ -85,7 +87,7 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
     if (!data.user) return null;
 
-    const nextUser = await loadUser(data.user.id);
+    const nextUser = await loadUser(data.user);
     setUser(nextUser);
     return nextUser;
   }
