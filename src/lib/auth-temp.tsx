@@ -40,7 +40,7 @@ async function loadUser(userId: string): Promise<TempUser | null> {
   return {
     id: authUser.id,
     username: authUser.email?.split("@")[0] ?? authUser.id,
-    name: profile?.nome_completo ?? authUser.user_metadata?.full_name ?? authUser.email ?? "Usuário",
+    name: profile?.nome_completo ?? authUser.user_metadata?.["full_name"] ?? authUser.email ?? "Usuário",
     email: profile?.email ?? authUser.email ?? "",
     role,
     isAdminGlobal,

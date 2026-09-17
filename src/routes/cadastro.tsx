@@ -21,7 +21,10 @@ function CadastroPage() {
       options: { data: { full_name: form.name.trim(), company_name: form.company.trim() } },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (data.session) {
       toast.success("Conta criada. Bem-vindo ao Cash Engine PRO.");
       navigate({ to: "/app" }).catch(() => {});
