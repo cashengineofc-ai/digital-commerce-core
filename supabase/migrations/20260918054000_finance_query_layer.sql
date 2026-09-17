@@ -157,26 +157,41 @@ AS $$
     SELECT
       'venda'::text AS operacao,
       t.metodo_pagamento::text AS metodo,
-      sum(coalesce(t.valor_taxa_processamento,0))::numeric AS provider_cost
+      sum(coalesce(t.valor_bruto,0))::numeric AS volume_base,
+      sum(coalesce(t.valor_taxa_processamento,0))::numeric AS provider_cost,
+      count(*)::bigint AS quantidade
     FROM public.transacoes t
     WHERE t.empresa_id=public.current_empresa_id()
-      AND t.status IN ('aprovada','capturada','paga','disponivel','estornada_parcial','reembolsada')
+      AND t.status IN (
+        'aprovada','capturada','paga','disponivel',
+        'estornada_parcial','reembolsada'
+      )
       AND (p_inicio IS NULL OR coalesce(t.data_pagamento,t.created_at)>=p_inicio)
       AND (p_fim IS NULL OR coalesce(t.data_pagamento,t.created_at)<p_fim)
       AND coalesce(t.valor_taxa_processamento,0)>0
     GROUP BY t.metodo_pagamento
+  ),
+  combined AS (
+    SELECT
+      coalesce(f.operacao,p.operacao) AS operacao,
+      coalesce(f.metodo,p.metodo) AS metodo,
+      coalesce(f.volume_base,p.volume_base,0) AS volume_base,
+      coalesce(f.taxa_plataforma,0) AS taxa_plataforma,
+      coalesce(p.provider_cost,0) AS provider_cost,
+      greatest(coalesce(f.quantidade,0),coalesce(p.quantidade,0)) AS quantidade
+    FROM platform_fees f
+    FULL OUTER JOIN provider_costs p
+      ON p.operacao=f.operacao AND p.metodo=f.metodo
   )
   SELECT
-    f.operacao,
-    f.metodo,
-    round(f.volume_base,2),
-    round(f.taxa_plataforma,2),
-    round(coalesce(p.provider_cost,0),2),
-    f.quantidade
-  FROM platform_fees f
-  LEFT JOIN provider_costs p
-    ON p.operacao=f.operacao AND p.metodo=f.metodo
-  ORDER BY f.operacao,f.metodo;
+    operacao,
+    metodo,
+    round(volume_base,2),
+    round(taxa_plataforma,2),
+    round(provider_cost,2),
+    quantidade
+  FROM combined
+  ORDER BY operacao,metodo;
 $$;
 
 REVOKE ALL ON FUNCTION public.fn_taxas_operacionais(timestamptz,timestamptz)
