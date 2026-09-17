@@ -489,6 +489,73 @@ export type Database = {
           },
         ]
       }
+      afiliado_cliques: {
+        Row: {
+          afiliado_id: string
+          created_at: string
+          dedupe_bucket: string
+          dedupe_key: string
+          empresa_id: string
+          fingerprint_hash: string
+          id: string
+          ip_hash: string | null
+          link_afiliado_id: string
+          metadata: Json
+          referrer_host: string | null
+          user_agent_hash: string | null
+        }
+        Insert: {
+          afiliado_id: string
+          created_at?: string
+          dedupe_bucket: string
+          dedupe_key: string
+          empresa_id: string
+          fingerprint_hash: string
+          id?: string
+          ip_hash?: string | null
+          link_afiliado_id: string
+          metadata?: Json
+          referrer_host?: string | null
+          user_agent_hash?: string | null
+        }
+        Update: {
+          afiliado_id?: string
+          created_at?: string
+          dedupe_bucket?: string
+          dedupe_key?: string
+          empresa_id?: string
+          fingerprint_hash?: string
+          id?: string
+          ip_hash?: string | null
+          link_afiliado_id?: string
+          metadata?: Json
+          referrer_host?: string | null
+          user_agent_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "afiliado_cliques_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afiliado_cliques_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "afiliado_cliques_link_afiliado_id_fkey"
+            columns: ["link_afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "links_afiliados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       afiliados: {
         Row: {
           aprovado_por: string | null
@@ -698,6 +765,7 @@ export type Database = {
           id: string
           maximo_comissao_periodo: number | null
           produto_id: string
+          regra_atribuicao: Json
           taxa_comissao_personalizada: number | null
           total_comissao_gerada: number | null
           total_vendas: number | null
@@ -716,6 +784,7 @@ export type Database = {
           id?: string
           maximo_comissao_periodo?: number | null
           produto_id: string
+          regra_atribuicao?: Json
           taxa_comissao_personalizada?: number | null
           total_comissao_gerada?: number | null
           total_vendas?: number | null
@@ -734,6 +803,7 @@ export type Database = {
           id?: string
           maximo_comissao_periodo?: number | null
           produto_id?: string
+          regra_atribuicao?: Json
           taxa_comissao_personalizada?: number | null
           total_comissao_gerada?: number | null
           total_vendas?: number | null
@@ -1259,9 +1329,282 @@ export type Database = {
           },
         ]
       }
+      checkout_banners: {
+        Row: {
+          alt_text: string
+          aspect_ratio_desktop: number | null
+          aspect_ratio_mobile: number | null
+          ativo: boolean
+          checkout_id: string
+          checkout_version_id: string
+          created_at: string
+          desktop_asset_id: string | null
+          desktop_path: string | null
+          destino_url: string | null
+          empresa_id: string
+          id: string
+          mobile_asset_id: string | null
+          mobile_path: string | null
+          ordem: number
+          posicao: string
+          updated_at: string
+        }
+        Insert: {
+          alt_text?: string
+          aspect_ratio_desktop?: number | null
+          aspect_ratio_mobile?: number | null
+          ativo?: boolean
+          checkout_id: string
+          checkout_version_id: string
+          created_at?: string
+          desktop_asset_id?: string | null
+          desktop_path?: string | null
+          destino_url?: string | null
+          empresa_id: string
+          id?: string
+          mobile_asset_id?: string | null
+          mobile_path?: string | null
+          ordem?: number
+          posicao?: string
+          updated_at?: string
+        }
+        Update: {
+          alt_text?: string
+          aspect_ratio_desktop?: number | null
+          aspect_ratio_mobile?: number | null
+          ativo?: boolean
+          checkout_id?: string
+          checkout_version_id?: string
+          created_at?: string
+          desktop_asset_id?: string | null
+          desktop_path?: string | null
+          destino_url?: string | null
+          empresa_id?: string
+          id?: string
+          mobile_asset_id?: string | null
+          mobile_path?: string | null
+          ordem?: number
+          posicao?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_banners_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_banners_checkout_version_id_fkey"
+            columns: ["checkout_version_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_banners_desktop_asset_id_fkey"
+            columns: ["desktop_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_banners_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_banners_mobile_asset_id_fkey"
+            columns: ["mobile_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkout_order_bumps: {
+        Row: {
+          apresentacao: Json
+          ativo: boolean
+          checkout_id: string
+          checkout_version_id: string
+          created_at: string
+          desconto_fixo: number | null
+          desconto_percentual: number | null
+          descricao: string | null
+          empresa_id: string
+          id: string
+          imagem_url: string | null
+          modo_preco: string
+          oferta_id: string | null
+          ordem: number
+          preco_fixo: number | null
+          produto_id: string
+          regras_combinacao: Json
+          texto_oferta: string | null
+          titulo: string | null
+          updated_at: string
+        }
+        Insert: {
+          apresentacao?: Json
+          ativo?: boolean
+          checkout_id: string
+          checkout_version_id: string
+          created_at?: string
+          desconto_fixo?: number | null
+          desconto_percentual?: number | null
+          descricao?: string | null
+          empresa_id: string
+          id?: string
+          imagem_url?: string | null
+          modo_preco?: string
+          oferta_id?: string | null
+          ordem?: number
+          preco_fixo?: number | null
+          produto_id: string
+          regras_combinacao?: Json
+          texto_oferta?: string | null
+          titulo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          apresentacao?: Json
+          ativo?: boolean
+          checkout_id?: string
+          checkout_version_id?: string
+          created_at?: string
+          desconto_fixo?: number | null
+          desconto_percentual?: number | null
+          descricao?: string | null
+          empresa_id?: string
+          id?: string
+          imagem_url?: string | null
+          modo_preco?: string
+          oferta_id?: string | null
+          ordem?: number
+          preco_fixo?: number | null
+          produto_id?: string
+          regras_combinacao?: Json
+          texto_oferta?: string | null
+          titulo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_order_bumps_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_order_bumps_checkout_version_id_fkey"
+            columns: ["checkout_version_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_order_bumps_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_order_bumps_oferta_id_fkey"
+            columns: ["oferta_id"]
+            isOneToOne: false
+            referencedRelation: "ofertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_order_bumps_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkout_versions: {
+        Row: {
+          checkout_id: string
+          config: Json
+          created_at: string
+          criado_por: string | null
+          empresa_id: string
+          estado: string
+          id: string
+          numero: number
+          publicado_em: string | null
+          publicado_por: string | null
+          updated_at: string
+        }
+        Insert: {
+          checkout_id: string
+          config?: Json
+          created_at?: string
+          criado_por?: string | null
+          empresa_id: string
+          estado: string
+          id?: string
+          numero: number
+          publicado_em?: string | null
+          publicado_por?: string | null
+          updated_at?: string
+        }
+        Update: {
+          checkout_id?: string
+          config?: Json
+          created_at?: string
+          criado_por?: string | null
+          empresa_id?: string
+          estado?: string
+          id?: string
+          numero?: number
+          publicado_em?: string | null
+          publicado_por?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_versions_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_versions_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_versions_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_versions_publicado_por_fkey"
+            columns: ["publicado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkouts: {
         Row: {
           afiliado_requerido: boolean | null
+          atualizado_por: string | null
           banner_url: string | null
           created_at: string
           criado_por: string | null
@@ -1281,6 +1624,7 @@ export type Database = {
           maximo_total_vendas: number | null
           nome: string
           obrigar_cadastro: boolean | null
+          oferta_id: string | null
           permite_convidado: boolean | null
           permite_multiplos_cupons: boolean | null
           permitir_valor_personalizado: boolean | null
@@ -1290,7 +1634,10 @@ export type Database = {
           prazo_expiracao: number | null
           produto_id: string | null
           produtos_config: Json
+          public_token: string
           publicacao_data: string | null
+          publicado_versao_id: string | null
+          rascunho_versao_id: string | null
           slug: string
           status: Database["public"]["Enums"]["status_checkout"]
           taxa_afiliado_padrao: number | null
@@ -1310,6 +1657,7 @@ export type Database = {
         }
         Insert: {
           afiliado_requerido?: boolean | null
+          atualizado_por?: string | null
           banner_url?: string | null
           created_at?: string
           criado_por?: string | null
@@ -1329,6 +1677,7 @@ export type Database = {
           maximo_total_vendas?: number | null
           nome: string
           obrigar_cadastro?: boolean | null
+          oferta_id?: string | null
           permite_convidado?: boolean | null
           permite_multiplos_cupons?: boolean | null
           permitir_valor_personalizado?: boolean | null
@@ -1338,7 +1687,10 @@ export type Database = {
           prazo_expiracao?: number | null
           produto_id?: string | null
           produtos_config?: Json
+          public_token?: string
           publicacao_data?: string | null
+          publicado_versao_id?: string | null
+          rascunho_versao_id?: string | null
           slug: string
           status?: Database["public"]["Enums"]["status_checkout"]
           taxa_afiliado_padrao?: number | null
@@ -1358,6 +1710,7 @@ export type Database = {
         }
         Update: {
           afiliado_requerido?: boolean | null
+          atualizado_por?: string | null
           banner_url?: string | null
           created_at?: string
           criado_por?: string | null
@@ -1377,6 +1730,7 @@ export type Database = {
           maximo_total_vendas?: number | null
           nome?: string
           obrigar_cadastro?: boolean | null
+          oferta_id?: string | null
           permite_convidado?: boolean | null
           permite_multiplos_cupons?: boolean | null
           permitir_valor_personalizado?: boolean | null
@@ -1386,7 +1740,10 @@ export type Database = {
           prazo_expiracao?: number | null
           produto_id?: string | null
           produtos_config?: Json
+          public_token?: string
           publicacao_data?: string | null
+          publicado_versao_id?: string | null
+          rascunho_versao_id?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["status_checkout"]
           taxa_afiliado_padrao?: number | null
@@ -1405,6 +1762,13 @@ export type Database = {
           webhook_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "checkouts_atualizado_por_fkey"
+            columns: ["atualizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "checkouts_criado_por_fkey"
             columns: ["criado_por"]
@@ -1427,10 +1791,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "checkouts_oferta_id_fkey"
+            columns: ["oferta_id"]
+            isOneToOne: false
+            referencedRelation: "ofertas"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "checkouts_produto_id_fkey"
             columns: ["produto_id"]
             isOneToOne: false
             referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkouts_publicado_versao_id_fkey"
+            columns: ["publicado_versao_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkouts_rascunho_versao_id_fkey"
+            columns: ["rascunho_versao_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_versions"
             referencedColumns: ["id"]
           },
           {
@@ -1619,6 +2004,7 @@ export type Database = {
           updated_at: string
           valor_comissao_bruta: number
           valor_comissao_liquida: number
+          valor_estornado: number
           valor_venda: number
         }
         Insert: {
@@ -1657,6 +2043,7 @@ export type Database = {
           updated_at?: string
           valor_comissao_bruta: number
           valor_comissao_liquida: number
+          valor_estornado?: number
           valor_venda: number
         }
         Update: {
@@ -1695,6 +2082,7 @@ export type Database = {
           updated_at?: string
           valor_comissao_bruta?: number
           valor_comissao_liquida?: number
+          valor_estornado?: number
           valor_venda?: number
         }
         Relationships: [
@@ -2066,6 +2454,102 @@ export type Database = {
           },
         ]
       }
+      distribuicoes_financeiras: {
+        Row: {
+          afiliado_id: string | null
+          beneficiario_tipo: string
+          chave_idempotencia: string
+          created_at: string
+          empresa_id: string
+          id: string
+          moeda: string
+          pedido_id: string | null
+          profile_id: string | null
+          regra_snapshot: Json
+          status: string
+          transacao_id: string
+          transferencia_bancaria_confirmada: boolean
+          updated_at: string
+          valor: number
+          valor_revertido: number
+          versao_regra: string
+        }
+        Insert: {
+          afiliado_id?: string | null
+          beneficiario_tipo: string
+          chave_idempotencia: string
+          created_at?: string
+          empresa_id: string
+          id?: string
+          moeda?: string
+          pedido_id?: string | null
+          profile_id?: string | null
+          regra_snapshot?: Json
+          status?: string
+          transacao_id: string
+          transferencia_bancaria_confirmada?: boolean
+          updated_at?: string
+          valor: number
+          valor_revertido?: number
+          versao_regra: string
+        }
+        Update: {
+          afiliado_id?: string | null
+          beneficiario_tipo?: string
+          chave_idempotencia?: string
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          moeda?: string
+          pedido_id?: string | null
+          profile_id?: string | null
+          regra_snapshot?: Json
+          status?: string
+          transacao_id?: string
+          transferencia_bancaria_confirmada?: boolean
+          updated_at?: string
+          valor?: number
+          valor_revertido?: number
+          versao_regra?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribuicoes_financeiras_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribuicoes_financeiras_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribuicoes_financeiras_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribuicoes_financeiras_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribuicoes_financeiras_transacao_id_fkey"
+            columns: ["transacao_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empresas: {
         Row: {
           bairro: string | null
@@ -2276,20 +2760,29 @@ export type Database = {
           data_solicitacao: string
           detalhamento_motivo: string | null
           empresa_id: string
+          evidencia_conciliacao: string | null
           id: string
           id_estorno_gateway: string | null
+          idempotency_key: string | null
           metadata: Json | null
           metodo_estorno: string | null
+          modo_confirmacao: string | null
           motivo: string
           observacoes_internas: string | null
           pedido_cliente_motivo: string | null
+          pedido_id: string | null
           protocolo: string
+          provider_fee_refunded: number
+          provider_payload: Json
+          referencia_conciliacao: string | null
           rejeitado_por: string | null
+          responsavel_conciliacao: string | null
           saque_relacionado_id: string | null
           solicitado_por: string | null
           status: Database["public"]["Enums"]["status_estorno"]
           taxa_estorno: number | null
           tipo_estorno: string
+          tipo_ocorrencia: string
           transacao_id: string
           updated_at: string
           valor_aprovado_estorno: number | null
@@ -2311,20 +2804,29 @@ export type Database = {
           data_solicitacao?: string
           detalhamento_motivo?: string | null
           empresa_id: string
+          evidencia_conciliacao?: string | null
           id?: string
           id_estorno_gateway?: string | null
+          idempotency_key?: string | null
           metadata?: Json | null
           metodo_estorno?: string | null
+          modo_confirmacao?: string | null
           motivo: string
           observacoes_internas?: string | null
           pedido_cliente_motivo?: string | null
+          pedido_id?: string | null
           protocolo: string
+          provider_fee_refunded?: number
+          provider_payload?: Json
+          referencia_conciliacao?: string | null
           rejeitado_por?: string | null
+          responsavel_conciliacao?: string | null
           saque_relacionado_id?: string | null
           solicitado_por?: string | null
           status?: Database["public"]["Enums"]["status_estorno"]
           taxa_estorno?: number | null
           tipo_estorno?: string
+          tipo_ocorrencia?: string
           transacao_id: string
           updated_at?: string
           valor_aprovado_estorno?: number | null
@@ -2346,20 +2848,29 @@ export type Database = {
           data_solicitacao?: string
           detalhamento_motivo?: string | null
           empresa_id?: string
+          evidencia_conciliacao?: string | null
           id?: string
           id_estorno_gateway?: string | null
+          idempotency_key?: string | null
           metadata?: Json | null
           metodo_estorno?: string | null
+          modo_confirmacao?: string | null
           motivo?: string
           observacoes_internas?: string | null
           pedido_cliente_motivo?: string | null
+          pedido_id?: string | null
           protocolo?: string
+          provider_fee_refunded?: number
+          provider_payload?: Json
+          referencia_conciliacao?: string | null
           rejeitado_por?: string | null
+          responsavel_conciliacao?: string | null
           saque_relacionado_id?: string | null
           solicitado_por?: string | null
           status?: Database["public"]["Enums"]["status_estorno"]
           taxa_estorno?: number | null
           tipo_estorno?: string
+          tipo_ocorrencia?: string
           transacao_id?: string
           updated_at?: string
           valor_aprovado_estorno?: number | null
@@ -2397,8 +2908,22 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "estornos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "estornos_rejeitado_por_fkey"
             columns: ["rejeitado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estornos_responsavel_conciliacao_fkey"
+            columns: ["responsavel_conciliacao"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2618,13 +3143,17 @@ export type Database = {
           codigo_convite: string
           convidado_por: string
           created_at: string
-          email: string
+          email: string | null
           empresa_id: string
           expira_em: string
           id: string
           link_afiliado_base: string | null
           mensagem: string | null
           nome: string | null
+          produtos_autorizados: string[]
+          regras_afiliacao: Json
+          revogado_em: string | null
+          revogado_por: string | null
           role_id: string | null
           status: string
           taxa_comissao_padrao: number | null
@@ -2639,13 +3168,17 @@ export type Database = {
           codigo_convite: string
           convidado_por: string
           created_at?: string
-          email: string
+          email?: string | null
           empresa_id: string
           expira_em?: string
           id?: string
           link_afiliado_base?: string | null
           mensagem?: string | null
           nome?: string | null
+          produtos_autorizados?: string[]
+          regras_afiliacao?: Json
+          revogado_em?: string | null
+          revogado_por?: string | null
           role_id?: string | null
           status?: string
           taxa_comissao_padrao?: number | null
@@ -2660,13 +3193,17 @@ export type Database = {
           codigo_convite?: string
           convidado_por?: string
           created_at?: string
-          email?: string
+          email?: string | null
           empresa_id?: string
           expira_em?: string
           id?: string
           link_afiliado_base?: string | null
           mensagem?: string | null
           nome?: string | null
+          produtos_autorizados?: string[]
+          regras_afiliacao?: Json
+          revogado_em?: string | null
+          revogado_por?: string | null
           role_id?: string | null
           status?: string
           taxa_comissao_padrao?: number | null
@@ -2690,6 +3227,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invites_revogado_por_fkey"
+            columns: ["revogado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invites_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
@@ -2702,6 +3246,8 @@ export type Database = {
         Row: {
           afiliado_id: string | null
           automatico: boolean | null
+          bucket: string | null
+          chave_idempotencia: string | null
           comissao_id: string | null
           competencia: string
           conta_contabil: string
@@ -2713,13 +3259,16 @@ export type Database = {
           empresa_id: string | null
           estorno_id: string | null
           id: string
+          metadata: Json
           moeda: string | null
           motivo_manual: string | null
           profile_id: string | null
           repasse_id: string | null
+          reversao_de_id: string | null
           saldo_anterior: number | null
           saldo_atual: number | null
           saque_id: string | null
+          status: string
           tipo_lancamento: string
           transacao_id: string | null
           valor: number
@@ -2727,6 +3276,8 @@ export type Database = {
         Insert: {
           afiliado_id?: string | null
           automatico?: boolean | null
+          bucket?: string | null
+          chave_idempotencia?: string | null
           comissao_id?: string | null
           competencia: string
           conta_contabil: string
@@ -2738,13 +3289,16 @@ export type Database = {
           empresa_id?: string | null
           estorno_id?: string | null
           id?: string
+          metadata?: Json
           moeda?: string | null
           motivo_manual?: string | null
           profile_id?: string | null
           repasse_id?: string | null
+          reversao_de_id?: string | null
           saldo_anterior?: number | null
           saldo_atual?: number | null
           saque_id?: string | null
+          status?: string
           tipo_lancamento: string
           transacao_id?: string | null
           valor: number
@@ -2752,6 +3306,8 @@ export type Database = {
         Update: {
           afiliado_id?: string | null
           automatico?: boolean | null
+          bucket?: string | null
+          chave_idempotencia?: string | null
           comissao_id?: string | null
           competencia?: string
           conta_contabil?: string
@@ -2763,13 +3319,16 @@ export type Database = {
           empresa_id?: string | null
           estorno_id?: string | null
           id?: string
+          metadata?: Json
           moeda?: string | null
           motivo_manual?: string | null
           profile_id?: string | null
           repasse_id?: string | null
+          reversao_de_id?: string | null
           saldo_anterior?: number | null
           saldo_atual?: number | null
           saque_id?: string | null
+          status?: string
           tipo_lancamento?: string
           transacao_id?: string | null
           valor?: number
@@ -2822,6 +3381,13 @@ export type Database = {
             columns: ["repasse_id"]
             isOneToOne: false
             referencedRelation: "repasses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lancamentos_contabeis_reversao_de_id_fkey"
+            columns: ["reversao_de_id"]
+            isOneToOne: false
+            referencedRelation: "lancamentos_contabeis"
             referencedColumns: ["id"]
           },
           {
@@ -3005,8 +3571,10 @@ export type Database = {
           nome_cliente_obrigatorio: boolean | null
           notificar_email_criador: boolean | null
           notificar_whatsapp_criador: boolean | null
+          oferta_id: string | null
           permite_editar_valor: boolean | null
           produto_id: string | null
+          public_token: string
           status: Database["public"]["Enums"]["status_link_pagamento"]
           telefone_cliente_obrigatorio: boolean | null
           termo_utm: string | null
@@ -3014,6 +3582,7 @@ export type Database = {
           titulo: string
           updated_at: string
           url_redirecionamento_sucesso: string | null
+          uso_unico: boolean
           valor: number
           valor_original: number | null
           webhook_url: string | null
@@ -3043,8 +3612,10 @@ export type Database = {
           nome_cliente_obrigatorio?: boolean | null
           notificar_email_criador?: boolean | null
           notificar_whatsapp_criador?: boolean | null
+          oferta_id?: string | null
           permite_editar_valor?: boolean | null
           produto_id?: string | null
+          public_token?: string
           status?: Database["public"]["Enums"]["status_link_pagamento"]
           telefone_cliente_obrigatorio?: boolean | null
           termo_utm?: string | null
@@ -3052,6 +3623,7 @@ export type Database = {
           titulo: string
           updated_at?: string
           url_redirecionamento_sucesso?: string | null
+          uso_unico?: boolean
           valor?: number
           valor_original?: number | null
           webhook_url?: string | null
@@ -3081,8 +3653,10 @@ export type Database = {
           nome_cliente_obrigatorio?: boolean | null
           notificar_email_criador?: boolean | null
           notificar_whatsapp_criador?: boolean | null
+          oferta_id?: string | null
           permite_editar_valor?: boolean | null
           produto_id?: string | null
+          public_token?: string
           status?: Database["public"]["Enums"]["status_link_pagamento"]
           telefone_cliente_obrigatorio?: boolean | null
           termo_utm?: string | null
@@ -3090,6 +3664,7 @@ export type Database = {
           titulo?: string
           updated_at?: string
           url_redirecionamento_sucesso?: string | null
+          uso_unico?: boolean
           valor?: number
           valor_original?: number | null
           webhook_url?: string | null
@@ -3128,6 +3703,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "links_pagamento_oferta_id_fkey"
+            columns: ["oferta_id"]
+            isOneToOne: false
+            referencedRelation: "ofertas"
             referencedColumns: ["id"]
           },
           {
@@ -3401,6 +3983,69 @@ export type Database = {
           },
         ]
       }
+      media_assets: {
+        Row: {
+          altura: number | null
+          bucket: string
+          created_at: string
+          empresa_id: string
+          enviado_por: string | null
+          id: string
+          largura: number | null
+          mime_type: string
+          path: string
+          sha256: string | null
+          status: string
+          tamanho_bytes: number
+          updated_at: string
+        }
+        Insert: {
+          altura?: number | null
+          bucket?: string
+          created_at?: string
+          empresa_id: string
+          enviado_por?: string | null
+          id?: string
+          largura?: number | null
+          mime_type: string
+          path: string
+          sha256?: string | null
+          status?: string
+          tamanho_bytes: number
+          updated_at?: string
+        }
+        Update: {
+          altura?: number | null
+          bucket?: string
+          created_at?: string
+          empresa_id?: string
+          enviado_por?: string | null
+          id?: string
+          largura?: number | null
+          mime_type?: string
+          path?: string
+          sha256?: string | null
+          status?: string
+          tamanho_bytes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_assets_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_assets_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notificacoes: {
         Row: {
           afiliado_id: string | null
@@ -3647,6 +4292,334 @@ export type Database = {
           },
         ]
       }
+      ofertas: {
+        Row: {
+          condicoes: Json
+          created_at: string
+          criado_por: string | null
+          deleted_at: string | null
+          descricao: string | null
+          empresa_id: string
+          id: string
+          metadata: Json
+          moeda: string
+          nome: string
+          permitir_valor_personalizado: boolean
+          preco: number
+          preco_original: number | null
+          produto_id: string
+          status: string
+          updated_at: string
+          valor_maximo: number | null
+          valor_minimo: number | null
+          vigencia_fim: string | null
+          vigencia_inicio: string | null
+        }
+        Insert: {
+          condicoes?: Json
+          created_at?: string
+          criado_por?: string | null
+          deleted_at?: string | null
+          descricao?: string | null
+          empresa_id: string
+          id?: string
+          metadata?: Json
+          moeda?: string
+          nome: string
+          permitir_valor_personalizado?: boolean
+          preco: number
+          preco_original?: number | null
+          produto_id: string
+          status?: string
+          updated_at?: string
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Update: {
+          condicoes?: Json
+          created_at?: string
+          criado_por?: string | null
+          deleted_at?: string | null
+          descricao?: string | null
+          empresa_id?: string
+          id?: string
+          metadata?: Json
+          moeda?: string
+          nome?: string
+          permitir_valor_personalizado?: boolean
+          preco?: number
+          preco_original?: number | null
+          produto_id?: string
+          status?: string
+          updated_at?: string
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+          vigencia_fim?: string | null
+          vigencia_inicio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ofertas_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ofertas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedido_itens: {
+        Row: {
+          comissao_valor_snapshot: number | null
+          created_at: string
+          desconto_unitario: number
+          descricao_snapshot: string | null
+          empresa_id: string
+          id: string
+          imagem_snapshot: string | null
+          item_chave: string
+          nome_snapshot: string
+          oferta_id: string | null
+          order_bump_id: string | null
+          pedido_id: string
+          preco_base_unitario: number
+          preco_final_unitario: number
+          produto_id: string
+          quantidade: number
+          regras_comissao_snapshot: Json
+          regras_preco_snapshot: Json
+          subtotal: number
+          taxa_comissao_percentual_snapshot: number | null
+          tipo: string
+        }
+        Insert: {
+          comissao_valor_snapshot?: number | null
+          created_at?: string
+          desconto_unitario?: number
+          descricao_snapshot?: string | null
+          empresa_id: string
+          id?: string
+          imagem_snapshot?: string | null
+          item_chave: string
+          nome_snapshot: string
+          oferta_id?: string | null
+          order_bump_id?: string | null
+          pedido_id: string
+          preco_base_unitario: number
+          preco_final_unitario: number
+          produto_id: string
+          quantidade?: number
+          regras_comissao_snapshot?: Json
+          regras_preco_snapshot?: Json
+          subtotal: number
+          taxa_comissao_percentual_snapshot?: number | null
+          tipo: string
+        }
+        Update: {
+          comissao_valor_snapshot?: number | null
+          created_at?: string
+          desconto_unitario?: number
+          descricao_snapshot?: string | null
+          empresa_id?: string
+          id?: string
+          imagem_snapshot?: string | null
+          item_chave?: string
+          nome_snapshot?: string
+          oferta_id?: string | null
+          order_bump_id?: string | null
+          pedido_id?: string
+          preco_base_unitario?: number
+          preco_final_unitario?: number
+          produto_id?: string
+          quantidade?: number
+          regras_comissao_snapshot?: Json
+          regras_preco_snapshot?: Json
+          subtotal?: number
+          taxa_comissao_percentual_snapshot?: number | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_itens_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_itens_oferta_id_fkey"
+            columns: ["oferta_id"]
+            isOneToOne: false
+            referencedRelation: "ofertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_itens_order_bump_id_fkey"
+            columns: ["order_bump_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_order_bumps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_itens_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_itens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos: {
+        Row: {
+          afiliado_id: string | null
+          checkout_id: string | null
+          checkout_version_id: string | null
+          cliente_id: string | null
+          confirmado_em: string | null
+          created_at: string
+          desconto_total: number
+          empresa_id: string
+          id: string
+          idempotency_key: string | null
+          link_afiliado_id: string | null
+          link_pagamento_id: string | null
+          metadata: Json
+          moeda: string
+          numero: string
+          oferta_id: string | null
+          origem: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          afiliado_id?: string | null
+          checkout_id?: string | null
+          checkout_version_id?: string | null
+          cliente_id?: string | null
+          confirmado_em?: string | null
+          created_at?: string
+          desconto_total?: number
+          empresa_id: string
+          id?: string
+          idempotency_key?: string | null
+          link_afiliado_id?: string | null
+          link_pagamento_id?: string | null
+          metadata?: Json
+          moeda?: string
+          numero: string
+          oferta_id?: string | null
+          origem?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          afiliado_id?: string | null
+          checkout_id?: string | null
+          checkout_version_id?: string | null
+          cliente_id?: string | null
+          confirmado_em?: string | null
+          created_at?: string
+          desconto_total?: number
+          empresa_id?: string
+          id?: string
+          idempotency_key?: string | null
+          link_afiliado_id?: string | null
+          link_pagamento_id?: string | null
+          metadata?: Json
+          moeda?: string
+          numero?: string
+          oferta_id?: string | null
+          origem?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_checkout_version_id_fkey"
+            columns: ["checkout_version_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_link_afiliado_id_fkey"
+            columns: ["link_afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "links_afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_link_pagamento_id_fkey"
+            columns: ["link_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "links_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_oferta_id_fkey"
+            columns: ["oferta_id"]
+            isOneToOne: false
+            referencedRelation: "ofertas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           acao: Database["public"]["Enums"]["tipo_operacao"]
@@ -3685,6 +4658,7 @@ export type Database = {
           evidencia: string
           id: string
           metadata: Json
+          pedido_id: string | null
           recebedor_snapshot: Json
           referencia_bancaria: string
           transacao_id: string
@@ -3697,6 +4671,7 @@ export type Database = {
           evidencia: string
           id?: string
           metadata?: Json
+          pedido_id?: string | null
           recebedor_snapshot?: Json
           referencia_bancaria: string
           transacao_id: string
@@ -3709,6 +4684,7 @@ export type Database = {
           evidencia?: string
           id?: string
           metadata?: Json
+          pedido_id?: string | null
           recebedor_snapshot?: Json
           referencia_bancaria?: string
           transacao_id?: string
@@ -3727,6 +4703,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pix_confirmacoes_manuais_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
             referencedColumns: ["id"]
           },
           {
@@ -3762,6 +4745,7 @@ export type Database = {
           galeria_urls: string[] | null
           gerencia_estoque: boolean | null
           id: string
+          imagem_principal_asset_id: string | null
           imagem_principal_url: string | null
           integracao_id_externo: string | null
           juros_ao_dia: number | null
@@ -3830,6 +4814,7 @@ export type Database = {
           galeria_urls?: string[] | null
           gerencia_estoque?: boolean | null
           id?: string
+          imagem_principal_asset_id?: string | null
           imagem_principal_url?: string | null
           integracao_id_externo?: string | null
           juros_ao_dia?: number | null
@@ -3898,6 +4883,7 @@ export type Database = {
           galeria_urls?: string[] | null
           gerencia_estoque?: boolean | null
           id?: string
+          imagem_principal_asset_id?: string | null
           imagem_principal_url?: string | null
           integracao_id_externo?: string | null
           juros_ao_dia?: number | null
@@ -3963,6 +4949,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produtos_imagem_principal_asset_id_fkey"
+            columns: ["imagem_principal_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
             referencedColumns: ["id"]
           },
         ]
@@ -4528,6 +5521,74 @@ export type Database = {
           },
         ]
       }
+      reversoes_financeiras: {
+        Row: {
+          afiliado_id: string | null
+          chave_idempotencia: string
+          componente: string
+          created_at: string
+          empresa_id: string
+          estorno_id: string
+          id: string
+          regra_snapshot: Json
+          transacao_id: string
+          valor: number
+        }
+        Insert: {
+          afiliado_id?: string | null
+          chave_idempotencia: string
+          componente: string
+          created_at?: string
+          empresa_id: string
+          estorno_id: string
+          id?: string
+          regra_snapshot?: Json
+          transacao_id: string
+          valor: number
+        }
+        Update: {
+          afiliado_id?: string | null
+          chave_idempotencia?: string
+          componente?: string
+          created_at?: string
+          empresa_id?: string
+          estorno_id?: string
+          id?: string
+          regra_snapshot?: Json
+          transacao_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reversoes_financeiras_afiliado_id_fkey"
+            columns: ["afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "afiliados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reversoes_financeiras_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reversoes_financeiras_estorno_id_fkey"
+            columns: ["estorno_id"]
+            isOneToOne: false
+            referencedRelation: "estornos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reversoes_financeiras_transacao_id_fkey"
+            columns: ["transacao_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -4628,7 +5689,9 @@ export type Database = {
           saldo_disponivel: number
           saldo_em_analise: number
           saldo_estornado: number
+          saldo_liquidado: number
           saldo_previsao_liberar: number
+          saldo_reservado: number
           total_com_impostos: number | null
           total_entrado_historico: number
           total_sacado: number
@@ -4648,7 +5711,9 @@ export type Database = {
           saldo_disponivel?: number
           saldo_em_analise?: number
           saldo_estornado?: number
+          saldo_liquidado?: number
           saldo_previsao_liberar?: number
+          saldo_reservado?: number
           total_com_impostos?: number | null
           total_entrado_historico?: number
           total_sacado?: number
@@ -4668,7 +5733,9 @@ export type Database = {
           saldo_disponivel?: number
           saldo_em_analise?: number
           saldo_estornado?: number
+          saldo_liquidado?: number
           saldo_previsao_liberar?: number
+          saldo_reservado?: number
           total_com_impostos?: number | null
           total_entrado_historico?: number
           total_sacado?: number
@@ -4717,21 +5784,33 @@ export type Database = {
           data_pagamento: string | null
           data_rejeicao: string | null
           data_solicitacao: string
+          data_transferencia: string | null
+          destino_snapshot: Json
           empresa_id: string | null
+          evidencia_transferencia: string | null
           id: string
           id_transferencia_externa: string | null
           metadata: Json | null
           metodo_saque: string
+          modo_processamento: string
           moeda: string | null
           motivo_cancelamento: string | null
           motivo_rejeicao: string | null
           observacoes: string | null
           profile_id: string | null
           protocolo: string
+          provedor_transferencia: string | null
+          referencia_transferencia: string | null
+          regra_taxa_snapshot: Json
           rejeitado_por: string | null
+          reserva_criada_em: string | null
+          reserva_liberada_em: string | null
+          responsavel_pagamento: string | null
           status: Database["public"]["Enums"]["status_saque"]
           taxa_saque: number | null
           transacoes_ids: string[] | null
+          ultima_consulta_provedor_em: string | null
+          ultimo_erro_provedor: string | null
           updated_at: string
           valor_liquido: number
           valor_solicitado: number
@@ -4753,21 +5832,33 @@ export type Database = {
           data_pagamento?: string | null
           data_rejeicao?: string | null
           data_solicitacao?: string
+          data_transferencia?: string | null
+          destino_snapshot?: Json
           empresa_id?: string | null
+          evidencia_transferencia?: string | null
           id?: string
           id_transferencia_externa?: string | null
           metadata?: Json | null
           metodo_saque?: string
+          modo_processamento?: string
           moeda?: string | null
           motivo_cancelamento?: string | null
           motivo_rejeicao?: string | null
           observacoes?: string | null
           profile_id?: string | null
           protocolo: string
+          provedor_transferencia?: string | null
+          referencia_transferencia?: string | null
+          regra_taxa_snapshot?: Json
           rejeitado_por?: string | null
+          reserva_criada_em?: string | null
+          reserva_liberada_em?: string | null
+          responsavel_pagamento?: string | null
           status?: Database["public"]["Enums"]["status_saque"]
           taxa_saque?: number | null
           transacoes_ids?: string[] | null
+          ultima_consulta_provedor_em?: string | null
+          ultimo_erro_provedor?: string | null
           updated_at?: string
           valor_liquido: number
           valor_solicitado: number
@@ -4789,21 +5880,33 @@ export type Database = {
           data_pagamento?: string | null
           data_rejeicao?: string | null
           data_solicitacao?: string
+          data_transferencia?: string | null
+          destino_snapshot?: Json
           empresa_id?: string | null
+          evidencia_transferencia?: string | null
           id?: string
           id_transferencia_externa?: string | null
           metadata?: Json | null
           metodo_saque?: string
+          modo_processamento?: string
           moeda?: string | null
           motivo_cancelamento?: string | null
           motivo_rejeicao?: string | null
           observacoes?: string | null
           profile_id?: string | null
           protocolo?: string
+          provedor_transferencia?: string | null
+          referencia_transferencia?: string | null
+          regra_taxa_snapshot?: Json
           rejeitado_por?: string | null
+          reserva_criada_em?: string | null
+          reserva_liberada_em?: string | null
+          responsavel_pagamento?: string | null
           status?: Database["public"]["Enums"]["status_saque"]
           taxa_saque?: number | null
           transacoes_ids?: string[] | null
+          ultima_consulta_provedor_em?: string | null
+          ultimo_erro_provedor?: string | null
           updated_at?: string
           valor_liquido?: number
           valor_solicitado?: number
@@ -4861,6 +5964,13 @@ export type Database = {
           {
             foreignKeyName: "saques_rejeitado_por_fkey"
             columns: ["rejeitado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saques_responsavel_pagamento_fkey"
+            columns: ["responsavel_pagamento"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -5694,8 +6804,12 @@ export type Database = {
       }
       taxas_plataforma: {
         Row: {
+          arredondamento: string
           ativo: boolean | null
+          atualizado_por: string | null
+          base_calculo: string
           created_at: string
+          criado_por: string | null
           data_fim_vigencia: string | null
           data_inicio_vigencia: string
           dias_liquidacao: number | null
@@ -5704,7 +6818,9 @@ export type Database = {
           is_padrao: boolean | null
           max_parcelas_sem_juros: number | null
           metodo_pagamento: Database["public"]["Enums"]["metodo_pagamento"]
+          operacao: string
           plano: string
+          reverter_taxa_em_devolucao: boolean
           taxa_antecipacao_percentual: number | null
           taxa_boleto: number | null
           taxa_fixa: number
@@ -5718,10 +6834,15 @@ export type Database = {
           taxa_saque_fixa: number | null
           taxa_saque_percentual: number | null
           updated_at: string
+          versao: number
         }
         Insert: {
+          arredondamento?: string
           ativo?: boolean | null
+          atualizado_por?: string | null
+          base_calculo?: string
           created_at?: string
+          criado_por?: string | null
           data_fim_vigencia?: string | null
           data_inicio_vigencia?: string
           dias_liquidacao?: number | null
@@ -5730,7 +6851,9 @@ export type Database = {
           is_padrao?: boolean | null
           max_parcelas_sem_juros?: number | null
           metodo_pagamento: Database["public"]["Enums"]["metodo_pagamento"]
+          operacao?: string
           plano?: string
+          reverter_taxa_em_devolucao?: boolean
           taxa_antecipacao_percentual?: number | null
           taxa_boleto?: number | null
           taxa_fixa?: number
@@ -5744,10 +6867,15 @@ export type Database = {
           taxa_saque_fixa?: number | null
           taxa_saque_percentual?: number | null
           updated_at?: string
+          versao?: number
         }
         Update: {
+          arredondamento?: string
           ativo?: boolean | null
+          atualizado_por?: string | null
+          base_calculo?: string
           created_at?: string
+          criado_por?: string | null
           data_fim_vigencia?: string | null
           data_inicio_vigencia?: string
           dias_liquidacao?: number | null
@@ -5756,7 +6884,9 @@ export type Database = {
           is_padrao?: boolean | null
           max_parcelas_sem_juros?: number | null
           metodo_pagamento?: Database["public"]["Enums"]["metodo_pagamento"]
+          operacao?: string
           plano?: string
+          reverter_taxa_em_devolucao?: boolean
           taxa_antecipacao_percentual?: number | null
           taxa_boleto?: number | null
           taxa_fixa?: number
@@ -5770,13 +6900,70 @@ export type Database = {
           taxa_saque_fixa?: number | null
           taxa_saque_percentual?: number | null
           updated_at?: string
+          versao?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "taxas_plataforma_atualizado_por_fkey"
+            columns: ["atualizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxas_plataforma_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "taxas_plataforma_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taxas_plataforma_historico: {
+        Row: {
+          acao: string
+          alterado_em: string
+          alterado_por: string | null
+          id: string
+          snapshot: Json
+          taxa_id: string
+        }
+        Insert: {
+          acao: string
+          alterado_em?: string
+          alterado_por?: string | null
+          id?: string
+          snapshot: Json
+          taxa_id: string
+        }
+        Update: {
+          acao?: string
+          alterado_em?: string
+          alterado_por?: string | null
+          id?: string
+          snapshot?: Json
+          taxa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taxas_plataforma_historico_alterado_por_fkey"
+            columns: ["alterado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taxas_plataforma_historico_taxa_id_fkey"
+            columns: ["taxa_id"]
+            isOneToOne: false
+            referencedRelation: "taxas_plataforma"
             referencedColumns: ["id"]
           },
         ]
@@ -6308,10 +7495,12 @@ export type Database = {
           moeda_original: string | null
           notas_internas: string | null
           nsu: string | null
+          oferta_id: string | null
           origem_dispositivo: string | null
           parcela_atual: number | null
           parcelas: number | null
           payload_provedor: Json
+          pedido_id: string | null
           pedido_numero: string | null
           pix_chave_snapshot: string | null
           pix_copia_cola: string | null
@@ -6325,6 +7514,8 @@ export type Database = {
           produto_id: string | null
           profile_id: string | null
           provedor_pagamento: string | null
+          regra_financeira_snapshot: Json
+          regra_financeira_versao: string | null
           regras_antifraude: Json | null
           risco_nivel: string | null
           risco_score: number | null
@@ -6392,10 +7583,12 @@ export type Database = {
           moeda_original?: string | null
           notas_internas?: string | null
           nsu?: string | null
+          oferta_id?: string | null
           origem_dispositivo?: string | null
           parcela_atual?: number | null
           parcelas?: number | null
           payload_provedor?: Json
+          pedido_id?: string | null
           pedido_numero?: string | null
           pix_chave_snapshot?: string | null
           pix_copia_cola?: string | null
@@ -6409,6 +7602,8 @@ export type Database = {
           produto_id?: string | null
           profile_id?: string | null
           provedor_pagamento?: string | null
+          regra_financeira_snapshot?: Json
+          regra_financeira_versao?: string | null
           regras_antifraude?: Json | null
           risco_nivel?: string | null
           risco_score?: number | null
@@ -6476,10 +7671,12 @@ export type Database = {
           moeda_original?: string | null
           notas_internas?: string | null
           nsu?: string | null
+          oferta_id?: string | null
           origem_dispositivo?: string | null
           parcela_atual?: number | null
           parcelas?: number | null
           payload_provedor?: Json
+          pedido_id?: string | null
           pedido_numero?: string | null
           pix_chave_snapshot?: string | null
           pix_copia_cola?: string | null
@@ -6493,6 +7690,8 @@ export type Database = {
           produto_id?: string | null
           profile_id?: string | null
           provedor_pagamento?: string | null
+          regra_financeira_snapshot?: Json
+          regra_financeira_versao?: string | null
           regras_antifraude?: Json | null
           risco_nivel?: string | null
           risco_score?: number | null
@@ -6576,6 +7775,20 @@ export type Database = {
             columns: ["link_pagamento_id"]
             isOneToOne: false
             referencedRelation: "links_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_oferta_id_fkey"
+            columns: ["oferta_id"]
+            isOneToOne: false
+            referencedRelation: "ofertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
             referencedColumns: ["id"]
           },
           {
@@ -7305,7 +8518,84 @@ export type Database = {
     }
     Functions: {
       current_empresa_id: { Args: never; Returns: string }
+      fn_aceitar_convite_afiliado: {
+        Args: { p_token: string }
+        Returns: string
+      }
+      fn_admin_financeiro_saques: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          beneficiario_id: string
+          beneficiario_nome: string
+          beneficiario_tipo: string
+          destino: Json
+          modo: string
+          pago_em: string
+          referencia: string
+          saque_id: string
+          solicitado_em: string
+          status: Database["public"]["Enums"]["status_saque"]
+          valor_liquido: number
+          valor_solicitado: number
+        }[]
+      }
+      fn_aplicar_reversao_financeira: {
+        Args: {
+          p_estorno_id: string
+          p_provider_fee_refunded?: number
+          p_valor: number
+        }
+        Returns: boolean
+      }
       fn_cancelar_saque: { Args: { p_saque_id: string }; Returns: boolean }
+      fn_checkout_config_sanitizada: { Args: { p_config: Json }; Returns: Json }
+      fn_checkout_criar: {
+        Args: { p_nome: string; p_oferta_id: string; p_slug?: string }
+        Returns: string
+      }
+      fn_checkout_despublicar: {
+        Args: { p_checkout_id: string }
+        Returns: boolean
+      }
+      fn_checkout_publicar: { Args: { p_checkout_id: string }; Returns: string }
+      fn_checkout_publico: { Args: { p_public_token: string }; Returns: Json }
+      fn_checkout_restaurar_publicado: {
+        Args: { p_checkout_id: string }
+        Returns: string
+      }
+      fn_checkout_salvar_rascunho: {
+        Args: { p_checkout_id: string; p_config: Json }
+        Returns: string
+      }
+      fn_configurar_produto_afiliado: {
+        Args: {
+          p_afiliado_id: string
+          p_ativo?: boolean
+          p_percentual?: number
+          p_produto_id: string
+          p_valor_fixo?: number
+        }
+        Returns: string
+      }
+      fn_confirmar_estorno_manual: {
+        Args: {
+          p_data: string
+          p_estorno_id: string
+          p_evidencia: string
+          p_referencia: string
+        }
+        Returns: boolean
+      }
+      fn_confirmar_estorno_provedor: {
+        Args: {
+          p_estorno_id: string
+          p_gateway_ref: string
+          p_provider_fee_refunded?: number
+          p_provider_payload: Json
+          p_valor: number
+        }
+        Returns: boolean
+      }
       fn_confirmar_pix_manual: {
         Args: {
           p_evidencia: string
@@ -7313,6 +8603,65 @@ export type Database = {
           p_transacao_id: string
         }
         Returns: string
+      }
+      fn_confirmar_saque_manual: {
+        Args: {
+          p_data_transferencia: string
+          p_evidencia: string
+          p_referencia: string
+          p_saque_id: string
+        }
+        Returns: boolean
+      }
+      fn_criar_convite_afiliado: {
+        Args: {
+          p_email?: string
+          p_expira_em?: string
+          p_mensagem?: string
+          p_produtos?: string[]
+          p_taxa_padrao?: number
+        }
+        Returns: Json
+      }
+      fn_criar_link_afiliado: {
+        Args: {
+          p_checkout_id?: string
+          p_empresa_id: string
+          p_link_pagamento_id?: string
+          p_nome_campanha?: string
+          p_produto_id: string
+        }
+        Returns: Json
+      }
+      fn_criar_link_pagamento: {
+        Args: {
+          p_checkout_id: string
+          p_expira_em?: string
+          p_max_usos?: number
+          p_oferta_id: string
+          p_titulo: string
+          p_uso_unico?: boolean
+        }
+        Returns: Json
+      }
+      fn_criar_pedido_checkout_pix: {
+        Args: {
+          p_afiliado_id?: string
+          p_checkout_id: string
+          p_cliente_id: string
+          p_custom_amount: number
+          p_idempotency_key: string
+          p_link_afiliado_id?: string
+          p_link_id: string
+          p_order_bump_ids: string[]
+          p_provedor?: string
+        }
+        Returns: {
+          pedido_id: string
+          pedido_numero: string
+          total: number
+          transacao_id: string
+        }[]
       }
       fn_dashboard_operacional: {
         Args: { p_empresa_id: string; p_fim: string; p_inicio: string }
@@ -7342,7 +8691,39 @@ export type Database = {
           sales: number
         }[]
       }
+      fn_desativar_link_pagamento: {
+        Args: { p_link_id: string }
+        Returns: boolean
+      }
+      fn_estornos_contestacoes: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          created_at: string
+          evidencias: string[]
+          id: string
+          motivo: string
+          pedido_id: string
+          protocolo: string
+          responsavel: string
+          status: string
+          tipo: string
+          transacao_id: string
+          valor: number
+        }[]
+      }
+      fn_gerir_afiliacao: {
+        Args: { p_acao: string; p_afiliado_id: string; p_motivo?: string }
+        Returns: boolean
+      }
       fn_get_empresa_usuario: { Args: never; Returns: string }
+      fn_increment_afiliado_clique: {
+        Args: { p_afiliado_id: string }
+        Returns: undefined
+      }
+      fn_increment_link_afiliado_clique: {
+        Args: { p_link_id: string }
+        Returns: undefined
+      }
       fn_is_admin_global: { Args: never; Returns: boolean }
       fn_listar_pix_manual_pendente: {
         Args: never
@@ -7350,6 +8731,7 @@ export type Database = {
           cliente_email: string
           cliente_nome: string
           criado_em: string
+          pedido_id: string
           pedido_numero: string
           recebedor_cidade: string
           recebedor_nome: string
@@ -7358,6 +8740,22 @@ export type Database = {
           valor: number
         }[]
       }
+      fn_media_asset_em_uso_publicado: {
+        Args: { p_asset_id: string }
+        Returns: boolean
+      }
+      fn_media_registrar: {
+        Args: {
+          p_altura?: number
+          p_largura?: number
+          p_mime: string
+          p_path: string
+          p_sha256?: string
+          p_tamanho: number
+        }
+        Returns: string
+      }
+      fn_media_remover: { Args: { p_asset_id: string }; Returns: boolean }
       fn_obter_config_pix_admin: {
         Args: never
         Returns: {
@@ -7368,6 +8766,7 @@ export type Database = {
           recebedor_nome: string
         }[]
       }
+      fn_pode_gerir_afiliados: { Args: never; Returns: boolean }
       fn_pode_inscrever_marketplace: {
         Args: {
           p_afiliado_id: string
@@ -7389,6 +8788,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      fn_recalcular_saldo_entidade: {
+        Args: {
+          p_afiliado_id?: string
+          p_empresa_id?: string
+          p_profile_id?: string
+        }
+        Returns: string
+      }
+      fn_revogar_convite_afiliado: {
+        Args: { p_invite_id: string }
+        Returns: boolean
+      }
       fn_salvar_config_pix: {
         Args: {
           p_chave?: string
@@ -7398,11 +8809,51 @@ export type Database = {
         }
         Returns: undefined
       }
+      fn_saque_admin_transicionar: {
+        Args: {
+          p_motivo?: string
+          p_novo_status: Database["public"]["Enums"]["status_saque"]
+          p_saque_id: string
+        }
+        Returns: boolean
+      }
+      fn_saque_liberar_reserva: {
+        Args: { p_motivo: string; p_saque_id: string }
+        Returns: undefined
+      }
       fn_seed_role_permissions: { Args: never; Returns: undefined }
       fn_sincronizar_saldo_empresa: { Args: never; Returns: number }
+      fn_solicitar_estorno: {
+        Args: {
+          p_detalhes?: string
+          p_idempotency_key?: string
+          p_motivo: string
+          p_transacao_id: string
+          p_valor: number
+        }
+        Returns: string
+      }
       fn_solicitar_saque: {
         Args: { p_conta_bancaria_id: string; p_valor: number }
         Returns: string
+      }
+      fn_taxa_operacao_calcular: {
+        Args: {
+          p_empresa_id: string
+          p_metodo: Database["public"]["Enums"]["metodo_pagamento"]
+          p_operacao: string
+          p_valor_bruto: number
+          p_valor_liquido_provedor?: number
+        }
+        Returns: Json
+      }
+      fn_taxa_preview: {
+        Args: {
+          p_metodo: Database["public"]["Enums"]["metodo_pagamento"]
+          p_operacao?: string
+          p_valor: number
+        }
+        Returns: Json
       }
       fn_tem_permissao: {
         Args: {
@@ -7440,7 +8891,7 @@ export type Database = {
       prioridade_ticket: "baixa" | "media" | "alta" | "critica" | "urgente"
       status_afiliado: "pendente" | "ativo" | "inativo" | "suspenso" | "banido"
       status_ativo: "ativo" | "inativo" | "suspenso" | "bloqueado"
-      status_checkout: "rascunho" | "publicado" | "arquivado"
+      status_checkout: "rascunho" | "publicado" | "arquivado" | "desativado"
       status_comissao:
         | "pendente"
         | "aprovada"
@@ -7758,7 +9209,7 @@ export const Constants = {
       prioridade_ticket: ["baixa", "media", "alta", "critica", "urgente"],
       status_afiliado: ["pendente", "ativo", "inativo", "suspenso", "banido"],
       status_ativo: ["ativo", "inativo", "suspenso", "bloqueado"],
-      status_checkout: ["rascunho", "publicado", "arquivado"],
+      status_checkout: ["rascunho", "publicado", "arquivado", "desativado"],
       status_comissao: [
         "pendente",
         "aprovada",
