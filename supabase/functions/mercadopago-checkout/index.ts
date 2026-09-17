@@ -328,46 +328,64 @@ Deno.serve(async (request) => {
     : isUuid(request.headers.get("x-idempotency-key"))
       ? request.headers.get("x-idempotency-key")!
       : crypto.randomUUID();
-  const selectedBumps = Array.isArray(body.order_bump_ids) ? [...new Set(body.order_bump_ids.filter(isUuid))] : [];
-  if (Array.isArray(body.order_bump_ids) && selectedBumps.length !== body.order_bump_ids.length) return jsonResponse({ error: "invalid_order_bump_ids" }, 422);
+  const selectedBumpIds = Array.isArray(body.order_bump_ids) ? [...new Set(body.order_bump_ids.filter((id: unknown) => typeof id === "string" && id.trim()))] as string[] : [];
+  if (Array.isArray(body.order_bump_ids) && selectedBumpIds.length !== body.order_bump_ids.length) return jsonResponse({ error: "invalid_order_bump_ids" }, 422);
+  const bumpsById = new Map(bumps.map((bump) => [bump.id, bump]));
+  const selectedBumps = selectedBumpIds.map((id) => bumpsById.get(id));
+  if (selectedBumps.some((bump) => !bump)) return jsonResponse({ error: "invalid_order_bumps" }, 422);
+  const bumpSnapshot = selectedBumps as Array<{ id: string; product_id: string; name: string; amount: number }>;
 
   const affiliateCode = typeof body.affiliate_code === "string" ? body.affiliate_code.trim() : "";
   const attribution = await resolveAffiliate(supabase, affiliateCode, source);
   const provider = pixConfig.mode === "chave" ? "pix_chave" : "mercadopago";
-  const customAmount = source.offer.permitir_valor_personalizado || source.link?.permite_editar_valor ? Number(body.amount) : null;
+  const baseAmount = Number(checkoutBaseAmount(source, body.amount).toFixed(2));
+  if (!Number.isFinite(baseAmount) || baseAmount <= 0) return jsonResponse({ error: "invalid_checkout_amount" }, 422);
+  const bumpAmount = Number(bumpSnapshot.reduce((sum, bump) => sum + bump.amount, 0).toFixed(2));
+  const total = Number((baseAmount + bumpAmount).toFixed(2));
+  const metadata = { checkout_source: source.link ? "payment_link" : "checkout", public_checkout: true, order_bumps: bumpSnapshot, total_components: { base_amount: baseAmount, order_bumps_amount: bumpAmount, total } };
 
-  const orderResult = await supabase.rpc("fn_criar_pedido_checkout_pix", {
-    p_checkout_id: source.checkout.id,
-    p_link_id: source.link?.id ?? null,
-    p_cliente_id: customer!.id,
-    p_order_bump_ids: selectedBumps,
-    p_custom_amount: Number.isFinite(customAmount) && customAmount! > 0 ? customAmount : null,
-    p_idempotency_key: idempotencyKey,
-    p_afiliado_id: attribution?.afiliado_id ?? null,
-    p_link_afiliado_id: attribution?.link_afiliado_id ?? null,
-    p_provedor: provider,
-  });
-  if (orderResult.error || !orderResult.data?.length) {
-    console.error("Order creation failed", orderResult.error);
-    const msg = orderResult.error?.message ?? "order_create_failed";
-    return jsonResponse({ error: msg.includes("Order bump") || msg.includes("Combinação") ? "invalid_order_bumps" : "order_create_failed" }, 422);
-  }
-  const order = orderResult.data[0] as { pedido_id: string; transacao_id: string; pedido_numero: string; total: number };
-  const total = Number(order.total);
-
-  const existing = await supabase.from("transacoes").select("id,status,status_detalhe_provedor,id_transacao_gateway,pix_copia_cola,pix_qrcode,pix_modo,pix_recebedor_nome,pix_recebedor_cidade,payload_provedor").eq("id", order.transacao_id).single();
+  let existing = await supabase.from("transacoes").select("id,status,status_detalhe_provedor,id_transacao_gateway,pix_copia_cola,pix_qrcode,pix_modo,pix_recebedor_nome,pix_recebedor_cidade,payload_provedor,valor_bruto,afiliado_id,link_afiliado_id").eq("empresa_id", source.empresaId).eq("idempotency_key", idempotencyKey).maybeSingle();
   if (existing.error) return jsonResponse({ error: "transaction_lookup_failed" }, 500);
+  if (!existing.data) {
+    const inserted = await supabase.from("transacoes").insert({
+      empresa_id: source.empresaId,
+      cliente_id: customer!.id,
+      produto_id: source.product.id,
+      checkout_id: source.checkout.id,
+      link_pagamento_id: source.link?.id ?? null,
+      afiliado_id: attribution?.afiliado_id ?? null,
+      link_afiliado_id: attribution?.link_afiliado_id ?? null,
+      pedido_numero: `CE-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      codigo_externo: source.link?.codigo_unico ?? source.checkout.slug ?? null,
+      tipo: source.link ? "link_pagamento" : "venda",
+      metodo_pagamento: "pix",
+      status: "pendente",
+      valor_bruto: total,
+      valor_liquido: total,
+      moeda: source.offer.moeda ?? "BRL",
+      idempotency_key: idempotencyKey,
+      provedor_pagamento: provider,
+      origem_dispositivo: "web",
+      ip_cliente: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 45) ?? null,
+      metadata,
+    }).select("id,status,status_detalhe_provedor,id_transacao_gateway,pix_copia_cola,pix_qrcode,pix_modo,pix_recebedor_nome,pix_recebedor_cidade,payload_provedor,valor_bruto,afiliado_id,link_afiliado_id").single();
+    if (inserted.error?.code === "23505") existing = await supabase.from("transacoes").select("id,status,status_detalhe_provedor,id_transacao_gateway,pix_copia_cola,pix_qrcode,pix_modo,pix_recebedor_nome,pix_recebedor_cidade,payload_provedor,valor_bruto,afiliado_id,link_afiliado_id").eq("empresa_id", source.empresaId).eq("idempotency_key", idempotencyKey).single();
+    else if (inserted.error) return jsonResponse({ error: "transaction_create_failed" }, 500);
+    else existing = inserted;
+  }
+  if (!existing.data) return jsonResponse({ error: "transaction_create_failed" }, 500);
   const tx = existing.data;
+  const persistedTotal = Number(tx.valor_bruto);
 
   if (provider === "pix_chave") {
     if (tx.pix_copia_cola && tx.pix_qrcode) {
-      return jsonResponse({ ok: true, duplicate: true, order_id: order.pedido_id, transaction_id: tx.id, payment_id: tx.id, status: tx.status, status_detail: tx.status_detalhe_provedor, amount: total, receiver_name: tx.pix_recebedor_nome, receiver_city: tx.pix_recebedor_cidade, manual_confirmation: true, message: "Aguardando conferência", pix: { qr_code: tx.pix_copia_cola, qr_code_base64: tx.pix_qrcode, ticket_url: null }, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
+      return jsonResponse({ ok: true, duplicate: true, transaction_id: tx.id, payment_id: tx.id, status: tx.status, status_detail: tx.status_detalhe_provedor, amount: persistedTotal, receiver_name: tx.pix_recebedor_nome, receiver_city: tx.pix_recebedor_cidade, manual_confirmation: true, message: "Aguardando conferência", pix: { qr_code: tx.pix_copia_cola, qr_code_base64: tx.pix_qrcode, ticket_url: null }, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
     }
     const txid = normalizePixTxid(tx.id);
     let payload: string;
     let qrDataUrl: string;
     try {
-      payload = buildStaticPixPayload({ key: pixConfig.key, receiverName: pixConfig.receiverName, receiverCity: pixConfig.receiverCity, amount: total, txid });
+      payload = buildStaticPixPayload({ key: pixConfig.key, receiverName: pixConfig.receiverName, receiverCity: pixConfig.receiverCity, amount: persistedTotal, txid });
       qrDataUrl = await QRCode.toDataURL(payload, { errorCorrectionLevel: "M", margin: 2, width: 480 });
     } catch (error) {
       console.error("Static Pix generation failed", error);
@@ -390,26 +408,28 @@ Deno.serve(async (request) => {
       pix_gerado_em: new Date().toISOString(),
       payload_provedor: { mode: "chave", confirmation: "manual", br_code: "BR Code/EMV", version: 1 },
       updated_at: new Date().toISOString(),
-    }).eq("id", tx.id).eq("status", "pendente");
+    }).eq("id", tx.id).eq("status", "pendente").is("pix_copia_cola", null);
     if (updateError) return jsonResponse({ error: "pix_persist_failed" }, 500);
-    return jsonResponse({ ok: true, order_id: order.pedido_id, transaction_id: tx.id, payment_id: tx.id, status: "pendente", status_detail: "aguardando_conferencia_manual", amount: total, receiver_name: pixConfig.receiverName, receiver_city: pixConfig.receiverCity, manual_confirmation: true, message: "Aguardando conferência", pix: { qr_code: payload, qr_code_base64: qrBase64, ticket_url: null }, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
+    const persisted = await supabase.from("transacoes").select("status,status_detalhe_provedor,pix_copia_cola,pix_qrcode,pix_recebedor_nome,pix_recebedor_cidade,valor_bruto").eq("id", tx.id).single();
+    if (persisted.error || !persisted.data?.pix_copia_cola || !persisted.data.pix_qrcode) return jsonResponse({ error: "pix_persist_failed" }, 500);
+    return jsonResponse({ ok: true, transaction_id: tx.id, payment_id: tx.id, status: persisted.data.status, status_detail: persisted.data.status_detalhe_provedor, amount: Number(persisted.data.valor_bruto), receiver_name: persisted.data.pix_recebedor_nome, receiver_city: persisted.data.pix_recebedor_cidade, manual_confirmation: true, message: "Aguardando conferência", pix: { qr_code: persisted.data.pix_copia_cola, qr_code_base64: persisted.data.pix_qrcode, ticket_url: null }, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
   }
 
   if (!accessToken) return jsonResponse({ error: "mercadopago_not_configured" }, 503);
   if (tx.id_transacao_gateway) {
     const payload = tx.payload_provedor as Record<string, any> | null;
     const pix = payload?.point_of_interaction?.transaction_data;
-    return jsonResponse({ ok: true, duplicate: true, order_id: order.pedido_id, transaction_id: tx.id, payment_id: tx.id_transacao_gateway, status: tx.status, status_detail: tx.status_detalhe_provedor, amount: total, manual_confirmation: false, message: null, pix: pix ? { qr_code: pix.qr_code ?? null, qr_code_base64: pix.qr_code_base64 ?? null, ticket_url: pix.ticket_url ?? null } : null, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
+    return jsonResponse({ ok: true, duplicate: true, transaction_id: tx.id, payment_id: tx.id_transacao_gateway, status: tx.status, status_detail: tx.status_detalhe_provedor, amount: persistedTotal, manual_confirmation: false, message: null, pix: pix ? { qr_code: pix.qr_code ?? null, qr_code_base64: pix.qr_code_base64 ?? null, ticket_url: pix.ticket_url ?? null } : null, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
   }
 
   const { firstName, lastName } = splitName(fullName);
   const paymentBody: Record<string, any> = {
-    transaction_amount: total,
+    transaction_amount: persistedTotal,
     description: source.product.nome,
     payment_method_id: "pix",
     payer: { email, first_name: firstName, last_name: lastName, ...(cpf ? { identification: { type: "CPF", number: cpf } } : {}) },
     external_reference: tx.id,
-    metadata: { cash_engine_transaction_id: tx.id, pedido_id: order.pedido_id, empresa_id: source.empresaId, produto_id: source.product.id, checkout_id: source.checkout.id, link_pagamento_id: source.link?.id ?? null, afiliado_id: attribution?.afiliado_id ?? null, link_afiliado_id: attribution?.link_afiliado_id ?? null },
+    metadata: { cash_engine_transaction_id: tx.id, empresa_id: source.empresaId, produto_id: source.product.id, checkout_id: source.checkout.id, link_pagamento_id: source.link?.id ?? null, afiliado_id: tx.afiliado_id ?? null, link_afiliado_id: tx.link_afiliado_id ?? null, order_bumps: bumpSnapshot, total_components: metadata.total_components },
     notification_url: `${supabaseUrl}/functions/v1/mercadopago-webhook`,
   };
   let response: Response;
