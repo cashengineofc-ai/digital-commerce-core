@@ -1,122 +1,213 @@
-import { useEffect, useState } from "react";
-import { Download } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Download, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
-import { StatementTable } from "@/components/app/finance/StatementTable";
+import { StatementTable, type StatementFilters } from "@/components/app/finance/StatementTable";
 
-type ExportRow = {
-  id: string;
-  date: string;
-  description: string;
-  type: "credito" | "debito";
-  amount: number;
-  balance: number | null;
+type Summary = {
+  saldo_abertura: number;
+  creditos: number;
+  debitos: number;
+  movimento_liquido: number;
+  saldo_fechamento: number;
 };
 
+function startIso(value: string) {
+  return value ? new Date(`${value}T00:00:00`).toISOString() : null;
+}
+function endIso(value: string) {
+  if (!value) return null;
+  const date = new Date(`${value}T00:00:00`);
+  date.setDate(date.getDate() + 1);
+  return date.toISOString();
+}
+function csvCell(value: unknown) {
+  let text = String(value ?? "");
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
 export function StatementPage() {
-  const [rows, setRows] = useState<ExportRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState<"" | "credito" | "debito">("");
+  const [bucket, setBucket] = useState("");
+  const [summary, setSummary] = useState<Summary>({
+    saldo_abertura: 0,
+    creditos: 0,
+    debitos: 0,
+    movimento_liquido: 0,
+    saldo_fechamento: 0,
+  });
+  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const filters = useMemo<StatementFilters>(
+    () => ({ start: start || null, end: end || null, search, type, bucket }),
+    [start, end, search, type, bucket],
+  );
 
   useEffect(() => {
     let active = true;
-
     async function load() {
-      setLoading(true);
+      setLoadingSummary(true);
+      setError(null);
       try {
-        const { data: auth } = await supabase.auth.getUser();
-        if (!auth.user) return;
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("empresa_id")
-          .eq("id", auth.user.id)
-          .maybeSingle();
-        if (!profile?.empresa_id) return;
-
-        const { data, error } = await supabase
-          .from("lancamentos_contabeis")
-          .select("id,data_lancamento,descricao,tipo_lancamento,valor,saldo_atual")
-          .eq("empresa_id", profile.empresa_id)
-          .order("data_lancamento", { ascending: false });
-
-        if (error) throw error;
+        const { data, error: rpcError } = await (supabase as any).rpc("fn_extrato_resumo", {
+          p_entidade: "empresa",
+          p_inicio: startIso(start),
+          p_fim: endIso(end),
+        });
+        if (rpcError) throw rpcError;
         if (!active) return;
-
-        setRows(
-          (data ?? []).map((row) => ({
-            id: row.id,
-            date: row.data_lancamento,
-            description: row.descricao,
-            type: row.tipo_lancamento === "C" ? "credito" : "debito",
-            amount: Math.abs(Number(row.valor ?? 0)),
-            balance: row.saldo_atual == null ? null : Number(row.saldo_atual),
-          })),
-        );
-      } catch (error) {
-        console.error("Falha ao calcular totais do extrato", error);
-        if (active) setRows([]);
+        const row = Array.isArray(data) ? data[0] : data;
+        setSummary({
+          saldo_abertura: Number(row?.saldo_abertura ?? 0),
+          creditos: Number(row?.creditos ?? 0),
+          debitos: Number(row?.debitos ?? 0),
+          movimento_liquido: Number(row?.movimento_liquido ?? 0),
+          saldo_fechamento: Number(row?.saldo_fechamento ?? 0),
+        });
+      } catch (cause) {
+        if (active) setError(cause instanceof Error ? cause.message : "Não foi possível calcular o extrato.");
       } finally {
-        if (active) setLoading(false);
+        if (active) setLoadingSummary(false);
       }
     }
-
     void load();
-    return () => {
-      active = false;
-    };
-  }, []);
+    return () => { active = false; };
+  }, [start, end]);
 
-  const credits = rows.filter((r) => r.type === "credito").reduce((a, r) => a + r.amount, 0);
-  const debits = rows.filter((r) => r.type === "debito").reduce((a, r) => a + r.amount, 0);
+  async function exportCsv() {
+    if (exporting) return;
+    setExporting(true);
+    setError(null);
+    try {
+      const rows: any[] = [];
+      let offset = 0;
+      while (true) {
+        const { data, error: rpcError } = await (supabase as any).rpc("fn_extrato_financeiro_v2", {
+          p_entidade: "empresa",
+          p_inicio: startIso(start),
+          p_fim: endIso(end),
+          p_tipo: type || null,
+          p_bucket: bucket || null,
+          p_busca: search.trim() || null,
+          p_limit: 200,
+          p_offset: offset,
+        });
+        if (rpcError) throw rpcError;
+        const page = (data ?? []) as any[];
+        rows.push(...page);
+        if (page.length < 200) break;
+        offset += 200;
+      }
 
-  function exportCsv() {
-    if (rows.length === 0) return;
-    const csvRows = [
-      ["ID", "Data", "Descrição", "Tipo", "Valor", "Saldo"],
-      ...rows.map((r) => [
-        r.id,
-        r.date,
-        r.description,
-        r.type,
-        r.amount.toFixed(2),
-        r.balance == null ? "" : r.balance.toFixed(2),
-      ]),
-    ];
-    const csv = csvRows
-      .map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","))
-      .join("\n");
-    const url = URL.createObjectURL(new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `extrato-${new Date().toISOString().slice(0, 10)}.csv`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+      if (!rows.length) return;
+      const csv = [
+        ["Data","Descrição","Conta","Estado","Tipo","Valor","Referência","Transação","Saque","Estorno"].map(csvCell).join(","),
+        ...rows.map((row) => [
+          row.data_lancamento,
+          row.descricao,
+          row.conta,
+          row.bucket,
+          row.tipo,
+          Number(row.valor_assinado ?? 0).toFixed(2),
+          row.documento ?? "",
+          row.transacao_id ?? "",
+          row.saque_id ?? "",
+          row.estorno_id ?? "",
+        ].map(csvCell).join(",")),
+      ].join("\n");
+
+      const url = URL.createObjectURL(new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `extrato-${new Date().toISOString().slice(0,10)}.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível exportar o extrato.");
+    } finally {
+      setExporting(false);
+    }
   }
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Extrato</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Extrato</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {loading
-              ? "Carregando movimentações..."
-              : `${formatBRL(credits)} em entradas · ${formatBRL(debits)} em saídas e taxas`}
+            Razão imutável: correções aparecem como novos ajustes ou reversões.
           </p>
         </div>
         <button
-          onClick={exportCsv}
-          disabled={rows.length === 0}
-          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3.5 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => void exportCsv()}
+          disabled={exporting}
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3.5 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
         >
           <Download className="h-4 w-4" />
-          Exportar CSV
+          {exporting ? "Exportando..." : "Exportar CSV"}
         </button>
       </header>
 
-      <div className="mt-6">
-        <StatementTable pageSize={14} />
+      {error && (
+        <div className="mt-5 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {[
+          ["Saldo de abertura", summary.saldo_abertura],
+          ["Entradas", summary.creditos],
+          ["Saídas", summary.debitos],
+          ["Movimento líquido", summary.movimento_liquido],
+          ["Saldo de fechamento", summary.saldo_fechamento],
+        ].map(([label,value]) => (
+          <div key={String(label)} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <p className="text-xs font-medium text-muted-foreground">{label}</p>
+            <p className="mt-2 text-lg font-semibold tabular-nums">
+              {loadingSummary ? "—" : formatBRL(Number(value))}
+            </p>
+          </div>
+        ))}
       </div>
+
+      <div className="mt-6 grid gap-3 rounded-xl border border-border bg-card p-3 md:grid-cols-[1fr_150px_180px_150px_150px]">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Buscar lançamento" className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm" />
+        </div>
+        <select value={type} onChange={(e)=>setType(e.target.value as ""|"credito"|"debito")} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+          <option value="">Entradas e saídas</option>
+          <option value="credito">Entradas</option>
+          <option value="debito">Saídas</option>
+        </select>
+        <select value={bucket} onChange={(e)=>setBucket(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+          <option value="">Todos os estados</option>
+          <option value="a_receber">A receber</option>
+          <option value="disponivel">Disponível</option>
+          <option value="reservado">Reservado</option>
+          <option value="bloqueado">Bloqueado</option>
+          <option value="liquidado">Liquidado</option>
+          <option value="estornado">Estornado</option>
+          <option value="devedor">Débito pendente</option>
+        </select>
+        <input type="date" value={start} onChange={(e)=>setStart(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
+        <input type="date" value={end} min={start || undefined} onChange={(e)=>setEnd(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm" />
+      </div>
+
+      <div className="mt-4">
+        <StatementTable pageSize={25} filters={filters} showFilters={false} />
+      </div>
+
+      <p className="mt-3 text-xs text-muted-foreground">
+        Saldo de abertura = posição dos buckets ativos antes do início do período. Fechamento = abertura + movimento líquido. Valores liquidados e estornados permanecem no histórico, mas não compõem o saldo utilizável.
+      </p>
     </div>
   );
 }
