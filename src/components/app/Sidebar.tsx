@@ -30,17 +30,15 @@ function Brand() {
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { role } = useAppShell();
-  const { isAdminGlobal: tempIsAdminGlobal } = useTempAuth();
+  const { isAdminGlobal } = useTempAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const windowIsAdmin =
-    typeof window !== "undefined" &&
-    (window as unknown as { is_admin_global?: boolean }).is_admin_global === true;
-  const isAdminGlobal = tempIsAdminGlobal || windowIsAdmin || role === "admin_global";
 
   return (
     <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
       {navGroups.map((group) => {
-        if (group.label === "Plataforma" && !isAdminGlobal) return null;
+        if ((group.label === "Plataforma" || group.label === "Desenvolvedores") && !isAdminGlobal) {
+          return null;
+        }
         const items = group.items.filter(
           (item) => !(role === "afiliado" && hiddenForAffiliate.has(item.to)),
         );
