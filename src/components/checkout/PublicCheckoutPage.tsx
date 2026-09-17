@@ -110,9 +110,8 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
   useEffect(() => {
     let active = true;
     const searchParams = new URLSearchParams(window.location.search);
-    affiliateCodeRef.current = ["ref", "aff", "affiliate"]
-      .map((key) => searchParams.get(key)?.trim() ?? "")
-      .find(Boolean) ?? "";
+    affiliateCodeRef.current =
+      ["ref", "aff", "affiliate"].map((key) => searchParams.get(key)?.trim() ?? "").find(Boolean) ?? "";
     setLoading(true);
     setLoadError(null);
     setCheckout(null);

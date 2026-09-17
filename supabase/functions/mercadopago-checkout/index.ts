@@ -500,7 +500,7 @@ Deno.serve(async (request) => {
       }
     } else {
       transactionId = data.id;
-        transactionAffiliateAttribution = affiliateAttribution;
+      transactionAffiliateAttribution = affiliateAttribution;
     }
   }
 
