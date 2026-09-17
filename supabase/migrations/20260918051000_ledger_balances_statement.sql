@@ -6,6 +6,7 @@ ALTER TABLE public.saldos
   ADD COLUMN IF NOT EXISTS saldo_reservado numeric(15,2) NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS saldo_liquidado numeric(18,2) NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS saldo_bloqueado_operacional numeric(15,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS saldo_devedor numeric(15,2) NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS origem_calculo text NOT NULL DEFAULT 'legacy';
 
 DO $$
@@ -20,6 +21,7 @@ BEGIN
         AND saldo_reservado >= 0
         AND saldo_liquidado >= 0
         AND saldo_bloqueado_operacional >= 0
+        AND saldo_devedor >= 0
       );
   END IF;
 END $$;
@@ -85,6 +87,8 @@ DECLARE
   v_bloqueado numeric(15,2);
   v_liquidado numeric(18,2);
   v_estornado numeric(15,2);
+  v_devedor numeric(15,2);
+  v_disponivel_bruto numeric(15,2);
   v_bruto numeric(15,2);
 BEGIN
   IF (p_empresa_id IS NOT NULL)::int
@@ -94,15 +98,17 @@ BEGIN
   END IF;
 
   v_a_receber:=round(public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'a_receber'),2);
-  v_disponivel:=round(public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'disponivel'),2);
+  v_disponivel_bruto:=round(public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'disponivel'),2);
   v_reservado:=round(public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'reservado'),2);
   v_bloqueado:=round(public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'bloqueado'),2);
   v_liquidado:=round(public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'liquidado'),2);
   v_estornado:=abs(round(public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'estornado'),2));
+  v_devedor:=greatest(round(public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'devedor'),2),0);
 
-  -- Valores negativos em buckets ativos representam inconsistência e nunca viram saldo utilizável.
+  -- Débito pendente consome disponibilidade antes de permitir novo saque.
   v_a_receber:=greatest(v_a_receber,0);
-  v_disponivel:=greatest(v_disponivel,0);
+  v_disponivel:=greatest(v_disponivel_bruto-v_devedor,0);
+  v_devedor:=greatest(v_devedor-greatest(v_disponivel_bruto,0),0);
   v_reservado:=greatest(v_reservado,0);
   v_bloqueado:=greatest(v_bloqueado,0);
   v_liquidado:=greatest(v_liquidado,0);
@@ -112,13 +118,13 @@ BEGIN
     empresa_id,profile_id,afiliado_id,
     saldo_bruto,saldo_disponivel,saldo_bloqueado,saldo_estornado,
     saldo_previsao_liberar,saldo_a_receber,saldo_reservado,
-    saldo_liquidado,saldo_bloqueado_operacional,origem_calculo,
+    saldo_liquidado,saldo_bloqueado_operacional,saldo_devedor,origem_calculo,
     ultimo_movimento,atualizado_em
   ) VALUES (
     p_empresa_id,p_profile_id,p_afiliado_id,
     v_bruto,v_disponivel,v_reservado+v_bloqueado,v_estornado,
     v_a_receber,v_a_receber,v_reservado,
-    v_liquidado,v_bloqueado,'ledger',
+    v_liquidado,v_bloqueado,v_devedor,'ledger',
     now(),now()
   )
   ON CONFLICT (empresa_id,profile_id,afiliado_id)
@@ -132,6 +138,7 @@ BEGIN
     saldo_reservado=excluded.saldo_reservado,
     saldo_liquidado=excluded.saldo_liquidado,
     saldo_bloqueado_operacional=excluded.saldo_bloqueado_operacional,
+    saldo_devedor=excluded.saldo_devedor,
     origem_calculo='ledger',
     ultimo_movimento=now(),
     atualizado_em=now()
@@ -434,6 +441,7 @@ RETURNS TABLE(
   bloqueado numeric,
   liquidado_historico numeric,
   estornado_historico numeric,
+  devedor numeric,
   atualizado_em timestamptz
 )
 LANGUAGE plpgsql
@@ -458,6 +466,7 @@ BEGIN
       coalesce(s.saldo_bloqueado_operacional,0),
       coalesce(s.saldo_liquidado,0),
       coalesce(s.saldo_estornado,0),
+      coalesce(s.saldo_devedor,0),
       s.atualizado_em
     FROM public.saldos s
     WHERE s.empresa_id=v_empresa
@@ -485,6 +494,7 @@ BEGIN
       coalesce(s.saldo_bloqueado_operacional,0),
       coalesce(s.saldo_liquidado,0),
       coalesce(s.saldo_estornado,0),
+      coalesce(s.saldo_devedor,0),
       s.atualizado_em
     FROM public.saldos s
     WHERE s.afiliado_id=v_afiliado;
