@@ -561,7 +561,11 @@ BEGIN
   RETURN QUERY
   WITH entity_rows AS (
     SELECT l.*,
-      CASE WHEN l.tipo_lancamento='C' THEN l.valor ELSE -l.valor END AS signed_value
+      CASE
+        WHEN l.bucket='devedor'
+          THEN CASE WHEN l.tipo_lancamento='C' THEN -l.valor ELSE l.valor END
+        ELSE CASE WHEN l.tipo_lancamento='C' THEN l.valor ELSE -l.valor END
+      END AS signed_value
     FROM public.lancamentos_contabeis l
     WHERE (
       (p_entidade='empresa'
@@ -576,7 +580,7 @@ BEGIN
     SELECT coalesce(sum(signed_value),0) AS value
     FROM entity_rows
     WHERE p_inicio IS NOT NULL AND data_lancamento<p_inicio
-      AND bucket IN ('a_receber','disponivel','reservado','bloqueado')
+      AND bucket IN ('a_receber','disponivel','reservado','bloqueado','devedor')
   ),
   filtered AS (
     SELECT *
