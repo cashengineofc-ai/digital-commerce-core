@@ -59,6 +59,16 @@ function LoginPage() {
       } else {
         toast.error("Usuário ou senha incorretos");
       }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      if (message.includes("Email not confirmed")) {
+        toast.error("Confirme seu e-mail antes de entrar.");
+      } else if (message.includes("Invalid login credentials")) {
+        toast.error("E-mail ou senha incorretos.");
+      } else {
+        toast.error("Não foi possível entrar agora. Tente novamente.");
+      }
     } finally {
       setSubmitting(false);
     }
