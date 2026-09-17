@@ -12,16 +12,33 @@ export const periods: { key: PeriodKey; label: string }[] = [
 ];
 
 export const roles: { key: RoleKey; label: string; description: string }[] = [
-  { key: "admin_global", label: "Admin Global", description: "Acesso total e irrestrito à plataforma" },
-  { key: "super-admin", label: "Super Admin", description: "Visão global da plataforma" },
-  { key: "produtor", label: "Produtor", description: "Vendas, produtos e carteira" },
-  { key: "afiliado", label: "Afiliado", description: "Comissões e marketplace" },
+  {
+    key: "admin_global",
+    label: "Admin da plataforma",
+    description: "Autorização global definida exclusivamente no backend",
+  },
+  {
+    key: "super-admin",
+    label: "Administrador da empresa",
+    description: "Administra somente a empresa vinculada",
+  },
+  {
+    key: "produtor",
+    label: "Membro da empresa",
+    description: "Acesso conforme funções e permissões concedidas",
+  },
+  {
+    key: "afiliado",
+    label: "Afiliado",
+    description: "Acesso à própria operação de afiliação",
+  },
 ];
 
 type AppShellState = {
   period: PeriodKey;
   setPeriod: (p: PeriodKey) => void;
   role: RoleKey;
+  /** Uso interno: reflete o papel já validado pelo backend. Não é um seletor de permissão. */
   setRole: (r: RoleKey) => void;
 };
 
@@ -29,7 +46,7 @@ const AppShellContext = createContext<AppShellState | null>(null);
 
 export function AppShellProvider({ children }: { children: ReactNode }) {
   const [period, setPeriod] = useState<PeriodKey>("30d");
-  const [role, setRole] = useState<RoleKey>("super-admin");
+  const [role, setRole] = useState<RoleKey>("produtor");
 
   const value = useMemo(() => ({ period, setPeriod, role, setRole }), [period, role]);
 
