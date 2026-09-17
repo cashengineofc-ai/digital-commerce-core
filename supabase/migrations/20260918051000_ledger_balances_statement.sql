@@ -121,7 +121,7 @@ BEGIN
     v_liquidado,v_bloqueado,'ledger',
     now(),now()
   )
-  ON CONFLICT (empresa_id,profile_id,afiliado_id) NULLS NOT DISTINCT
+  ON CONFLICT (empresa_id,profile_id,afiliado_id)
   DO UPDATE SET
     saldo_bruto=excluded.saldo_bruto,
     saldo_disponivel=excluded.saldo_disponivel,
