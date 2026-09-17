@@ -220,7 +220,7 @@ export function PaymentLinksPage() {
 
   async function copyUrl(link: PaymentLink) {
     await navigator.clipboard.writeText(
-      `${window.location.origin}/pay/${link.public_token}`,
+      `${window.location.origin}/pagar/${link.public_token}`,
     );
   }
 
@@ -329,7 +329,7 @@ export function PaymentLinksPage() {
                             <button onClick={() => void copyUrl(link)} className="grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-muted" title="Copiar URL">
                               <Copy className="h-3.5 w-3.5" />
                             </button>
-                            <a href={`/pay/${link.public_token}`} target="_blank" rel="noreferrer" className="grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-muted" title="Abrir">
+                            <a href={`/pagar/${link.public_token}`} target="_blank" rel="noreferrer" className="grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-muted" title="Abrir">
                               <Eye className="h-3.5 w-3.5" />
                             </a>
                             <button onClick={() => void disableLink(link.id)} className="grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-muted" title="Desativar">
