@@ -149,6 +149,7 @@ export function CheckoutEditor({
   const [copied, setCopied] = useState(false);
 
   const publicPath = checkout ? `/checkout/${checkout.public_token}` : "";
+  const publicOrigin = typeof window !== "undefined" ? window.location.origin : "";
 
   async function load() {
     setLoading(true);
@@ -488,7 +489,7 @@ export function CheckoutEditor({
 
   async function copyLink() {
     if (!checkout) return;
-    const url = `${window.location.origin}${publicPath}`;
+    const url = `${publicOrigin}${publicPath}`;
     await navigator.clipboard.writeText(url);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
@@ -570,7 +571,7 @@ export function CheckoutEditor({
       {checkout.status === "publicado" && (
         <div className="mt-5 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3">
           <Eye className="h-4 w-4 text-primary" />
-          <code className="min-w-0 flex-1 truncate text-xs">{window.location.origin}{publicPath}</code>
+          <code className="min-w-0 flex-1 truncate text-xs">{publicOrigin}{publicPath}</code>
           <button onClick={() => void copyLink()} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted">
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             {copied ? "Copiado" : "Copiar"}
