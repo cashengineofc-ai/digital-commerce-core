@@ -6238,6 +6238,7 @@ export type Database = {
           ip_cliente: string | null
           link_afiliado_id: string | null
           link_pagamento_id: string | null
+          link_uso_contabilizado_em: string | null
           metadata: Json | null
           metodo_pagamento:
             | Database["public"]["Enums"]["metodo_pagamento"]
@@ -6315,6 +6316,7 @@ export type Database = {
           ip_cliente?: string | null
           link_afiliado_id?: string | null
           link_pagamento_id?: string | null
+          link_uso_contabilizado_em?: string | null
           metadata?: Json | null
           metodo_pagamento?:
             | Database["public"]["Enums"]["metodo_pagamento"]
@@ -6392,6 +6394,7 @@ export type Database = {
           ip_cliente?: string | null
           link_afiliado_id?: string | null
           link_pagamento_id?: string | null
+          link_uso_contabilizado_em?: string | null
           metadata?: Json | null
           metodo_pagamento?:
             | Database["public"]["Enums"]["metodo_pagamento"]
