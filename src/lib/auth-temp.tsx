@@ -37,6 +37,7 @@ async function loadUser(userId: string): Promise<TempUser | null> {
 
   const isAdminGlobal = profile?.is_admin_global === true;
   const role: RoleKey = isAdminGlobal ? "admin_global" : profile?.is_owner ? "produtor" : "afiliado";
+
   return {
     id: authUser.id,
     username: authUser.email?.split("@")[0] ?? authUser.id,
@@ -55,10 +56,12 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let alive = true;
+
     supabase.auth.getSession().then(async ({ data }) => {
       if (alive && data.session?.user) setUser(await loadUser(data.session.user.id));
       if (alive) setIsLoading(false);
     });
+
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
         setUser(null);
@@ -66,6 +69,7 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
       }
       loadUser(session.user.id).then(setUser);
     });
+
     return () => {
       alive = false;
       subscription.subscription.unsubscribe();
@@ -73,8 +77,14 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(email: string, password: string): Promise<TempUser | null> {
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error || !data.user) return null;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    if (error) throw error;
+    if (!data.user) return null;
+
     const nextUser = await loadUser(data.user.id);
     setUser(nextUser);
     return nextUser;
