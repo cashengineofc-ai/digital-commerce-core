@@ -1,628 +1,945 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowRight,
   BadgeCheck,
-  Building2,
   Calculator,
-  Handshake,
+  ChevronLeft,
+  ChevronRight,
   History,
-  Package,
-  Percent,
+  Plus,
+  RefreshCw,
+  Settings2,
   ShieldCheck,
-  Sparkles,
-  UserRound,
+  Trash2,
 } from "lucide-react";
-import {
-  affiliateProductCommissionRules,
-  defaultCommissionRule,
-  platformFeeRule,
-  productCommissionRules,
-  products,
-  affiliatesFull,
-  saleRecords,
-  type CommissionRule,
-  type CommissionRuleType,
-} from "@/lib/mock/data";
+import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime, formatPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 
-type SplitShare = {
-  key: "produtor" | "afiliado" | "plataforma" | "taxa";
-  label: string;
-  percent: number;
-  amount: number;
-  ruleNote?: string;
+type Product = {
+  id: string;
+  nome: string;
+  preco: number;
 };
 
-const gatewayFixed = 0.99;
-const gatewayPercent = 0.0349;
+type TeamMember = {
+  id: string;
+  nome_completo: string;
+  email: string;
+};
 
-function resolveCommission(params: {
-  productId: string;
-  affiliateId?: string | undefined;
-  customType?: CommissionRuleType | undefined;
-  customValue?: number | undefined;
-  gross: number;
-}): { amount: number; type: CommissionRuleType; value: number; source: string } {
-  const { productId, affiliateId, customType, customValue, gross } = params;
+type Affiliate = {
+  id: string;
+  codigo_afiliado: string;
+  profile_id: string | null;
+  name: string;
+};
 
-  if (customType && customValue !== undefined && !isNaN(customValue)) {
-    const amount =
-      customType === "percentual"
-        ? Math.round(gross * (customValue / 100) * 100) / 100
-        : Math.round(customValue * 100) / 100;
-    return { amount, type: customType, value: customValue, source: "Simulação manual" };
-  }
+type RuleBeneficiary = {
+  id?: string;
+  profile_id: string;
+  name?: string;
+  percentual: number;
+  prioridade?: number;
+};
 
-  if (affiliateId) {
-    const specific = affiliateProductCommissionRules.find(
-      (r) => r.productId === productId && r.affiliateId === affiliateId && r.status === "ativo",
-    );
-    if (specific) {
-      const amount =
-        specific.type === "percentual"
-          ? Math.round(gross * (specific.value / 100) * 100) / 100
-          : Math.round(specific.value * 100) / 100;
-      return {
-        amount,
-        type: specific.type,
-        value: specific.value,
-        source: `Afiliado × Produto (${specific.affiliateName})`,
-      };
-    }
-  }
-
-  const product = products.find((p) => p.id === productId);
-  if (product) {
-    const pr = productCommissionRuleById(productId);
-    if (pr) {
-      const amount =
-        pr.type === "percentual"
-          ? Math.round(gross * (pr.value / 100) * 100) / 100
-          : Math.round(pr.value * 100) / 100;
-      return {
-        amount,
-        type: pr.type,
-        value: pr.value,
-        source: `Produto (${pr.productName ?? product.name})`,
-      };
-    }
-    if (product.commission) {
-      const amount = Math.round(gross * (product.commission / 100) * 100) / 100;
-      return {
-        amount,
-        type: "percentual",
-        value: product.commission,
-        source: `Produto · cadastro (${product.name})`,
-      };
-    }
-  }
-
-  const amount =
-    defaultCommissionRule.type === "percentual"
-      ? Math.round(gross * (defaultCommissionRule.value / 100) * 100) / 100
-      : Math.round(defaultCommissionRule.value * 100) / 100;
-  return {
-    amount,
-    type: defaultCommissionRule.type,
-    value: defaultCommissionRule.value,
-    source: "Padrão da plataforma",
+type CurrentRule = {
+  rule: null | {
+    id: string;
+    name: string;
+    version: number;
+    base: string;
+    effective_at: string;
   };
-}
-
-function productCommissionRuleById(productId: string) {
-  return productCommissionRules.find(
-    (r: CommissionRule) => r.productId === productId && r.status === "ativo",
-  );
-}
-
-function splitFor(
-  gross: number,
-  hasAffiliate: boolean,
-  platformFeePct: number,
-  commissionAmount: number,
-): SplitShare[] {
-  const gatewayFee = Math.round((gross * gatewayPercent + gatewayFixed) * 100) / 100;
-  const platform = Math.round(gross * (platformFeePct / 100) * 100) / 100;
-  const affiliate = hasAffiliate ? Math.min(commissionAmount, gross) : 0;
-  let producer = gross - gatewayFee - platform - affiliate;
-
-  let total = gatewayFee + platform + affiliate + producer;
-  const diff = Math.round((gross - total) * 100);
-  if (Math.abs(diff) >= 1) {
-    producer = Math.round((producer + diff / 100) * 100) / 100;
-    total = gatewayFee + platform + affiliate + producer;
-  }
-
-  const safePercent = (v: number) => (gross > 0 ? Math.round((v / gross) * 10000) / 100 : 0);
-
-  const rows: SplitShare[] = [
-    {
-      key: "produtor",
-      label: "Produtor",
-      percent: safePercent(producer),
-      amount: producer,
-    },
-  ];
-  if (hasAffiliate) {
-    rows.push({
-      key: "afiliado",
-      label: "Afiliado",
-      percent: safePercent(affiliate),
-      amount: affiliate,
-    });
-  }
-  rows.push(
-    {
-      key: "plataforma",
-      label: "Cash Engine PRO",
-      percent: safePercent(platform),
-      amount: platform,
-    },
-    {
-      key: "taxa",
-      label: "Taxa de processamento",
-      percent: safePercent(gatewayFee),
-      amount: gatewayFee,
-    },
-  );
-  return rows;
-}
-
-const meta: Record<
-  SplitShare["key"],
-  { icon: React.ElementType; bar: string; chip: string; note: string }
-> = {
-  produtor: {
-    icon: UserRound,
-    bar: "bg-primary",
-    chip: "bg-primary/10 text-primary",
-    note: "Recebe o líquido em D+2 (Pix) ou D+30 (cartão).",
-  },
-  afiliado: {
-    icon: Handshake,
-    bar: "bg-[oklch(0.72_0.15_80)]",
-    chip: "bg-[oklch(0.78_0.15_80_/_18%)] text-[oklch(0.5_0.13_75)]",
-    note: "Comissão liberada junto com a liquidação da venda.",
-  },
-  plataforma: {
-    icon: Building2,
-    bar: "bg-foreground",
-    chip: "bg-foreground/10 text-foreground",
-    note: "Taxa da plataforma sobre o valor bruto.",
-  },
-  taxa: {
-    icon: Percent,
-    bar: "bg-muted-foreground/60",
-    chip: "bg-muted text-muted-foreground",
-    note: "Custo do adquirente/gateway por transação.",
-  },
+  beneficiaries: RuleBeneficiary[];
 };
+
+type SplitComponent = {
+  type: "produtor" | "afiliado" | "plataforma" | "autorizado";
+  label: string;
+  profile_id?: string | null;
+  amount: number;
+  percent_of_gross: number;
+  rule_percent?: number;
+  commission_rate?: number;
+  commission_fixed?: number | null;
+};
+
+type Simulation = {
+  gross: number;
+  platform_fee: number;
+  affiliate_commission: number;
+  authorized_total: number;
+  producer_residual: number;
+  distributed_total: number;
+  difference: number;
+  method: string;
+  provider_cost_included: boolean;
+  bank_transfer_performed: boolean;
+  split_rule: null | { id: string; name: string; version: number };
+  components: SplitComponent[];
+};
+
+type SplitRecord = {
+  transacao_id: string;
+  pedido_id: string | null;
+  pedido_numero: string | null;
+  valor_bruto: number;
+  status_pagamento: string;
+  data_referencia: string;
+  distribuicoes: Array<{
+    id: string;
+    type: string;
+    profile_id: string | null;
+    affiliate_id: string | null;
+    amount: number;
+    reversed: number;
+    net: number;
+    rule_id: string | null;
+    rule_version: number | null;
+    snapshot: Record<string, unknown>;
+  }>;
+  total_distribuido: number;
+  total_revertido: number;
+  total_registros: number;
+};
+
+const PAGE_SIZE = 20;
+
+const componentLabels: Record<string, string> = {
+  produtor: "Produtor",
+  afiliado: "Afiliado",
+  plataforma: "Cash Engine PRO",
+  autorizado: "Parceiro autorizado",
+};
+
+function moneyInput(value: string) {
+  const number = Number(value.replace(",", "."));
+  return Number.isFinite(number) ? number : NaN;
+}
 
 export function SplitEnginePage() {
-  const [tab, setTab] = useState<"calculadora" | "registros">("calculadora");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [currentRule, setCurrentRule] = useState<CurrentRule>({
+    rule: null,
+    beneficiaries: [],
+  });
+  const [records, setRecords] = useState<SplitRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [simulating, setSimulating] = useState(false);
+  const [savingRule, setSavingRule] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [tab, setTab] = useState<"simulador" | "registros" | "regra">("simulador");
+  const [page, setPage] = useState(1);
 
-  const [productId, setProductId] = useState(products[0]!.id);
-  const [affiliateId, setAffiliateId] = useState<string>("none");
-  const [amount, setAmount] = useState(String(products[0]!.price));
-  const [platformFee, setPlatformFee] = useState(String(platformFeeRule.value));
-  const [overrideType, setOverrideType] = useState<CommissionRuleType | "auto">("auto");
-  const [overrideValue, setOverrideValue] = useState<string>("");
-  const [withAffiliate, setWithAffiliate] = useState(true);
+  const [productId, setProductId] = useState("");
+  const [affiliateId, setAffiliateId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [simulation, setSimulation] = useState<Simulation | null>(null);
 
-  const product = products.find((p) => p.id === productId) ?? products[0]!;
-  const gross = Number(amount) || 0;
-  const platformFeePct = Number(platformFee) || 0;
-  const affiliate = affiliateId !== "none" ? affiliateId : undefined;
+  const [ruleName, setRuleName] = useState("Regra principal");
+  const [draftBeneficiaries, setDraftBeneficiaries] = useState<RuleBeneficiary[]>([]);
 
-  const commission = useMemo(
+  async function load(pageNumber = page) {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth.user) throw new Error("Sessão não encontrada.");
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("empresa_id")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      if (profileError || !profile?.empresa_id) {
+        throw new Error("Empresa não identificada.");
+      }
+
+      const [
+        productResult,
+        affiliateResult,
+        teamResult,
+        ruleResult,
+        recordResult,
+      ] = await Promise.all([
+        supabase
+          .from("produtos")
+          .select("id,nome,preco")
+          .eq("empresa_id", profile.empresa_id)
+          .eq("status", "publicado")
+          .is("deleted_at", null)
+          .order("nome"),
+        supabase
+          .from("afiliados")
+          .select("id,codigo_afiliado,profile_id")
+          .eq("empresa_id", profile.empresa_id)
+          .eq("status", "ativo")
+          .is("deleted_at", null)
+          .order("created_at"),
+        supabase
+          .from("profiles")
+          .select("id,nome_completo,email")
+          .eq("empresa_id", profile.empresa_id)
+          .eq("status", "ativo")
+          .is("deleted_at", null)
+          .order("nome_completo"),
+        (supabase as any).rpc("fn_split_regra_atual"),
+        (supabase as any).rpc("fn_split_registros", {
+          p_limit: PAGE_SIZE,
+          p_offset: (pageNumber - 1) * PAGE_SIZE,
+        }),
+      ]);
+
+      if (productResult.error) throw productResult.error;
+      if (affiliateResult.error) throw affiliateResult.error;
+      if (teamResult.error) throw teamResult.error;
+      if (ruleResult.error) throw ruleResult.error;
+      if (recordResult.error) throw recordResult.error;
+
+      const teamRows = (teamResult.data ?? []) as TeamMember[];
+      const teamById = new Map(teamRows.map((member) => [member.id, member]));
+
+      const productRows = ((productResult.data ?? []) as any[]).map((row) => ({
+        id: String(row.id),
+        nome: String(row.nome),
+        preco: Number(row.preco ?? 0),
+      }));
+
+      setProducts(productRows);
+      setTeam(teamRows);
+      setAffiliates(
+        ((affiliateResult.data ?? []) as any[]).map((row) => ({
+          id: String(row.id),
+          codigo_afiliado: String(row.codigo_afiliado),
+          profile_id: row.profile_id ? String(row.profile_id) : null,
+          name:
+            (row.profile_id && teamById.get(String(row.profile_id))?.nome_completo) ||
+            String(row.codigo_afiliado),
+        })),
+      );
+
+      const rule = (ruleResult.data ?? {
+        rule: null,
+        beneficiaries: [],
+      }) as CurrentRule;
+      setCurrentRule(rule);
+      setRuleName(rule.rule?.name ?? "Regra principal");
+      setDraftBeneficiaries(
+        (rule.beneficiaries ?? []).map((beneficiary) => ({
+          profile_id: beneficiary.profile_id,
+          name: beneficiary.name,
+          percentual: Number(beneficiary.percentual ?? 0),
+          prioridade: Number(beneficiary.prioridade ?? 100),
+        })),
+      );
+
+      setRecords(
+        ((recordResult.data ?? []) as any[]).map((row) => ({
+          transacao_id: String(row.transacao_id),
+          pedido_id: row.pedido_id ? String(row.pedido_id) : null,
+          pedido_numero: row.pedido_numero ? String(row.pedido_numero) : null,
+          valor_bruto: Number(row.valor_bruto ?? 0),
+          status_pagamento: String(row.status_pagamento ?? "confirmado"),
+          data_referencia: String(row.data_referencia),
+          distribuicoes: Array.isArray(row.distribuicoes)
+            ? row.distribuicoes.map((item: any) => ({
+                ...item,
+                amount: Number(item.amount ?? 0),
+                reversed: Number(item.reversed ?? 0),
+                net: Number(item.net ?? 0),
+                rule_version:
+                  item.rule_version == null ? null : Number(item.rule_version),
+              }))
+            : [],
+          total_distribuido: Number(row.total_distribuido ?? 0),
+          total_revertido: Number(row.total_revertido ?? 0),
+          total_registros: Number(row.total_registros ?? 0),
+        })),
+      );
+
+      if (!productId && productRows.length > 0) {
+        setProductId(productRows[0].id);
+        setAmount(String(productRows[0].preco).replace(".", ","));
+      }
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Não foi possível carregar o Split Engine.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void load(page);
+  }, [page]);
+
+  const totalRecords = records[0]?.total_registros ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalRecords / PAGE_SIZE));
+
+  const beneficiaryTotal = useMemo(
     () =>
-      resolveCommission({
-        productId,
-        affiliateId: affiliate,
-        customType: overrideType === "auto" ? undefined : overrideType,
-        customValue: overrideValue === "" ? undefined : Number(overrideValue),
-        gross,
-      }),
-    [productId, affiliate, overrideType, overrideValue, gross],
+      draftBeneficiaries.reduce(
+        (sum, beneficiary) => sum + Number(beneficiary.percentual || 0),
+        0,
+      ),
+    [draftBeneficiaries],
   );
 
-  const shares = useMemo(
-    () => splitFor(gross, withAffiliate, platformFeePct, commission.amount),
-    [gross, withAffiliate, platformFeePct, commission.amount],
-  );
+  async function simulate() {
+    const gross = moneyInput(amount);
+    if (!productId || !Number.isFinite(gross) || gross <= 0) {
+      setError("Selecione um produto e informe um valor maior que zero.");
+      return;
+    }
 
-  const sum = useMemo(
-    () => shares.reduce((acc, s) => Math.round((acc + s.amount) * 100) / 100, 0),
-    [shares],
-  );
+    setSimulating(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const { data, error: rpcError } = await (supabase as any).rpc(
+        "fn_split_simular",
+        {
+          p_valor: gross,
+          p_produto_id: productId,
+          p_afiliado_id: affiliateId || null,
+        },
+      );
+      if (rpcError) throw rpcError;
+      if (!data) throw new Error("O banco não retornou a simulação.");
 
-  const sumOk = Math.abs(Math.round((gross - sum) * 100)) <= 1;
+      setSimulation({
+        ...data,
+        gross: Number(data.gross ?? 0),
+        platform_fee: Number(data.platform_fee ?? 0),
+        affiliate_commission: Number(data.affiliate_commission ?? 0),
+        authorized_total: Number(data.authorized_total ?? 0),
+        producer_residual: Number(data.producer_residual ?? 0),
+        distributed_total: Number(data.distributed_total ?? 0),
+        difference: Number(data.difference ?? 0),
+        components: Array.isArray(data.components)
+          ? data.components.map((component: any) => ({
+              ...component,
+              amount: Number(component.amount ?? 0),
+              percent_of_gross: Number(component.percent_of_gross ?? 0),
+            }))
+          : [],
+      });
+    } catch (cause) {
+      setSimulation(null);
+      setError(cause instanceof Error ? cause.message : "Não foi possível simular.");
+    } finally {
+      setSimulating(false);
+    }
+  }
+
+  function addBeneficiary() {
+    const already = new Set(draftBeneficiaries.map((item) => item.profile_id));
+    const member = team.find((item) => !already.has(item.id));
+    if (!member) {
+      setError("Não há outro membro elegível nesta empresa.");
+      return;
+    }
+    setDraftBeneficiaries((current) => [
+      ...current,
+      {
+        profile_id: member.id,
+        name: member.nome_completo,
+        percentual: 0,
+        prioridade: (current.length + 1) * 10,
+      },
+    ]);
+  }
+
+  async function saveRule() {
+    if (!ruleName.trim()) {
+      setError("Informe o nome da regra.");
+      return;
+    }
+
+    if (
+      draftBeneficiaries.some(
+        (beneficiary) =>
+          !beneficiary.profile_id ||
+          !Number.isFinite(beneficiary.percentual) ||
+          beneficiary.percentual <= 0 ||
+          beneficiary.percentual > 100,
+      ) ||
+      beneficiaryTotal > 100
+    ) {
+      setError(
+        "Cada parceiro deve ter percentual entre 0 e 100, e a soma não pode passar de 100%.",
+      );
+      return;
+    }
+
+    setSavingRule(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const { data, error: rpcError } = await (supabase as any).rpc(
+        "fn_split_regra_criar_versao",
+        {
+          p_nome: ruleName.trim(),
+          p_beneficiarios: draftBeneficiaries.map((beneficiary, index) => ({
+            profile_id: beneficiary.profile_id,
+            percentual: Number(beneficiary.percentual),
+            prioridade: beneficiary.prioridade ?? (index + 1) * 10,
+          })),
+          p_vigencia_inicio: new Date().toISOString(),
+        },
+      );
+      if (rpcError) throw rpcError;
+      if (!data) throw new Error("O banco não confirmou a nova versão.");
+
+      setMessage(
+        "Nova versão da regra criada. Vendas antigas preservam a regra que já foi aplicada.",
+      );
+      await load(page);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Não foi possível criar a nova versão da regra.",
+      );
+    } finally {
+      setSavingRule(false);
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Calculadora Financeira
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Split Engine</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Simule a distribuição exata de cada venda, considerando comissões por produto, afiliado
-            e taxa da plataforma.
+            Distribuição contábil real de vendas confirmadas, com regra versionada.
           </p>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-          Fechamento financeiro consistente
-        </span>
+        <button
+          onClick={() => void load(page)}
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3.5 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+        >
+          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          Atualizar
+        </button>
       </header>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="mt-6 w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="calculadora" className="gap-1.5">
-            <Calculator className="h-3.5 w-3.5" />
-            Calculadora
-          </TabsTrigger>
-          <TabsTrigger value="registros" className="gap-1.5">
-            <History className="h-3.5 w-3.5" />
-            Registros de venda
-          </TabsTrigger>
-        </TabsList>
+      {error && (
+        <div className="mt-5 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+      {message && (
+        <div className="mt-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700">
+          {message}
+        </div>
+      )}
 
-        <TabsContent value="calculadora" className="space-y-5">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Package className="h-4 w-4 text-primary" />
-                Parâmetros da venda
-              </CardTitle>
-              <CardDescription>
-                Selecione um produto para carregar suas regras de comissão automaticamente.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs uppercase tracking-wide">Produto</Label>
-                <Select
+      <div className="mt-5 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 text-sm text-muted-foreground">
+        O Split Engine registra obrigações e participações no razão interno. Ele não afirma que o
+        banco dividiu automaticamente o Pix entre beneficiários. Transferência bancária só existe
+        quando houver um provedor de payout realmente integrado e conciliado.
+      </div>
+
+      <div className="mt-6 flex gap-1 rounded-xl border border-border bg-card p-1">
+        {[
+          ["simulador", "Simulador", Calculator],
+          ["registros", "Vendas registradas", History],
+          ["regra", "Regra de parceiros", Settings2],
+        ].map(([key, label, Icon]) => (
+          <button
+            key={String(key)}
+            onClick={() => setTab(key as typeof tab)}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition",
+              tab === key
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted",
+            )}
+          >
+            <Icon className="h-4 w-4" />
+            {String(label)}
+          </button>
+        ))}
+      </div>
+
+      {tab === "simulador" && (
+        <div className="mt-5 grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <section className="rounded-xl border border-border bg-card p-5">
+            <h2 className="font-semibold">Regras atuais</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              O cálculo acontece no servidor; o navegador não define taxa ou comissão.
+            </p>
+
+            <div className="mt-5 space-y-4">
+              <label className="block">
+                <span className="text-xs font-medium text-muted-foreground">Produto</span>
+                <select
                   value={productId}
-                  onValueChange={(v) => {
-                    setProductId(v);
-                    const p = products.find((x) => x.id === v);
-                    if (p && !Number.isNaN(p.price)) setAmount(String(p.price));
+                  onChange={(e) => {
+                    setProductId(e.target.value);
+                    const product = products.find(
+                      (item) => item.id === e.target.value,
+                    );
+                    if (product) {
+                      setAmount(String(product.preco).replace(".", ","));
+                    }
+                    setSimulation(null);
                   }}
+                  className="mt-1.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um produto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name} · {formatBRL(p.price)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs uppercase tracking-wide">Valor da venda (R$)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="tabular-nums"
+                  {products.length === 0 && (
+                    <option value="">Nenhum produto publicado</option>
+                  )}
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.nome}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Valor da venda
+                </span>
+                <input
+                  inputMode="decimal"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    setSimulation(null);
+                  }}
+                  className="mt-1.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs uppercase tracking-wide">Afiliado</Label>
-                <Select value={affiliateId} onValueChange={setAffiliateId}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Venda direta (sem afiliado)</SelectItem>
-                    {affiliatesFull.slice(0, 10).map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs uppercase tracking-wide">Valor da plataforma (%)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="tabular-nums"
-                  value={platformFee}
-                  onChange={(e) => setPlatformFee(e.target.value)}
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  Configurável — atual: {formatPct(platformFeeRule.value)}.
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs uppercase tracking-wide">Comissão</Label>
-                <div className="grid grid-cols-5 gap-2">
-                  <div className="col-span-2">
-                    <Select
-                      value={overrideType}
-                      onValueChange={(v) => setOverrideType(v as CommissionRuleType | "auto")}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="auto">Auto (regra)</SelectItem>
-                        <SelectItem value="percentual">% manual</SelectItem>
-                        <SelectItem value="fixa">R$ fixa</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-3">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="h-9 tabular-nums"
-                      placeholder={
-                        overrideType === "auto"
-                          ? `${commission.type === "percentual" ? formatPct(commission.value) : formatBRL(commission.value)} (auto)`
-                          : overrideType === "percentual"
-                            ? "Ex: 40"
-                            : "Ex: 50"
-                      }
-                      value={overrideValue}
-                      onChange={(e) => setOverrideValue(e.target.value)}
-                      disabled={overrideType === "auto"}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <Badge
-                    variant="secondary"
-                    className="gap-1 bg-primary/5 text-primary border-primary/20"
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    {commission.source}
-                  </Badge>
-                  <span className="text-[11px] text-muted-foreground tabular-nums">
-                    Base:{" "}
-                    {commission.type === "percentual"
-                      ? formatPct(commission.value)
-                      : formatBRL(commission.value)}
-                    {" · "}
-                    Calculado:{" "}
-                    <strong className="text-foreground">{formatBRL(commission.amount)}</strong>
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-end">
-                <Button
-                  type="button"
-                  variant={withAffiliate ? "default" : "outline"}
-                  onClick={() => setWithAffiliate((v) => !v)}
-                  className="w-full gap-1.5"
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Afiliado
+                </span>
+                <select
+                  value={affiliateId}
+                  onChange={(e) => {
+                    setAffiliateId(e.target.value);
+                    setSimulation(null);
+                  }}
+                  className="mt-1.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
                 >
-                  <Handshake className="h-4 w-4" />
-                  {withAffiliate ? "Com afiliado" : "Venda direta"}
-                </Button>
+                  <option value="">Venda direta</option>
+                  {affiliates.map((affiliate) => (
+                    <option key={affiliate.id} value={affiliate.id}>
+                      {affiliate.name} · {affiliate.codigo_afiliado}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                onClick={() => void simulate()}
+                disabled={simulating || !productId}
+                className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              >
+                {simulating ? "Calculando..." : "Calcular com regras atuais"}
+              </button>
+            </div>
+
+            <div className="mt-5 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+              Método operacional: Pix. Custo de provedor não é inventado nem incluído no split se o
+              provedor não o informou.
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-border bg-card p-5">
+            {!simulation ? (
+              <div className="grid min-h-[420px] place-items-center text-center">
+                <div>
+                  <Calculator className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <p className="mt-3 font-medium">Nenhuma simulação calculada</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Escolha os dados e peça o cálculo ao servidor.
+                  </p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Calculator className="h-4 w-4 text-primary" />
-                  Resultado
-                </CardTitle>
-                <CardDescription>
-                  Valor bruto, distribuição e fechamento do cálculo.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
-                    Venda bruta
-                  </p>
-                  <p className="mt-1.5 text-3xl font-semibold tracking-tight tabular-nums text-foreground">
-                    {formatBRL(gross)}
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    {product.name} · Pix / Cartão
-                  </p>
-                </div>
-
-                <div className="flex h-3 w-full overflow-hidden rounded-full">
-                  {shares.map((s) => (
-                    <span
-                      key={s.key}
-                      className={cn("h-full transition-all duration-500", meta[s.key].bar)}
-                      style={{ width: `${s.percent}%` }}
-                    />
-                  ))}
-                </div>
-
-                <ul className="space-y-2 text-xs">
-                  {shares.map((s) => (
-                    <li key={s.key} className="flex items-center justify-between gap-3">
-                      <span className="inline-flex items-center gap-2 text-muted-foreground">
-                        <span className={cn("h-2 w-2 rounded-full", meta[s.key].bar)} />
-                        {s.label}
-                      </span>
-                      <span className="tabular-nums text-foreground font-medium">
-                        {formatPct(s.percent)} · {formatBRL(s.amount)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="rounded-xl border border-border bg-background/60 p-3 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Soma distribuída</span>
-                    <span className="flex items-center gap-1.5 tabular-nums font-semibold">
-                      {formatBRL(sum)}
-                      {sumOk ? (
-                        <BadgeCheck className="h-4 w-4 text-emerald-600" />
-                      ) : (
-                        <span className="text-rose-600">⚠ dif. {formatBRL(gross - sum)}</span>
-                      )}
-                    </span>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Valor bruto</p>
+                    <p className="mt-1 text-3xl font-semibold tabular-nums">
+                      {formatBRL(simulation.gross)}
+                    </p>
                   </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Diferença máxima de 1 centavo ajustada no produtor.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <ArrowRight className="h-4 w-4 text-foreground" />
-                  Fluxo de caixa
-                </CardTitle>
-                <CardDescription>Distribuição detalhada e conferência de valores.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-5 md:grid-cols-[180px_1fr] md:items-center">
-                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
-                    Entrada
-                  </p>
-                  <p className="mt-1.5 text-xl font-semibold tabular-nums text-foreground">
-                    {formatBRL(gross)}
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">Pagamento aprovado</p>
+                  <div
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium",
+                      Math.abs(simulation.difference) < 0.01
+                        ? "bg-emerald-500/10 text-emerald-700"
+                        : "bg-destructive/10 text-destructive",
+                    )}
+                  >
+                    <BadgeCheck className="h-4 w-4" />
+                    Fechamento {formatBRL(simulation.distributed_total)}
+                  </div>
                 </div>
 
-                <ul className="space-y-3">
-                  {shares.map((s) => {
-                    const Icon = meta[s.key].icon;
-                    return (
-                      <li
-                        key={s.key}
-                        className="flex items-center gap-3 rounded-xl border border-border bg-background p-3"
-                      >
-                        <ArrowRight className="hidden h-4 w-4 shrink-0 text-muted-foreground md:block" />
-                        <span
-                          className={cn(
-                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-                            meta[s.key].chip,
-                          )}
-                        >
-                          <Icon className="h-4 w-4" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-                            <p className="text-sm font-medium text-foreground">{s.label}</p>
-                            <p className="text-sm font-semibold tabular-nums text-foreground">
-                              {formatBRL(s.amount)}
-                            </p>
-                          </div>
-                          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                            <span
-                              className={cn(
-                                "block h-full rounded-full transition-all duration-500",
-                                meta[s.key].bar,
-                              )}
-                              style={{ width: `${s.percent}%` }}
-                            />
-                          </div>
-                          <p className="mt-1.5 text-[11px] text-muted-foreground">
-                            {meta[s.key].note}
+                <div className="mt-6 space-y-3">
+                  {simulation.components.map((component, index) => (
+                    <div
+                      key={`${component.type}:${component.profile_id ?? index}`}
+                      className="rounded-xl border border-border bg-background p-4"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-medium">
+                            {component.label ||
+                              componentLabels[component.type] ||
+                              component.type}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {component.type === "autorizado" &&
+                            component.rule_percent != null
+                              ? `Regra: ${formatPct(component.rule_percent, 4)} do residual`
+                              : `${formatPct(component.percent_of_gross, 4)} do bruto`}
                           </p>
                         </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+                        <p className="font-semibold tabular-nums">
+                          {formatBRL(component.amount)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-        <TabsContent value="registros">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Vendas registradas (amostra)</CardTitle>
-              <CardDescription>
-                Cada venda armazena a comissão aplicada, taxa da plataforma, valor do produtor e
-                afiliado relacionado.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1100px] text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                      <th className="px-2 py-3 font-medium">Transação</th>
-                      <th className="px-2 py-3 font-medium">Produto</th>
-                      <th className="px-2 py-3 text-right font-medium">Bruto</th>
-                      <th className="px-2 py-3 font-medium">Comissão</th>
-                      <th className="px-2 py-3 text-right font-medium">Afiliado</th>
-                      <th className="px-2 py-3 text-right font-medium">Plataforma</th>
-                      <th className="px-2 py-3 text-right font-medium">Gateway</th>
-                      <th className="px-2 py-3 text-right font-medium">Produtor</th>
-                      <th className="px-2 py-3 font-medium">Data</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {saleRecords.map((sr) => (
-                      <tr key={sr.id} className="hover:bg-muted/40">
-                        <td className="px-2 py-2.5 font-mono text-xs text-muted-foreground">
-                          {sr.transactionId}
-                        </td>
-                        <td className="px-2 py-2.5 font-medium text-foreground">{sr.product}</td>
-                        <td className="px-2 py-2.5 text-right tabular-nums text-muted-foreground">
-                          {formatBRL(sr.grossAmount)}
-                        </td>
-                        <td className="px-2 py-2.5 text-xs text-muted-foreground">
-                          {sr.appliedCommissionType === "percentual"
-                            ? `${sr.appliedCommissionValue}%`
-                            : `R$ ${sr.appliedCommissionValue}`}
-                        </td>
-                        <td className="px-2 py-2.5 text-right tabular-nums">
-                          {formatBRL(sr.commissionAmount)}
-                        </td>
-                        <td className="px-2 py-2.5 text-right tabular-nums">
-                          {formatBRL(sr.platformFeeAmount)}
-                        </td>
-                        <td className="px-2 py-2.5 text-right tabular-nums text-muted-foreground">
-                          {formatBRL(sr.gatewayFeeAmount)}
-                        </td>
-                        <td className="px-2 py-2.5 text-right font-semibold tabular-nums text-foreground">
-                          {formatBRL(sr.producerAmount)}
-                        </td>
-                        <td className="px-2 py-2.5 text-xs tabular-nums text-muted-foreground">
-                          {formatDateTime(sr.date)}
-                        </td>
-                      </tr>
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Taxa plataforma</p>
+                    <p className="mt-1 font-semibold tabular-nums">
+                      {formatBRL(simulation.platform_fee)}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Comissão</p>
+                    <p className="mt-1 font-semibold tabular-nums">
+                      {formatBRL(simulation.affiliate_commission)}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Parceiros</p>
+                    <p className="mt-1 font-semibold tabular-nums">
+                      {formatBRL(simulation.authorized_total)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex items-start gap-2 rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+                  {simulation.split_rule
+                    ? `Regra ${simulation.split_rule.name} · versão ${simulation.split_rule.version}. A versão será preservada na venda.`
+                    : "Nenhuma regra adicional de parceiros está ativa. O residual fica com o produtor."}
+                </div>
+              </>
+            )}
+          </section>
+        </div>
+      )}
+
+      {tab === "registros" && (
+        <section className="mt-5 overflow-hidden rounded-xl border border-border bg-card">
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="font-semibold">Distribuições registradas</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Cada linha corresponde a uma transação que já recebeu um split persistido.
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="p-12 text-center text-sm text-muted-foreground">
+              Carregando registros...
+            </div>
+          ) : records.length === 0 ? (
+            <div className="p-12 text-center text-sm text-muted-foreground">
+              Nenhuma distribuição real registrada ainda.
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {records.map((record) => (
+                <div key={record.transacao_id} className="p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <p className="font-mono text-xs font-medium">
+                        {record.pedido_numero ?? record.transacao_id}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatDateTime(record.data_referencia)} ·{" "}
+                        {record.status_pagamento.replaceAll("_", " ")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Bruto</p>
+                      <p className="font-semibold tabular-nums">
+                        {formatBRL(record.valor_bruto)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                    {record.distribuicoes.map((distribution) => (
+                      <div
+                        key={distribution.id}
+                        className="rounded-lg border border-border bg-background p-3"
+                      >
+                        <p className="text-xs text-muted-foreground">
+                          {componentLabels[distribution.type] ?? distribution.type}
+                        </p>
+                        <p className="mt-1 font-semibold tabular-nums">
+                          {formatBRL(distribution.net)}
+                        </p>
+                        {distribution.reversed > 0 && (
+                          <p className="mt-1 text-[11px] text-destructive">
+                            {formatBRL(distribution.reversed)} revertidos
+                          </p>
+                        )}
+                        {distribution.rule_version != null && (
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            regra v{distribution.rule_version}
+                          </p>
+                        )}
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap justify-end gap-4 text-xs text-muted-foreground">
+                    <span>
+                      Distribuído:{" "}
+                      <strong className="text-foreground">
+                        {formatBRL(record.total_distribuido)}
+                      </strong>
+                    </span>
+                    <span>
+                      Revertido:{" "}
+                      <strong className="text-foreground">
+                        {formatBRL(record.total_revertido)}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {records.length > 0 && (
+            <footer className="flex items-center justify-between border-t border-border px-5 py-3 text-xs text-muted-foreground">
+              <span>
+                {totalRecords} registro{totalRecords === 1 ? "" : "s"}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  disabled={page <= 1}
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 disabled:opacity-40"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Anterior
+                </button>
+                <span>
+                  {page} / {totalPages}
+                </span>
+                <button
+                  onClick={() =>
+                    setPage((value) => Math.min(totalPages, value + 1))
+                  }
+                  disabled={page >= totalPages}
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 disabled:opacity-40"
+                >
+                  Próxima
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </footer>
+          )}
+        </section>
+      )}
+
+      {tab === "regra" && (
+        <div className="mt-5 grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <section className="rounded-xl border border-border bg-card p-5">
+            <h2 className="font-semibold">Regra vigente</h2>
+            {currentRule.rule ? (
+              <div className="mt-4 space-y-2 text-sm">
+                <p>
+                  <span className="text-muted-foreground">Nome:</span>{" "}
+                  {currentRule.rule.name}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Versão:</span>{" "}
+                  v{currentRule.rule.version}
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Base:</span>{" "}
+                  após taxa e comissão
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Vigência:</span>{" "}
+                  {formatDateTime(currentRule.rule.effective_at)}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-muted-foreground">
+                Nenhuma regra adicional ativa. Plataforma e afiliado seguem suas próprias regras;
+                todo o residual pertence ao produtor.
+              </p>
+            )}
+
+            <div className="mt-5 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              Uma nova versão não altera splits históricos. O banco grava a versão aplicada em cada
+              distribuição.
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-border bg-card p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-semibold">Criar nova versão</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Parceiros autorizados recebem uma porcentagem do residual após taxa da plataforma
+                  e comissão do afiliado.
+                </p>
+              </div>
+              <button
+                onClick={addBeneficiary}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Adicionar parceiro
+              </button>
+            </div>
+
+            <label className="mt-5 block">
+              <span className="text-xs font-medium text-muted-foreground">
+                Nome da regra
+              </span>
+              <input
+                value={ruleName}
+                onChange={(e) => setRuleName(e.target.value)}
+                className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+              />
+            </label>
+
+            <div className="mt-4 space-y-3">
+              {draftBeneficiaries.map((beneficiary, index) => (
+                <div
+                  key={`${beneficiary.profile_id}:${index}`}
+                  className="grid gap-3 rounded-xl border border-border p-3 sm:grid-cols-[1fr_150px_40px]"
+                >
+                  <select
+                    value={beneficiary.profile_id}
+                    onChange={(e) =>
+                      setDraftBeneficiaries((current) =>
+                        current.map((item, currentIndex) =>
+                          currentIndex === index
+                            ? {
+                                ...item,
+                                profile_id: e.target.value,
+                                name:
+                                  team.find(
+                                    (member) => member.id === e.target.value,
+                                  )?.nome_completo ?? "",
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                    className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+                  >
+                    {team.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.nome_completo} · {member.email}
+                      </option>
+                    ))}
+                  </select>
+
+                  <label>
+                    <span className="sr-only">Percentual</span>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0.0001}
+                        max={100}
+                        step={0.0001}
+                        value={beneficiary.percentual}
+                        onChange={(e) =>
+                          setDraftBeneficiaries((current) =>
+                            current.map((item, currentIndex) =>
+                              currentIndex === index
+                                ? {
+                                    ...item,
+                                    percentual: Number(e.target.value),
+                                  }
+                                : item,
+                            ),
+                          )
+                        }
+                        className="h-10 w-full rounded-lg border border-border bg-background px-3 pr-8 text-sm"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                        %
+                      </span>
+                    </div>
+                  </label>
+
+                  <button
+                    onClick={() =>
+                      setDraftBeneficiaries((current) =>
+                        current.filter((_, currentIndex) => currentIndex !== index),
+                      )
+                    }
+                    className="grid h-10 w-10 place-items-center rounded-lg border border-border text-muted-foreground hover:text-destructive"
+                    aria-label="Remover parceiro"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+
+              {draftBeneficiaries.length === 0 && (
+                <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
+                  Nenhum parceiro adicional. O produtor fica com todo o residual.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm">
+              <span className="text-muted-foreground">
+                Percentual destinado a parceiros
+              </span>
+              <strong
+                className={cn(
+                  "tabular-nums",
+                  beneficiaryTotal > 100 && "text-destructive",
+                )}
+              >
+                {formatPct(beneficiaryTotal, 4)}
+              </strong>
+            </div>
+
+            <button
+              onClick={() => void saveRule()}
+              disabled={savingRule || beneficiaryTotal > 100}
+              className="mt-5 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            >
+              {savingRule ? "Salvando..." : "Criar nova versão da regra"}
+            </button>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
