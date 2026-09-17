@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShellProvider, useAppShell } from "@/components/app/app-shell-context";
 import {
@@ -8,7 +8,7 @@ import {
 import { Bell, HelpCircle, Lock, Menu, Search } from "lucide-react";
 import { ArrowLeftToLine } from "lucide-react";
 import { useTempAuth } from "@/lib/auth-temp";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";\nimport { PlatformAdminGuard } from "@/components/app/security/PlatformAdminGuard";
 
 
 function AdminTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
@@ -50,9 +50,6 @@ function AdminTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
             className="relative rounded-md border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
-              7
-            </span>
           </button>
 
           <button
@@ -68,37 +65,9 @@ function AdminTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   );
 }
 
-function AccessRestrictedPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-lg">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-          <Lock className="h-8 w-8 text-destructive" />
-        </div>
-        <h1 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
-          Acesso restrito
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Esta área é exclusiva para administradores globais da plataforma.
-          Seu perfil não possui permissão para acessar este módulo.
-        </p>
-        <div className="mt-8">
-          <Link
-            to="/app"
-            className="inline-flex items-center gap-2 rounded-lg bg-destructive px-4 py-2.5 text-sm font-medium text-destructive-foreground shadow-sm transition-opacity hover:opacity-90"
-          >
-            <ArrowLeftToLine className="h-4 w-4" />
-            Voltar ao dashboard
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function AdminShellInner() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user, isAuthed, isLoading, isAdminGlobal: tempIsAdminGlobal } = useTempAuth();
+  const { user, isAuthed, isLoading } = useTempAuth();
   const { setRole } = useAppShell();
   const navigate = useNavigate();
 
@@ -114,9 +83,6 @@ function AdminShellInner() {
       setRole(user.role);
     }
   }, [user?.role, setRole]);
-
-  // UI guard only: database policies must independently enforce authorization.
-  const isAdminGlobal = tempIsAdminGlobal;
 
   if (isLoading) {
     return (
@@ -150,10 +116,6 @@ function AdminShellInner() {
     return null;
   }
 
-  if (!isAdminGlobal) {
-    return <AccessRestrictedPage />;
-  }
-
   return (
     <div className="app-light min-h-screen bg-background text-foreground antialiased">
       <DesktopSidebar />
@@ -169,7 +131,11 @@ function AdminShellInner() {
 }
 
 function AdminShell() {
-  return <AdminShellInner />;
+  return (
+    <PlatformAdminGuard>
+      <AdminShellInner />
+    </PlatformAdminGuard>
+  );
 }
 
 export const Route = createFileRoute("/admin")({
