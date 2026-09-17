@@ -490,7 +490,7 @@ Deno.serve(async (request) => {
   }
   const pixData = payment.point_of_interaction?.transaction_data ?? null;
   const fees = Array.isArray(payment.fee_details) ? payment.fee_details.reduce((sum: number, fee: Record<string, any>) => sum + Number(fee.amount ?? 0), 0) : 0;
-  const net = Number(payment.transaction_details?.net_received_amount ?? total);
+  const net = Number(payment.transaction_details?.net_received_amount ?? persistedTotal);
   const mapped = mapStatus(payment.status);
   const updateError = await supabase.from("transacoes").update({
     id_transacao_gateway: String(payment.id),
@@ -498,8 +498,8 @@ Deno.serve(async (request) => {
     status: mapped,
     status_detalhe_provedor: payment.status_detail ?? null,
     metodo_pagamento: "pix",
-    valor_bruto: Number(payment.transaction_amount ?? total),
-    valor_liquido: Number.isFinite(net) ? net : total,
+    valor_bruto: Number(payment.transaction_amount ?? persistedTotal),
+    valor_liquido: Number.isFinite(net) ? net : persistedTotal,
     valor_taxa_processamento: Number.isFinite(fees) ? fees : 0,
     parcelas: 1,
     data_pagamento: payment.date_approved ?? null,
@@ -511,5 +511,5 @@ Deno.serve(async (request) => {
     updated_at: new Date().toISOString(),
   }).eq("id", tx.id);
   if (updateError.error) return jsonResponse({ error: "payment_persist_failed" }, 500);
-  return jsonResponse({ ok: true, order_id: order.pedido_id, transaction_id: tx.id, payment_id: String(payment.id), status: mapped, status_detail: payment.status_detail ?? null, amount: total, manual_confirmation: false, message: null, pix: pixData ? { qr_code: pixData.qr_code ?? null, qr_code_base64: pixData.qr_code_base64 ?? null, ticket_url: pixData.ticket_url ?? null } : null, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
+  return jsonResponse({ ok: true, order_id: order.pedido_id, transaction_id: tx.id, payment_id: String(payment.id), status: mapped, status_detail: payment.status_detail ?? null, amount: persistedTotal, manual_confirmation: false, message: null, pix: pixData ? { qr_code: pixData.qr_code ?? null, qr_code_base64: pixData.qr_code_base64 ?? null, ticket_url: pixData.ticket_url ?? null } : null, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
 });
