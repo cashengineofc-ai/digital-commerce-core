@@ -70,6 +70,11 @@ export function BalancePage() {
         .maybeSingle();
       if (!profile?.empresa_id) return;
 
+      const { error: syncError } = await (supabase as any).rpc("fn_sincronizar_saldo_empresa");
+      if (syncError) {
+        console.error("Falha ao sincronizar liberações do saldo", syncError);
+      }
+
       const { data, error } = await supabase
         .from("saldos")
         .select("saldo_disponivel,saldo_em_analise,saldo_previsao_liberar,saldo_bloqueado")
