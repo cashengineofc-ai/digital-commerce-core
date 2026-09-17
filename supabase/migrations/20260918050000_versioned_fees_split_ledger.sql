@@ -15,6 +15,7 @@ ALTER TABLE public.taxas_plataforma
   ADD COLUMN IF NOT EXISTS vigencia_fim_em timestamptz,
   ADD COLUMN IF NOT EXISTS criado_por uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS alterado_por uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS reembolsar_em_estorno boolean NOT NULL DEFAULT true,
   ADD COLUMN IF NOT EXISTS regra_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb;
 
 UPDATE public.taxas_plataforma
@@ -180,7 +181,8 @@ CREATE OR REPLACE FUNCTION public.fn_admin_taxa_criar_versao(
   p_vigencia_inicio timestamptz DEFAULT now(),
   p_base_calculo text DEFAULT 'valor_bruto',
   p_prioridade integer DEFAULT 100,
-  p_plano text DEFAULT 'free'
+  p_plano text DEFAULT 'free',
+  p_reembolsar_em_estorno boolean DEFAULT true
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -236,12 +238,12 @@ BEGIN
     empresa_id,plano,metodo_pagamento,taxa_percentual,taxa_fixa,
     taxa_minima,taxa_maxima,dias_liquidacao,is_padrao,
     data_inicio_vigencia,ativo,operacao,base_calculo,prioridade,versao,
-    vigencia_inicio_em,criado_por,regra_snapshot
+    vigencia_inicio_em,criado_por,reembolsar_em_estorno,regra_snapshot
   ) VALUES (
     p_empresa_id,p_plano,p_metodo,round(p_percentual,4),round(p_fixo,2),
     p_minimo,p_maximo,p_dias_liquidacao,p_empresa_id IS NULL,
     p_vigencia_inicio::date,true,p_operacao,p_base_calculo,p_prioridade,v_versao,
-    p_vigencia_inicio,auth.uid(),
+    p_vigencia_inicio,auth.uid(),coalesce(p_reembolsar_em_estorno,true),
     jsonb_build_object(
       'percentual',round(p_percentual,4),
       'fixo',round(p_fixo,2),
@@ -249,7 +251,8 @@ BEGIN
       'maximo',p_maximo,
       'dias_liquidacao',p_dias_liquidacao,
       'base_calculo',p_base_calculo,
-      'rounding','numeric_round_2'
+      'rounding','numeric_round_2',
+      'reembolsar_em_estorno',coalesce(p_reembolsar_em_estorno,true)
     )
   ) RETURNING id INTO v_id;
 
@@ -269,10 +272,10 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public.fn_admin_taxa_criar_versao(
-  uuid,text,public.metodo_pagamento,numeric,numeric,numeric,numeric,integer,timestamptz,text,integer,text
+  uuid,text,public.metodo_pagamento,numeric,numeric,numeric,numeric,integer,timestamptz,text,integer,text,boolean
 ) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.fn_admin_taxa_criar_versao(
-  uuid,text,public.metodo_pagamento,numeric,numeric,numeric,numeric,integer,timestamptz,text,integer,text
+  uuid,text,public.metodo_pagamento,numeric,numeric,numeric,numeric,integer,timestamptz,text,integer,text,boolean
 ) TO authenticated;
 
 -- =========================================================
@@ -601,6 +604,7 @@ BEGIN
       v_rule.taxa_percentual,v_rule.taxa_fixa,v_rule.taxa_minima,v_rule.taxa_maxima,
       v_fee,
       coalesce(v_rule.regra_snapshot,'{}'::jsonb) || jsonb_build_object(
+        'reembolsar_em_estorno',v_rule.reembolsar_em_estorno,
         'rule_id',v_rule.id,'versao',v_rule.versao,'aplicada_em',coalesce(v_t.data_pagamento,now())
       )
     )
