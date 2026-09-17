@@ -105,6 +105,7 @@ DECLARE
   v_remaining numeric(15,2):=round(coalesce(p_valor,0),2);
   v_available numeric(15,2);
   v_receivable numeric(15,2);
+  v_debt numeric(15,2);
   v_take numeric(15,2);
 BEGIN
   IF v_remaining<=0 THEN RETURN 0; END IF;
@@ -112,6 +113,10 @@ BEGIN
   v_available:=greatest(round(
     public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'disponivel'),2
   ),0);
+  v_debt:=greatest(round(
+    public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'devedor'),2
+  ),0);
+  v_available:=greatest(v_available-v_debt,0);
   v_receivable:=greatest(round(
     public.fn_ledger_saldo_bucket(p_empresa_id,p_profile_id,p_afiliado_id,'a_receber'),2
   ),0);
