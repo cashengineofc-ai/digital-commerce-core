@@ -32,8 +32,27 @@ async function loadUser(authUser: User): Promise<TempUser> {
     .eq("id", authUser.id)
     .maybeSingle();
 
+  // A interface nunca escolhe o próprio papel. O contexto vem exclusivamente
+  // de vínculos persistidos e autorizados no backend.
   const isAdminGlobal = profile?.is_admin_global === true;
-  const role: RoleKey = isAdminGlobal ? "admin_global" : profile?.is_owner ? "produtor" : "afiliado";
+  let role: RoleKey = "produtor";
+
+  if (isAdminGlobal) {
+    role = "admin_global";
+  } else if (profile?.is_owner) {
+    role = "super-admin";
+  } else {
+    const { data: affiliate } = await supabase
+      .from("afiliados")
+      .select("id")
+      .eq("profile_id", authUser.id)
+      .eq("status", "ativo")
+      .is("deleted_at", null)
+      .limit(1)
+      .maybeSingle();
+
+    role = affiliate ? "afiliado" : "produtor";
+  }
 
   return {
     id: authUser.id,
