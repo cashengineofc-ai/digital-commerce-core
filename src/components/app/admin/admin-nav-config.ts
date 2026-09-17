@@ -4,8 +4,6 @@ import {
   Banknote,
   Bell,
   Building2,
-  CircleDollarSign,
-  CreditCard,
   Gauge,
   GraduationCap,
   Plug,
@@ -45,9 +43,7 @@ export const navGroups: NavGroup[] = [
   {
     label: "Financeiro Global",
     items: [
-      { label: "Saques pendentes", to: "/admin/saques-pendentes", icon: Banknote },
-      { label: "Transações globais", to: "/admin/transacoes", icon: CreditCard },
-      { label: "Repasses", to: "/admin/repasses", icon: CircleDollarSign },
+      { label: "Operações financeiras", to: "/admin/financeiro", icon: Banknote },
     ],
   },
   {
