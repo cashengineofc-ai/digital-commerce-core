@@ -6,9 +6,9 @@ import {
   MobileSidebar,
 } from "@/components/app/admin/AdminSidebar";
 import { Bell, HelpCircle, Lock, Menu, Search } from "lucide-react";
-import { ArrowLeftToLine } from "lucide-react";
 import { useTempAuth } from "@/lib/auth-temp";
-import { Skeleton } from "@/components/ui/skeleton";\nimport { PlatformAdminGuard } from "@/components/app/security/PlatformAdminGuard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PlatformAdminGuard } from "@/components/app/security/PlatformAdminGuard";
 
 
 function AdminTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
