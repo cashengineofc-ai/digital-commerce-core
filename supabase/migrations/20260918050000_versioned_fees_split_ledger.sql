@@ -7,6 +7,13 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- TAXAS VERSIONADAS
 -- =========================================================
 ALTER TABLE public.taxas_plataforma
+  ALTER COLUMN taxa_percentual TYPE numeric(9,4),
+  ALTER COLUMN taxa_antecipacao_percentual TYPE numeric(9,4),
+  ALTER COLUMN taxa_parcelamento_por_parcela TYPE numeric(9,4),
+  ALTER COLUMN taxa_pix_percentual TYPE numeric(9,4),
+  ALTER COLUMN taxa_saque_percentual TYPE numeric(9,4);
+
+ALTER TABLE public.taxas_plataforma
   ADD COLUMN IF NOT EXISTS operacao text NOT NULL DEFAULT 'venda',
   ADD COLUMN IF NOT EXISTS base_calculo text NOT NULL DEFAULT 'valor_bruto',
   ADD COLUMN IF NOT EXISTS prioridade integer NOT NULL DEFAULT 100,
@@ -47,6 +54,7 @@ BEGIN
       ADD CONSTRAINT taxas_plataforma_valores_chk
       CHECK (
         taxa_percentual >= 0
+        AND taxa_percentual <= 100
         AND taxa_fixa >= 0
         AND (taxa_minima IS NULL OR taxa_minima >= 0)
         AND (taxa_maxima IS NULL OR taxa_maxima >= 0)
@@ -200,7 +208,8 @@ BEGIN
   IF p_base_calculo NOT IN ('valor_bruto','valor_distribuivel') THEN
     RAISE EXCEPTION 'invalid_fee_base';
   END IF;
-  IF coalesce(p_percentual,0)<0 OR coalesce(p_fixo,0)<0
+  IF coalesce(p_percentual,0)<0 OR coalesce(p_percentual,0)>100
+     OR coalesce(p_fixo,0)<0
      OR (p_minimo IS NOT NULL AND p_minimo<0)
      OR (p_maximo IS NOT NULL AND p_maximo<0)
      OR (p_minimo IS NOT NULL AND p_maximo IS NOT NULL AND p_maximo<p_minimo) THEN
