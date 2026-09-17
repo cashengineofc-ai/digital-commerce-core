@@ -1,8 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import QRCode from "https://esm.sh/qrcode@1.5.4";
 import { buildStaticPixPayload, normalizePixTxid } from "../_shared/pix-brcode.ts";
-import QRCode from "https://esm.sh/qrcode@1.5.4";
-import { buildStaticPixPayload, normalizePixTxid } from "../_shared/pix-brcode.ts";
 
 const corsHeaders = {
   "access-control-allow-origin": "*",
@@ -145,52 +143,41 @@ async function loadSource(supabase: ReturnType<typeof createClient>, body: Recor
 }
 
 async function loadBumps(supabase: ReturnType<typeof createClient>, source: Source) {
-  const { data: rows, error } = await supabase
-    .from("checkout_order_bumps")
-    .select("*")
-    .eq("checkout_version_id", source.version.id)
-    .eq("ativo", true)
-    .order("ordem", { ascending: true });
-  if (error) throw error;
-  if (!rows?.length) return [];
-
-  const productIds = [...new Set(rows.map((row: any) => row.produto_id))];
-  const offerIds = [...new Set(rows.map((row: any) => row.oferta_id).filter(Boolean))];
-  const productsResult = await supabase.from("produtos").select("*").in("id", productIds).eq("empresa_id", source.empresaId);
-  if (productsResult.error) throw productsResult.error;
-  const offersResult = offerIds.length ? await supabase.from("ofertas").select("*").in("id", offerIds).eq("empresa_id", source.empresaId) : { data: [], error: null };
-  if (offersResult.error) throw offersResult.error;
-  const products = new Map((productsResult.data ?? []).map((p: any) => [p.id, p]));
-  const offers = new Map((offersResult.data ?? []).map((o: any) => [o.id, o]));
-
-  return rows.flatMap((row: any) => {
-    const product = products.get(row.produto_id) as Record<string, any> | undefined;
-    if (!product || !validProduct(product)) return [];
-    const offer = row.oferta_id ? offers.get(row.oferta_id) as Record<string, any> | undefined : undefined;
-    let base = activePromotionPrice(product);
-    if (row.modo_preco === "oferta") {
-      if (!offer || offer.status !== "ativa" || offer.deleted_at) return [];
-      base = Number(offer.preco);
-    }
-    let amount = base;
-    if (row.modo_preco === "preco_fixo") amount = Number(row.preco_fixo ?? base);
-    if (row.modo_preco === "desconto_percentual") amount = Math.max(0, base * (1 - Number(row.desconto_percentual ?? 0) / 100));
-    if (row.modo_preco === "desconto_fixo") amount = Math.max(0, base - Number(row.desconto_fixo ?? 0));
-    amount = Number(amount.toFixed(2));
-    if (!Number.isFinite(amount) || amount < 0) return [];
-    return [{
-      id: row.id,
-      product_id: product.id,
-      offer_id: row.oferta_id ?? null,
-      name: row.titulo || product.nome,
-      description: row.descricao || product.descricao_curta || null,
-      image_url: row.imagem_url || product.imagem_principal_url || null,
-      offer_text: row.texto_oferta || null,
-      amount,
-      presentation: row.apresentacao ?? {},
-      combination_rules: row.regras_combinacao ?? {},
-    }];
+  const rows = Array.isArray(source.checkout.produtos_config) ? source.checkout.produtos_config : [];
+  const configured = rows.flatMap((item: unknown) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, any>;
+    if (row.tipo !== "order_bump" && row.type !== "order_bump" && row.order_bump !== true) return [];
+    const productId = row.produto_id ?? row.product_id;
+    const id = row.id ?? row.bump_id ?? productId;
+    return typeof productId === "string" && productId && typeof id === "string" && id ? [{ id, productId }] : [];
   });
+  if (!configured.length) return [];
+  const productsResult = await supabase.from("produtos").select("*").in("id", [...new Set(configured.map((row) => row.productId))]).eq("empresa_id", source.empresaId).eq("status", "publicado").is("deleted_at", null);
+  if (productsResult.error) throw productsResult.error;
+  const products = new Map((productsResult.data ?? []).map((product: any) => [product.id, product]));
+  const seen = new Set<string>();
+  return configured.flatMap((row) => {
+    if (seen.has(row.id)) return [];
+    const product = products.get(row.productId) as Record<string, any> | undefined;
+    if (!product || !validProduct(product)) return [];
+    const amount = Number(activePromotionPrice(product).toFixed(2));
+    if (!Number.isFinite(amount) || amount < 0) return [];
+    seen.add(row.id);
+    return [{ id: row.id, product_id: product.id, name: product.nome, amount }];
+  });
+}
+
+function checkoutBaseAmount(source: Source, requested: unknown) {
+  const fixed = Number(source.offer.preco);
+  if (!source.offer.permitir_valor_personalizado && !source.link?.permite_editar_valor) return fixed;
+  let amount = Number(requested);
+  if (!Number.isFinite(amount) || amount <= 0) amount = fixed;
+  const min = source.offer.valor_minimo == null ? null : Number(source.offer.valor_minimo);
+  const max = source.offer.valor_maximo == null ? null : Number(source.offer.valor_maximo);
+  if (min != null && Number.isFinite(min)) amount = Math.max(amount, min);
+  if (max != null && Number.isFinite(max)) amount = Math.min(amount, max);
+  return amount;
 }
 
 async function resolveAffiliate(supabase: ReturnType<typeof createClient>, code: string, source: Source) {
