@@ -1,5 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { WebhooksPage } from "@/components/app/developers/WebhooksPage";
+import { PlatformAdminGuard } from "@/components/app/security/PlatformAdminGuard";
+
+function ProtectedPage() {
+  return (
+    <PlatformAdminGuard compact>
+      <WebhooksPage />
+    </PlatformAdminGuard>
+  );
+}
 
 export const Route = createFileRoute("/app/webhooks")({
   head: () => ({
@@ -9,5 +18,5 @@ export const Route = createFileRoute("/app/webhooks")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: () => <WebhooksPage />,
+  component: ProtectedPage,
 });
