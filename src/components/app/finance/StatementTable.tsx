@@ -6,251 +6,270 @@ import { EmptyState } from "@/components/app/EmptyState";
 import { TableSkeleton } from "@/components/app/Skeletons";
 import { cn } from "@/lib/utils";
 
-const typeOptions = ["todos", "credito", "debito"] as const;
-type LedgerType = Exclude<(typeof typeOptions)[number], "todos">;
-type LedgerCategory = "venda" | "taxa" | "comissao" | "saque" | "estorno" | "outro";
-const categoryOptions: (LedgerCategory | "todas")[] = [
-  "todas",
-  "venda",
-  "taxa",
-  "comissao",
-  "saque",
-  "estorno",
-  "outro",
-];
-
-const categoryLabel: Record<LedgerCategory, string> = {
-  venda: "Venda",
-  taxa: "Taxa",
-  comissao: "Comissão",
-  saque: "Saque",
-  estorno: "Estorno",
-  outro: "Outro",
+export type StatementFilters = {
+  search?: string;
+  type?: "" | "credito" | "debito";
+  bucket?: string;
+  start?: string | null;
+  end?: string | null;
 };
 
 type LedgerRow = {
   id: string;
-  date: string;
-  description: string;
-  category: LedgerCategory;
-  type: LedgerType;
-  amount: number;
-  balance: number | null;
+  data_lancamento: string;
+  descricao: string;
+  conta: string;
+  bucket: string;
+  tipo: "credito" | "debito";
+  valor: number;
+  valor_assinado: number;
+  documento: string | null;
+  transacao_id: string | null;
+  saque_id: string | null;
+  estorno_id: string | null;
+  total_registros: number;
 };
 
-function resolveCategory(row: any): LedgerCategory {
-  const account = String(row.conta_contabil ?? "").toLowerCase();
-  if (row.saque_id) return "saque";
-  if (row.estorno_id) return "estorno";
-  if (row.comissao_id) return "comissao";
-  if (account.includes("taxa") || account.includes("fee")) return "taxa";
-  if (row.transacao_id) return "venda";
-  return "outro";
+const bucketLabels: Record<string, string> = {
+  a_receber: "A receber",
+  disponivel: "Disponível",
+  reservado: "Reservado",
+  bloqueado: "Bloqueado",
+  liquidado: "Liquidado",
+  estornado: "Estornado",
+  devedor: "Débito pendente",
+};
+
+function isoStart(value?: string | null) {
+  return value ? new Date(`${value}T00:00:00`).toISOString() : null;
+}
+
+function isoEndExclusive(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(`${value}T00:00:00`);
+  date.setDate(date.getDate() + 1);
+  return date.toISOString();
 }
 
 export function StatementTable({
   pageSize = 12,
   limit,
+  entity = "empresa",
+  filters,
+  showFilters = true,
 }: {
   pageSize?: number;
   limit?: number;
+  entity?: "empresa" | "afiliado";
+  filters?: StatementFilters;
+  showFilters?: boolean;
 }) {
-  const [statement, setStatement] = useState<LedgerRow[]>([]);
+  const [rows, setRows] = useState<LedgerRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
-  const [type, setType] = useState<(typeof typeOptions)[number]>("todos");
-  const [category, setCategory] = useState<(typeof categoryOptions)[number]>("todas");
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [internalSearch, setInternalSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [internalType, setInternalType] = useState<"" | "credito" | "debito">("");
+  const [internalBucket, setInternalBucket] = useState("");
 
   useEffect(() => {
-    let active = true;
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(internalSearch.trim());
+      setPage(1);
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [internalSearch]);
 
+  const active = useMemo<StatementFilters>(
+    () => ({
+      search: filters?.search ?? debouncedSearch,
+      type: filters?.type ?? internalType,
+      bucket: filters?.bucket ?? internalBucket,
+      start: filters?.start ?? null,
+      end: filters?.end ?? null,
+    }),
+    [filters, debouncedSearch, internalType, internalBucket],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [active.search, active.type, active.bucket, active.start, active.end, entity]);
+
+  useEffect(() => {
+    let alive = true;
     async function load() {
       setLoading(true);
+      setError(null);
       try {
-        const { data: auth } = await supabase.auth.getUser();
-        if (!auth.user) return;
+        const effectivePageSize = Math.max(1, Math.min(pageSize, limit ?? pageSize));
+        const maxRows = limit ?? Number.MAX_SAFE_INTEGER;
+        const offset = (page - 1) * effectivePageSize;
+        if (offset >= maxRows) {
+          if (alive) setRows([]);
+          return;
+        }
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("empresa_id")
-          .eq("id", auth.user.id)
-          .maybeSingle();
-        if (!profile?.empresa_id) return;
+        const { data, error: rpcError } = await (supabase as any).rpc(
+          "fn_extrato_financeiro_v2",
+          {
+            p_entidade: entity,
+            p_inicio: isoStart(active.start),
+            p_fim: isoEndExclusive(active.end),
+            p_tipo: active.type || null,
+            p_bucket: active.bucket || null,
+            p_busca: active.search?.trim() || null,
+            p_limit: Math.min(effectivePageSize, maxRows - offset),
+            p_offset: offset,
+          },
+        );
+        if (rpcError) throw rpcError;
+        if (!alive) return;
 
-        let queryBuilder = supabase
-          .from("lancamentos_contabeis")
-          .select(
-            "id,descricao,tipo_lancamento,valor,data_lancamento,saldo_atual,conta_contabil,saque_id,estorno_id,comissao_id,transacao_id",
-          )
-          .eq("empresa_id", profile.empresa_id)
-          .order("data_lancamento", { ascending: false });
-
-        if (limit) queryBuilder = queryBuilder.limit(limit);
-
-        const { data, error } = await queryBuilder;
-        if (error) throw error;
-        if (!active) return;
-
-        setStatement(
-          ((data ?? []) as unknown as Array<any>).map((row) => ({
-            id: row.id,
-            date: row.data_lancamento,
-            description: row.descricao,
-            category: resolveCategory(row),
-            type: row.tipo_lancamento === "C" ? "credito" : "debito",
-            amount: Math.abs(Number(row.valor ?? 0)),
-            balance: row.saldo_atual == null ? null : Number(row.saldo_atual),
+        setRows(
+          ((data ?? []) as any[]).map((row) => ({
+            id: String(row.id),
+            data_lancamento: String(row.data_lancamento),
+            descricao: String(row.descricao ?? ""),
+            conta: String(row.conta ?? ""),
+            bucket: String(row.bucket ?? "disponivel"),
+            tipo: row.tipo === "debito" ? "debito" : "credito",
+            valor: Number(row.valor ?? 0),
+            valor_assinado: Number(row.valor_assinado ?? 0),
+            documento: row.documento ? String(row.documento) : null,
+            transacao_id: row.transacao_id ? String(row.transacao_id) : null,
+            saque_id: row.saque_id ? String(row.saque_id) : null,
+            estorno_id: row.estorno_id ? String(row.estorno_id) : null,
+            total_registros: Number(row.total_registros ?? 0),
           })),
         );
-      } catch (error) {
-        console.error("Falha ao carregar extrato", error);
-        if (active) setStatement([]);
+      } catch (cause) {
+        if (!alive) return;
+        setRows([]);
+        setError(cause instanceof Error ? cause.message : "Não foi possível carregar o extrato.");
       } finally {
-        if (active) setLoading(false);
+        if (alive) setLoading(false);
       }
     }
-
     void load();
     return () => {
-      active = false;
+      alive = false;
     };
-  }, [limit]);
+  }, [active, entity, page, pageSize, limit]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return statement.filter((r) => {
-      if (type !== "todos" && r.type !== type) return false;
-      if (category !== "todas" && r.category !== category) return false;
-      return !q || r.description.toLowerCase().includes(q) || r.id.toLowerCase().includes(q);
-    });
-  }, [statement, query, type, category]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const current = Math.min(page, totalPages);
-  const rows = filtered.slice((current - 1) * pageSize, current * pageSize);
+  const databaseTotal = rows[0]?.total_registros ?? 0;
+  const total = Math.min(databaseTotal, limit ?? databaseTotal);
+  const totalPages = Math.max(1, Math.ceil(total / Math.max(1, Math.min(pageSize, limit ?? pageSize))));
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <header className="flex flex-wrap items-center gap-3 border-b border-border p-3">
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Buscar no extrato"
-            className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/15"
-          />
+      {showFilters && (
+        <header className="flex flex-wrap items-center gap-3 border-b border-border p-3">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={internalSearch}
+              onChange={(e) => setInternalSearch(e.target.value)}
+              placeholder="Buscar descrição, documento ou ID"
+              className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary/60"
+            />
+          </div>
+          <select
+            value={internalType}
+            onChange={(e) => setInternalType(e.target.value as "" | "credito" | "debito")}
+            className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm"
+          >
+            <option value="">Entradas e saídas</option>
+            <option value="credito">Entradas</option>
+            <option value="debito">Saídas</option>
+          </select>
+          <select
+            value={internalBucket}
+            onChange={(e) => setInternalBucket(e.target.value)}
+            className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm"
+          >
+            <option value="">Todos os estados</option>
+            {Object.entries(bucketLabels).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+        </header>
+      )}
+
+      {error && (
+        <div className="border-b border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {error}
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {typeOptions.map((t) => (
-            <button
-              key={t}
-              onClick={() => {
-                setType(t);
-                setPage(1);
-              }}
-              className={cn(
-                "rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition",
-                type === t
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border bg-background text-muted-foreground hover:bg-muted",
-              )}
-            >
-              {t === "credito" ? "Entradas" : t === "debito" ? "Saídas" : "Todos"}
-            </button>
-          ))}
-        </div>
-        <select
-          value={category}
-          onChange={(e) => {
-            setCategory(e.target.value as LedgerCategory | "todas");
-            setPage(1);
-          }}
-          className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-primary/60"
-        >
-          {categoryOptions.map((c) => (
-            <option key={c} value={c}>
-              {c === "todas" ? "Todas as categorias" : categoryLabel[c]}
-            </option>
-          ))}
-        </select>
-      </header>
+      )}
 
       {loading ? (
-        <TableSkeleton rows={8} cols={5} />
+        <TableSkeleton rows={Math.min(pageSize, 8)} cols={5} />
       ) : rows.length === 0 ? (
         <EmptyState
           icon={Receipt}
           title="Nenhum lançamento encontrado"
-          description="Os lançamentos reais da operação aparecerão aqui conforme forem registrados no livro contábil."
+          description="O extrato mostra apenas lançamentos contábeis reais registrados pela operação."
         />
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-sm">
+            <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <th className="px-5 py-3 font-medium">Data</th>
                   <th className="px-5 py-3 font-medium">Descrição</th>
-                  <th className="px-5 py-3 font-medium">Categoria</th>
+                  <th className="px-5 py-3 font-medium">Estado</th>
+                  <th className="px-5 py-3 font-medium">Referência</th>
                   <th className="px-5 py-3 text-right font-medium">Valor</th>
-                  <th className="px-5 py-3 text-right font-medium">Saldo</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {rows.map((r) => (
-                  <tr key={r.id} className="transition-colors hover:bg-muted/50">
+                {rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-muted/40">
                     <td className="whitespace-nowrap px-5 py-3.5 text-muted-foreground">
-                      {formatDateTime(r.date)}
+                      {formatDateTime(row.data_lancamento)}
                     </td>
                     <td className="px-5 py-3.5">
-                      <p className="font-medium text-foreground">{r.description}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{r.id}</p>
+                      <p className="font-medium text-foreground">{row.descricao}</p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">{row.conta}</p>
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                        {categoryLabel[r.category]}
+                        {bucketLabels[row.bucket] ?? row.bucket}
                       </span>
+                    </td>
+                    <td className="px-5 py-3.5 font-mono text-[11px] text-muted-foreground">
+                      {row.documento ?? "—"}
                     </td>
                     <td
                       className={cn(
                         "px-5 py-3.5 text-right font-semibold tabular-nums",
-                        r.type === "credito" ? "text-emerald-600" : "text-foreground",
+                        row.valor_assinado >= 0 ? "text-emerald-600" : "text-foreground",
                       )}
                     >
-                      {r.type === "credito" ? "+" : "−"}
-                      {formatBRL(r.amount)}
-                    </td>
-                    <td className="px-5 py-3.5 text-right tabular-nums text-muted-foreground">
-                      {r.balance == null ? "—" : formatBRL(r.balance)}
+                      {row.valor_assinado >= 0 ? "+" : "−"}
+                      {formatBRL(Math.abs(row.valor_assinado))}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
-          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3 text-xs text-muted-foreground">
-            <span>{formatInt(filtered.length)} lançamentos</span>
+          <footer className="flex items-center justify-between gap-3 border-t border-border px-5 py-3 text-xs text-muted-foreground">
+            <span>{formatInt(total)} lançamento{total === 1 ? "" : "s"}</span>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={current === 1}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background transition hover:bg-muted disabled:opacity-40"
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                disabled={page <= 1}
+                className="grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-muted disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span>
-                {current} / {totalPages}
-              </span>
+              <span>{page} / {totalPages}</span>
               <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={current === totalPages}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background transition hover:bg-muted disabled:opacity-40"
+                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                disabled={page >= totalPages}
+                className="grid h-8 w-8 place-items-center rounded-lg border border-border hover:bg-muted disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
