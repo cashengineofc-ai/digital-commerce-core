@@ -83,10 +83,25 @@ type Source = {
 };
 
 async function findCheckoutByPublicValue(supabase: ReturnType<typeof createClient>, value: string) {
-  const byToken = await supabase.from("checkouts").select("*").eq("public_token", value).eq("status", "publicado").is("deleted_at", null).maybeSingle();
-  if (byToken.error) throw byToken.error;
-  if (byToken.data) return byToken.data;
-  const bySlug = await supabase.from("checkouts").select("*").eq("slug", value).eq("status", "publicado").is("deleted_at", null).limit(2);
+  if (isUuid(value)) {
+    const byToken = await supabase
+      .from("checkouts")
+      .select("*")
+      .eq("public_token", value)
+      .eq("status", "publicado")
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (byToken.error) throw byToken.error;
+    if (byToken.data) return byToken.data;
+  }
+
+  const bySlug = await supabase
+    .from("checkouts")
+    .select("*")
+    .eq("slug", value)
+    .eq("status", "publicado")
+    .is("deleted_at", null)
+    .limit(2);
   if (bySlug.error) throw bySlug.error;
   if ((bySlug.data ?? []).length !== 1) return null;
   return bySlug.data![0];
@@ -143,52 +158,44 @@ async function loadSource(supabase: ReturnType<typeof createClient>, body: Recor
 }
 
 async function loadBumps(supabase: ReturnType<typeof createClient>, source: Source) {
-  const { data: configs, error: configError } = await supabase
-    .from("checkout_order_bumps")
-    .select("*")
+  const { data, error } = await supabase
+    .from("checkout_version_order_bumps")
+    .select("id,produto_id,titulo_snapshot,descricao_snapshot,imagem_snapshot,preco_publicado_snapshot,grupo_combinacao,max_selecao_grupo,ordem")
+    .eq("checkout_version_id", source.version.id)
     .eq("checkout_id", source.checkout.id)
     .eq("empresa_id", source.empresaId)
-    .eq("ativo", true)
-    .is("deleted_at", null)
     .order("ordem", { ascending: true });
 
-  if (configError) throw configError;
-  if (!configs?.length) return [];
+  if (error) throw error;
+  if (!data?.length) return [];
 
-  const productIds = [...new Set(configs.map((row: any) => row.produto_id).filter(Boolean))];
+  const productIds = [...new Set(data.map((row: any) => row.produto_id).filter(Boolean))];
   const productsResult = await supabase
     .from("produtos")
-    .select("*")
+    .select("id,status,deleted_at,gerencia_estoque,estoque,estoque_reservado")
     .in("id", productIds)
-    .eq("empresa_id", source.empresaId)
-    .eq("status", "publicado")
-    .is("deleted_at", null);
+    .eq("empresa_id", source.empresaId);
 
   if (productsResult.error) throw productsResult.error;
   const products = new Map((productsResult.data ?? []).map((product: any) => [product.id, product]));
 
-  return configs.flatMap((row: any) => {
+  return data.flatMap((row: any) => {
     const product = products.get(row.produto_id) as Record<string, any> | undefined;
-    if (!product || !validProduct(product)) return [];
-
-    const normal = activePromotionPrice(product);
-    let amount = normal;
-    if (row.tipo_preco === "preco_fixo") {
-      amount = Number(row.preco_fixo ?? 0);
-    } else if (row.tipo_preco === "desconto_percentual") {
-      const discount = Math.min(100, Math.max(0, Number(row.desconto_percentual ?? 0)));
-      amount = normal * (1 - discount / 100);
+    if (!product || product.status !== "publicado" || product.deleted_at) return [];
+    if (
+      product.gerencia_estoque &&
+      Number(product.estoque ?? 0) - Number(product.estoque_reservado ?? 0) <= 0
+    ) {
+      return [];
     }
-    amount = Number(amount.toFixed(2));
-    if (!Number.isFinite(amount) || amount < 0) return [];
 
     return [{
       id: row.id as string,
-      product_id: product.id as string,
-      name: (row.titulo || product.nome) as string,
-      description: (row.descricao || product.descricao_curta || null) as string | null,
-      image_url: (row.imagem_url || product.imagem_principal_url || null) as string | null,
-      amount,
+      product_id: row.produto_id as string,
+      name: row.titulo_snapshot as string,
+      description: (row.descricao_snapshot ?? null) as string | null,
+      image_url: (row.imagem_snapshot ?? null) as string | null,
+      amount: Number(row.preco_publicado_snapshot ?? 0),
       group: row.grupo_combinacao ?? null,
       max_group_selection: row.max_selecao_grupo ?? null,
     }];
@@ -273,7 +280,7 @@ Deno.serve(async (request) => {
         name: source.checkout.nome,
         description: source.checkout.descricao ?? source.product.descricao_curta ?? null,
         image_url: source.product.imagem_principal_url ?? null,
-        banner_url: null,
+        banner_url: config.banners?.desktop_url ?? config.banners?.image_url ?? null,
         success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? config.confirmation?.redirect_url ?? null,
         allow_custom_amount: Boolean(source.offer.permitir_valor_personalizado || source.link?.permite_editar_valor),
         min_amount: source.offer.valor_minimo ?? null,
