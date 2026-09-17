@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -6234,7 +6234,9 @@ export type Database = {
           endereco_cobranca: Json | null
           id: string
           id_transacao_gateway: string | null
+          idempotency_key: string | null
           ip_cliente: string | null
+          link_afiliado_id: string | null
           link_pagamento_id: string | null
           metadata: Json | null
           metodo_pagamento:
@@ -6247,23 +6249,30 @@ export type Database = {
           origem_dispositivo: string | null
           parcela_atual: number | null
           parcelas: number | null
+          payload_provedor: Json
           pedido_numero: string | null
           pix_copia_cola: string | null
           pix_expiracao: string | null
           pix_qrcode: string | null
           produto_id: string | null
           profile_id: string | null
+          provedor_pagamento: string | null
           regras_antifraude: Json | null
           risco_nivel: string | null
           risco_score: number | null
+          saldo_liberado_em: string | null
+          saldo_processado_em: string | null
+          saldo_revertido_em: string | null
           split_pagamento: Json | null
           status: Database["public"]["Enums"]["status_transacao"]
+          status_detalhe_provedor: string | null
           taxa_cambio: number | null
           tid: string | null
           tipo: Database["public"]["Enums"]["tipo_transacao"]
           updated_at: string
           url_callback: string | null
           valor_bruto: number
+          valor_comissao_afiliado: number
           valor_descontos: number | null
           valor_impostos: number | null
           valor_juros: number | null
@@ -6271,6 +6280,7 @@ export type Database = {
           valor_multa: number | null
           valor_original_moeda: number | null
           valor_parcela: number | null
+          valor_saldo_empresa: number
           valor_taxa_antecipacao: number | null
           valor_taxa_plataforma: number | null
           valor_taxa_processamento: number | null
@@ -6301,7 +6311,9 @@ export type Database = {
           endereco_cobranca?: Json | null
           id?: string
           id_transacao_gateway?: string | null
+          idempotency_key?: string | null
           ip_cliente?: string | null
+          link_afiliado_id?: string | null
           link_pagamento_id?: string | null
           metadata?: Json | null
           metodo_pagamento?:
@@ -6314,23 +6326,30 @@ export type Database = {
           origem_dispositivo?: string | null
           parcela_atual?: number | null
           parcelas?: number | null
+          payload_provedor?: Json
           pedido_numero?: string | null
           pix_copia_cola?: string | null
           pix_expiracao?: string | null
           pix_qrcode?: string | null
           produto_id?: string | null
           profile_id?: string | null
+          provedor_pagamento?: string | null
           regras_antifraude?: Json | null
           risco_nivel?: string | null
           risco_score?: number | null
+          saldo_liberado_em?: string | null
+          saldo_processado_em?: string | null
+          saldo_revertido_em?: string | null
           split_pagamento?: Json | null
           status?: Database["public"]["Enums"]["status_transacao"]
+          status_detalhe_provedor?: string | null
           taxa_cambio?: number | null
           tid?: string | null
           tipo: Database["public"]["Enums"]["tipo_transacao"]
           updated_at?: string
           url_callback?: string | null
           valor_bruto: number
+          valor_comissao_afiliado?: number
           valor_descontos?: number | null
           valor_impostos?: number | null
           valor_juros?: number | null
@@ -6338,6 +6357,7 @@ export type Database = {
           valor_multa?: number | null
           valor_original_moeda?: number | null
           valor_parcela?: number | null
+          valor_saldo_empresa?: number
           valor_taxa_antecipacao?: number | null
           valor_taxa_plataforma?: number | null
           valor_taxa_processamento?: number | null
@@ -6368,7 +6388,9 @@ export type Database = {
           endereco_cobranca?: Json | null
           id?: string
           id_transacao_gateway?: string | null
+          idempotency_key?: string | null
           ip_cliente?: string | null
+          link_afiliado_id?: string | null
           link_pagamento_id?: string | null
           metadata?: Json | null
           metodo_pagamento?:
@@ -6381,23 +6403,30 @@ export type Database = {
           origem_dispositivo?: string | null
           parcela_atual?: number | null
           parcelas?: number | null
+          payload_provedor?: Json
           pedido_numero?: string | null
           pix_copia_cola?: string | null
           pix_expiracao?: string | null
           pix_qrcode?: string | null
           produto_id?: string | null
           profile_id?: string | null
+          provedor_pagamento?: string | null
           regras_antifraude?: Json | null
           risco_nivel?: string | null
           risco_score?: number | null
+          saldo_liberado_em?: string | null
+          saldo_processado_em?: string | null
+          saldo_revertido_em?: string | null
           split_pagamento?: Json | null
           status?: Database["public"]["Enums"]["status_transacao"]
+          status_detalhe_provedor?: string | null
           taxa_cambio?: number | null
           tid?: string | null
           tipo?: Database["public"]["Enums"]["tipo_transacao"]
           updated_at?: string
           url_callback?: string | null
           valor_bruto?: number
+          valor_comissao_afiliado?: number
           valor_descontos?: number | null
           valor_impostos?: number | null
           valor_juros?: number | null
@@ -6405,6 +6434,7 @@ export type Database = {
           valor_multa?: number | null
           valor_original_moeda?: number | null
           valor_parcela?: number | null
+          valor_saldo_empresa?: number
           valor_taxa_antecipacao?: number | null
           valor_taxa_plataforma?: number | null
           valor_taxa_processamento?: number | null
@@ -6450,6 +6480,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_link_afiliado_id_fkey"
+            columns: ["link_afiliado_id"]
+            isOneToOne: false
+            referencedRelation: "links_afiliados"
             referencedColumns: ["id"]
           },
           {
@@ -7130,12 +7167,128 @@ export type Database = {
           },
         ]
       }
+      webhook_events: {
+        Row: {
+          attempts: number
+          error: string | null
+          event_type: string
+          external_event_id: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          provider: string
+          received_at: string
+          status: string
+          transaction_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          error?: string | null
+          event_type: string
+          external_event_id: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          provider: string
+          received_at?: string
+          status?: string
+          transaction_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          error?: string | null
+          event_type?: string
+          external_event_id?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          provider?: string
+          received_at?: string
+          status?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_events_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       current_empresa_id: { Args: never; Returns: string }
+      fn_cancelar_saque: { Args: { p_saque_id: string }; Returns: boolean }
+      fn_dashboard_operacional: {
+        Args: { p_empresa_id: string; p_fim: string; p_inicio: string }
+        Returns: {
+          pagamentos_aprovados: number
+          receita_liquida: number
+          tentativas_validas: number
+          vendas_pagas: number
+          volume_processado: number
+        }[]
+      }
+      fn_dashboard_series: {
+        Args: { p_fim: string; p_granularidade?: string; p_inicio: string }
+        Returns: {
+          bucket_start: string
+          sales: number
+          volume: number
+        }[]
+      }
+      fn_dashboard_top_products: {
+        Args: { p_fim: string; p_inicio: string; p_limit?: number }
+        Returns: {
+          commission_rate: number
+          product_id: string
+          product_name: string
+          revenue: number
+          sales: number
+        }[]
+      }
+      fn_get_empresa_usuario: { Args: never; Returns: string }
+      fn_is_admin_global: { Args: never; Returns: boolean }
+      fn_pode_inscrever_marketplace: {
+        Args: {
+          p_afiliado_id: string
+          p_empresa_id: string
+          p_marketplace_produto_id: string
+          p_produto_id: string
+        }
+        Returns: boolean
+      }
+      fn_processar_financeiro_transacao: {
+        Args: { p_transacao_id: string }
+        Returns: boolean
+      }
+      fn_recalcular_agregados_transacao: {
+        Args: {
+          p_checkout_id?: string
+          p_cliente_id?: string
+          p_produto_id?: string
+        }
+        Returns: undefined
+      }
+      fn_seed_role_permissions: { Args: never; Returns: undefined }
+      fn_sincronizar_saldo_empresa: { Args: never; Returns: number }
+      fn_solicitar_saque: {
+        Args: { p_conta_bancaria_id: string; p_valor: number }
+        Returns: string
+      }
+      fn_tem_permissao: {
+        Args: {
+          p_acao: Database["public"]["Enums"]["tipo_operacao"]
+          p_modulo: string
+          p_recurso: string
+        }
+        Returns: boolean
+      }
       is_admin_global: { Args: never; Returns: boolean }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
@@ -7345,12 +7498,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7374,11 +7527,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7399,11 +7552,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7424,11 +7577,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -7441,11 +7594,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
