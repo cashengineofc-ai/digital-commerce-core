@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Banknote } from "lucide-react";
 import {
@@ -13,42 +13,34 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
 
-type BankAccount = {
-  id: string;
-  label: string;
-};
+type BankAccount = { id: string; label: string };
 
 export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(0);
   const [available, setAvailable] = useState(0);
   const [account, setAccount] = useState("");
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  const value = Number.isFinite(amount) ? Math.min(Math.max(amount, 0), available) : 0;
+  const requestKey = useRef(crypto.randomUUID());
 
   async function loadFinanceData() {
     setLoading(true);
     try {
       const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return;
+      if (!auth.user) throw new Error("Sessão não encontrada.");
 
       const { data: profile } = await supabase
         .from("profiles")
         .select("empresa_id")
         .eq("id", auth.user.id)
         .maybeSingle();
-      if (!profile?.empresa_id) return;
+      if (!profile?.empresa_id) throw new Error("Empresa não identificada.");
 
-      const [{ data: balance, error: balanceError }, { data: accounts, error: accountsError }] =
+      const [{ data: balanceData, error: balanceError }, { data: bankData, error: bankError }] =
         await Promise.all([
-          supabase
-            .from("saldos")
-            .select("saldo_disponivel")
-            .eq("empresa_id", profile.empresa_id)
-            .maybeSingle(),
+          (supabase as any).rpc("fn_financeiro_saldo", { p_entidade: "empresa" }),
           supabase
             .from("contas_bancarias")
             .select("id,banco_nome,agencia,conta,conta_dv,chave_pix,principal")
@@ -58,21 +50,25 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
         ]);
 
       if (balanceError) throw balanceError;
-      if (accountsError) throw accountsError;
+      if (bankError) throw bankError;
 
-      const availableValue = Number(balance?.saldo_disponivel ?? 0);
-      const mapped = (accounts ?? []).map((item) => ({
+      const balance = Array.isArray(balanceData) ? balanceData[0] : balanceData;
+      const availableValue = Number(balance?.disponivel ?? 0);
+      const mapped = (bankData ?? []).map((item) => ({
         id: item.id,
-        label: `${item.banco_nome} · Ag. ${item.agencia} · Conta ${item.conta}${item.conta_dv ? `-${item.conta_dv}` : ""}`,
+        label: item.chave_pix
+          ? `${item.banco_nome} · Pix ${item.chave_pix}`
+          : `${item.banco_nome} · Ag. ${item.agencia} · Conta ${item.conta}${item.conta_dv ? `-${item.conta_dv}` : ""}`,
       }));
 
       setAvailable(availableValue);
       setAmount(availableValue);
-      setBankAccounts(mapped);
+      setAccounts(mapped);
       setAccount(mapped[0]?.id ?? "");
-    } catch (error) {
-      console.error("Falha ao carregar dados para saque", error);
-      toast.error("Não foi possível carregar seu saldo e suas contas bancárias.");
+    } catch (cause) {
+      toast.error("Não foi possível carregar o saque", {
+        description: cause instanceof Error ? cause.message : undefined,
+      });
     } finally {
       setLoading(false);
     }
@@ -80,28 +76,35 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
 
   async function handleOpenChange(next: boolean) {
     setOpen(next);
-    if (next) await loadFinanceData();
+    if (next) {
+      requestKey.current = crypto.randomUUID();
+      await loadFinanceData();
+    }
   }
 
   async function submitWithdrawal() {
-    if (!account || value <= 0 || value > available) return;
+    const value = Number(amount);
+    if (!account || !Number.isFinite(value) || value <= 0 || value > available) return;
+
     setSubmitting(true);
     try {
-      const { error } = await (supabase.rpc as any)("fn_solicitar_saque", {
+      const { data, error } = await (supabase as any).rpc("fn_solicitar_saque_v2", {
         p_valor: value,
         p_conta_bancaria_id: account,
+        p_idempotency_key: requestKey.current,
+        p_entidade: "empresa",
       });
       if (error) throw error;
+      if (!data) throw new Error("O banco não confirmou a solicitação.");
 
       setOpen(false);
       toast.success("Saque solicitado", {
-        description: `${formatBRL(value)} foram reservados para processamento.`,
+        description: `${formatBRL(value)} foram reservados. Aprovação não significa pagamento; a liquidação será registrada somente após conciliação.`,
       });
       await onSuccess?.();
-    } catch (error: any) {
-      console.error("Falha ao solicitar saque", error);
+    } catch (cause) {
       toast.error("Não foi possível solicitar o saque", {
-        description: error?.message ?? "Confira seu saldo e a conta de destino.",
+        description: cause instanceof Error ? cause.message : undefined,
       });
       await loadFinanceData();
     } finally {
@@ -112,30 +115,30 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <button className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90">
-          <Banknote className="h-4 w-4" />
-          Solicitar saque
+        <button className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+          <Banknote className="h-4 w-4" /> Solicitar saque
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Solicitar saque</DialogTitle>
           <DialogDescription>
-            Disponível para saque: {loading ? "Carregando..." : formatBRL(available)}
+            Disponível: {loading ? "Carregando..." : formatBRL(available)}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <label className="block">
-            <span className="text-xs font-medium text-muted-foreground">Valor do saque</span>
+            <span className="text-xs font-medium text-muted-foreground">Valor</span>
             <input
               type="number"
-              min={0}
+              min={0.01}
+              max={available}
               step="0.01"
-              value={value}
+              value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
               disabled={loading}
-              className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/15 disabled:opacity-60"
+              className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
             />
           </label>
 
@@ -144,37 +147,28 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
             <select
               value={account}
               onChange={(e) => setAccount(e.target.value)}
-              disabled={loading || bankAccounts.length === 0}
-              className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary/60 disabled:opacity-60"
+              disabled={loading || accounts.length === 0}
+              className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
             >
-              {bankAccounts.length === 0 ? (
-                <option value="">Nenhuma conta bancária cadastrada</option>
-              ) : (
-                bankAccounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.label}
-                  </option>
-                ))
-              )}
+              {accounts.length === 0 ? (
+                <option value="">Nenhuma conta cadastrada</option>
+              ) : accounts.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
             </select>
           </label>
 
           <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-            O valor será reservado imediatamente. A taxa de saque, quando houver, será calculada no banco conforme o plano e a configuração vigente da operação.
+            O destino será congelado no pedido de saque. O valor será reservado de forma atômica para impedir saques concorrentes acima do saldo.
           </div>
         </div>
 
         <DialogFooter>
+          <button onClick={() => setOpen(false)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium">Cancelar</button>
           <button
-            onClick={() => setOpen(false)}
-            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={submitWithdrawal}
-            disabled={loading || submitting || value <= 0 || value > available || !account}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+            onClick={() => void submitWithdrawal()}
+            disabled={loading || submitting || amount <= 0 || amount > available || !account}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
             {submitting ? "Solicitando..." : "Confirmar saque"}
           </button>
