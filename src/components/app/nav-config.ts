@@ -51,7 +51,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: "Transações", to: "/app/transacoes", icon: CreditCard },
       { label: "Vendas", to: "/app/vendas", icon: ShoppingBag },
-      { label: "Produtos", to: "/app/produtos", icon: Package },
+      { label: "Produtos", to: "/app/produtos", icon: Package },\n      { label: "Ofertas", to: "/app/ofertas", icon: BadgePercent },
       { label: "Checkouts", to: "/app/checkouts", icon: Ticket },
       { label: "Links de pagamento", to: "/app/links-de-pagamento", icon: Link2 },
       { label: "Clientes", to: "/app/clientes", icon: Users },
@@ -115,7 +115,7 @@ export const navGroups: NavGroup[] = [
 
 /** Itens ocultos por perfil de protótipo. */
 export const hiddenForAffiliate = new Set([
-  "/app/produtos",
+  "/app/produtos",\n  "/app/ofertas",
   "/app/checkouts",
   "/app/links-de-pagamento",
   "/app/clientes",
