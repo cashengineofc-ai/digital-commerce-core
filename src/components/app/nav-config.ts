@@ -19,7 +19,6 @@ import {
   ScrollText,
   Settings,
   ShieldAlert,
-  ShieldCheck,
   ShoppingBag,
   Store,
   Ticket,
