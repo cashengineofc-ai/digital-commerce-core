@@ -330,7 +330,7 @@ CREATE TABLE IF NOT EXISTS public.chargebacks (
     protocolo VARCHAR(32) UNIQUE NOT NULL,
     codigo_chargeback_banco VARCHAR(100),
     motivo_banco VARCHAR(255),
-    valor CHARGEBACK DECIMAL(15,2) NOT NULL,
+    valor DECIMAL(15,2) NOT NULL,
     valor_multa_banco DECIMAL(12,2) DEFAULT 0,
     valor_total_prejuizo DECIMAL(15,2) NOT NULL,
     moeda VARCHAR(3) DEFAULT 'BRL',
