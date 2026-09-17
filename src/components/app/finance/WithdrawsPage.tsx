@@ -1,294 +1,195 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, RefreshCw, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime, formatInt } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/app/EmptyState";
 import { WithdrawDialog } from "@/components/app/finance/WithdrawDialog";
+import { cn } from "@/lib/utils";
 
-type WithdrawStatus = "solicitado" | "processando" | "concluido" | "rejeitado";
 type Withdraw = {
   id: string;
-  protocol: string;
-  account: string;
-  amount: number;
-  fee: number;
-  net: number;
-  status: WithdrawStatus;
-  rawStatus: string;
-  requestedAt: string;
-  completedAt: string | null;
+  protocolo: string;
+  valor_solicitado: number;
+  taxa_saque: number;
+  valor_liquido: number;
+  status: string;
+  data_solicitacao: string;
+  data_pagamento: string | null;
+  destino: Record<string, any>;
+  referencia_conciliacao: string | null;
+  modo_processamento: string;
+  total_registros: number;
 };
 
-const statusOptions: { value: WithdrawStatus | "todos"; label: string }[] = [
-  { value: "todos", label: "Todos" },
-  { value: "solicitado", label: "Solicitado" },
-  { value: "processando", label: "Processando" },
-  { value: "concluido", label: "Concluído" },
-  { value: "rejeitado", label: "Rejeitado / cancelado" },
-];
+const PAGE_SIZE=20;
 
-const statusStyles: Record<WithdrawStatus, { label: string; className: string; dot: string }> = {
-  solicitado: {
-    label: "Solicitado",
-    className: "bg-[oklch(0.78_0.15_80_/_18%)] text-[oklch(0.52_0.13_75)]",
-    dot: "bg-[oklch(0.72_0.15_80)]",
-  },
-  processando: {
-    label: "Processando",
-    className: "bg-primary/12 text-primary",
-    dot: "bg-primary",
-  },
-  concluido: {
-    label: "Concluído",
-    className: "bg-success/12 text-success",
-    dot: "bg-success",
-  },
-  rejeitado: {
-    label: "Rejeitado / cancelado",
-    className: "bg-destructive/12 text-destructive",
-    dot: "bg-destructive",
-  },
+const statusLabels: Record<string,string> = {
+  solicitado:"Solicitado",
+  em_analise:"Em análise",
+  aprovado:"Aprovado",
+  em_processamento:"Em processamento",
+  enviado:"Enviado",
+  pago:"Pago",
+  recusado:"Recusado",
+  cancelado:"Cancelado",
+  falhou:"Falhou",
 };
 
-function normalizeStatus(status: string): WithdrawStatus {
-  if (status === "solicitado") return "solicitado";
-  if (["em_analise", "aprovado", "processando", "enviado"].includes(status)) return "processando";
-  if (status === "pago") return "concluido";
-  return "rejeitado";
+function csvCell(value: unknown) {
+  let text=String(value??"");
+  if(/^[=+\-@]/.test(text)) text=`'${text}`;
+  return `"${text.replaceAll('"','""')}"`;
 }
-
-function StatusBadge({ status }: { status: WithdrawStatus }) {
-  const s = statusStyles[status];
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-        s.className,
-      )}
-    >
-      <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
-      {s.label}
-    </span>
-  );
-}
-
-function KpiCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-      <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-        {formatBRL(value)}
-      </p>
-    </div>
-  );
-}
-
-const PAGE_SIZE = 12;
 
 export function WithdrawsPage() {
-  const [withdraws, setWithdraws] = useState<Withdraw[]>([]);
-  const [status, setStatus] = useState<WithdrawStatus | "todos">("todos");
-  const [page, setPage] = useState(1);
+  const [rows,setRows]=useState<Withdraw[]>([]);
+  const [status,setStatus]=useState("");
+  const [page,setPage]=useState(1);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState<string|null>(null);
 
-  const load = useCallback(async () => {
+  const load=useCallback(async()=>{
+    setLoading(true);
+    setError(null);
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("empresa_id")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-      if (!profile?.empresa_id) return;
-
-      const { data, error } = await supabase
-        .from("saques")
-        .select(
-          "id,protocolo,valor_solicitado,taxa_saque,valor_liquido,status,data_solicitacao,data_pagamento,data_cancelamento,data_rejeicao,contas_bancarias(banco_nome,agencia,conta,conta_dv)",
-        )
-        .eq("empresa_id", profile.empresa_id)
-        .order("data_solicitacao", { ascending: false });
-      if (error) throw error;
-
-      setWithdraws(
-        ((data ?? []) as unknown as Array<any>).map((row) => {
-          const bank = row.contas_bancarias;
-          return {
-            id: row.id,
-            protocol: row.protocolo,
-            account: bank
-              ? `${bank.banco_nome} · Ag. ${bank.agencia} · Conta ${bank.conta}${bank.conta_dv ? `-${bank.conta_dv}` : ""}`
-              : "Conta removida",
-            amount: Number(row.valor_solicitado ?? 0),
-            fee: Number(row.taxa_saque ?? 0),
-            net: Number(row.valor_liquido ?? 0),
-            status: normalizeStatus(String(row.status)),
-            rawStatus: String(row.status),
-            requestedAt: row.data_solicitacao,
-            completedAt: row.data_pagamento ?? row.data_cancelamento ?? row.data_rejeicao ?? null,
-          };
-        }),
-      );
-    } catch (error) {
-      console.error("Falha ao carregar saques", error);
-      setWithdraws([]);
+      const {data,error:rpcError}=await (supabase as any).rpc("fn_saques_listar",{
+        p_entidade:"empresa",
+        p_status:status||null,
+        p_limit:PAGE_SIZE,
+        p_offset:(page-1)*PAGE_SIZE,
+      });
+      if(rpcError) throw rpcError;
+      setRows(((data??[]) as any[]).map((row)=>({
+        ...row,
+        valor_solicitado:Number(row.valor_solicitado??0),
+        taxa_saque:Number(row.taxa_saque??0),
+        valor_liquido:Number(row.valor_liquido??0),
+        total_registros:Number(row.total_registros??0),
+      })));
+    } catch(cause) {
+      setRows([]);
+      setError(cause instanceof Error?cause.message:"Não foi possível carregar os saques.");
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  },[status,page]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useEffect(()=>{ void load(); },[load]);
 
-  const filtered = useMemo(() => {
-    return withdraws.filter((w) => status === "todos" || w.status === status);
-  }, [withdraws, status]);
+  const total=rows[0]?.total_registros??0;
+  const totalPages=Math.max(1,Math.ceil(total/PAGE_SIZE));
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const current = Math.min(page, totalPages);
-  const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+  const totals=useMemo(()=>rows.reduce((acc,row)=>{
+    acc.requested+=row.valor_solicitado;
+    if(row.status==="pago") acc.paid+=row.valor_liquido;
+    if(["solicitado","em_analise","aprovado","em_processamento","enviado"].includes(row.status)) acc.reserved+=row.valor_solicitado;
+    return acc;
+  },{requested:0,reserved:0,paid:0}),[rows]);
 
-  const kpis = useMemo(() => {
-    const byStatus = withdraws.reduce(
-      (acc, w) => {
-        acc[w.status] = (acc[w.status] ?? 0) + w.amount;
-        return acc;
-      },
-      {} as Record<WithdrawStatus, number>,
-    );
-    return {
-      solicitado: byStatus.solicitado ?? 0,
-      processando: byStatus.processando ?? 0,
-      concluido: byStatus.concluido ?? 0,
-      rejeitado: byStatus.rejeitado ?? 0,
-    };
-  }, [withdraws]);
-
-  async function cancelWithdrawal(id: string) {
+  async function cancel(id:string) {
     try {
-      const { error } = await (supabase.rpc as any)("fn_cancelar_saque", { p_saque_id: id });
-      if (error) throw error;
-      toast.success("Saque cancelado e saldo liberado.");
+      const {data,error:rpcError}=await (supabase as any).rpc("fn_cancelar_saque",{p_saque_id:id});
+      if(rpcError) throw rpcError;
+      if(!data) throw new Error("O saque não pôde ser cancelado.");
+      toast.success("Saque cancelado e reserva liberada.");
       await load();
-    } catch (error: any) {
-      toast.error("Não foi possível cancelar o saque", { description: error?.message });
+    } catch(cause) {
+      toast.error("Não foi possível cancelar",{description:cause instanceof Error?cause.message:undefined});
     }
   }
 
-  function exportCsv() {
-    if (filtered.length === 0) return;
-    const csvRows = [
-      ["Protocolo", "Conta", "Valor bruto", "Taxa", "Líquido", "Status", "Solicitado em", "Finalizado em"],
-      ...filtered.map((w) => [w.protocol, w.account, w.amount.toFixed(2), w.fee.toFixed(2), w.net.toFixed(2), w.rawStatus, w.requestedAt, w.completedAt ?? ""]),
-    ];
-    const csv = csvRows.map((row) => row.map((v) => `"${String(v).replaceAll('"', '""')}"`).join(",")).join("\n");
-    const url = URL.createObjectURL(new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `saques-${new Date().toISOString().slice(0, 10)}.csv`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+  async function exportCsv() {
+    const all:any[]=[];
+    let offset=0;
+    while(true) {
+      const {data,error:rpcError}=await (supabase as any).rpc("fn_saques_listar",{
+        p_entidade:"empresa",p_status:status||null,p_limit:200,p_offset:offset,
+      });
+      if(rpcError){setError(rpcError.message);return;}
+      const part=(data??[]) as any[];
+      all.push(...part);
+      if(part.length<200) break;
+      offset+=200;
+    }
+    if(!all.length) return;
+    const csv=[
+      ["Protocolo","Valor solicitado","Taxa","Líquido","Status","Solicitado em","Pago em","Modo","Referência"].map(csvCell).join(","),
+      ...all.map((row)=>[
+        row.protocolo,Number(row.valor_solicitado??0).toFixed(2),Number(row.taxa_saque??0).toFixed(2),
+        Number(row.valor_liquido??0).toFixed(2),row.status,row.data_solicitacao,row.data_pagamento??"",
+        row.modo_processamento,row.referencia_conciliacao??""
+      ].map(csvCell).join(","))
+    ].join("\n");
+    const url=URL.createObjectURL(new Blob(["\ufeff",csv],{type:"text/csv;charset=utf-8"}));
+    const a=document.createElement("a");a.href=url;a.download=`saques-${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url);
   }
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Saques</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Solicitações de saque e status de liquidação.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">Saques</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Aprovação e pagamento são etapas diferentes. Pago exige conciliação.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={exportCsv}
-            disabled={filtered.length === 0}
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3.5 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted disabled:opacity-50"
-          >
-            <Download className="h-4 w-4" />
-            Exportar CSV
-          </button>
-          <WithdrawDialog onSuccess={load} />
+        <div className="flex gap-2">
+          <button onClick={()=>void load()} className="inline-flex items-center gap-2 rounded-lg border border-border px-3.5 py-2 text-sm font-medium hover:bg-muted"><RefreshCw className={cn("h-4 w-4",loading&&"animate-spin")}/>Atualizar</button>
+          <button onClick={()=>void exportCsv()} disabled={total===0} className="inline-flex items-center gap-2 rounded-lg border border-border px-3.5 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"><Download className="h-4 w-4"/>Exportar</button>
+          <WithdrawDialog onSuccess={load}/>
         </div>
       </header>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Solicitados" value={kpis.solicitado} />
-        <KpiCard label="Processando" value={kpis.processando} />
-        <KpiCard label="Concluídos" value={kpis.concluido} />
-        <KpiCard label="Rejeitados / cancelados" value={kpis.rejeitado} />
+      {error&&<div className="mt-5 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</div>}
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {[
+          ["Página · solicitado",totals.requested],
+          ["Página · reservado",totals.reserved],
+          ["Página · pago",totals.paid],
+        ].map(([label,value])=><div key={String(label)} className="rounded-xl border border-border bg-card p-5"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-3 text-2xl font-semibold tabular-nums">{formatBRL(Number(value))}</p></div>)}
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card p-3 shadow-sm">
-        {statusOptions.map((o) => (
-          <button
-            key={o.value}
-            onClick={() => {
-              setStatus(o.value);
-              setPage(1);
-            }}
-            className={cn(
-              "rounded-lg px-3 py-1.5 text-xs font-medium transition",
-              status === o.value
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:bg-muted",
-            )}
-          >
-            {o.label}
-          </button>
-        ))}
-        <div className="ml-auto text-xs text-muted-foreground">{formatInt(filtered.length)} saques</div>
+      <div className="mt-6 flex flex-wrap gap-2 rounded-xl border border-border bg-card p-3">
+        <select value={status} onChange={(e)=>{setStatus(e.target.value);setPage(1);}} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
+          <option value="">Todos os estados</option>
+          {Object.entries(statusLabels).map(([key,label])=><option key={key} value={key}>{label}</option>)}
+        </select>
+        <span className="ml-auto self-center text-xs text-muted-foreground">{formatInt(total)} registro{total===1?"":"s"}</span>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1060px] text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-                <th className="px-5 py-3 font-medium">Protocolo</th>
-                <th className="px-5 py-3 font-medium">Conta destino</th>
-                <th className="px-5 py-3 text-right font-medium">Valor bruto</th>
-                <th className="px-5 py-3 text-right font-medium">Taxa</th>
-                <th className="px-5 py-3 text-right font-medium">Líquido</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 text-right font-medium">Solicitado em</th>
-                <th className="px-5 py-3 text-right font-medium">Finalizado em</th>
-                <th className="px-5 py-3 text-right font-medium">Ação</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {rows.map((w) => (
-                <tr key={w.id} className="transition hover:bg-muted/60">
-                  <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{w.protocol}</td>
-                  <td className="px-5 py-3 font-medium text-foreground">{w.account}</td>
-                  <td className="px-5 py-3 text-right tabular-nums text-foreground">{formatBRL(w.amount)}</td>
-                  <td className="px-5 py-3 text-right tabular-nums text-muted-foreground">{formatBRL(w.fee)}</td>
-                  <td className="px-5 py-3 text-right font-semibold tabular-nums text-foreground">{formatBRL(w.net)}</td>
-                  <td className="px-5 py-3"><StatusBadge status={w.status} /></td>
-                  <td className="px-5 py-3 text-right tabular-nums text-muted-foreground">{formatDateTime(w.requestedAt)}</td>
-                  <td className="px-5 py-3 text-right tabular-nums text-muted-foreground">{w.completedAt ? formatDateTime(w.completedAt) : "—"}</td>
-                  <td className="px-5 py-3 text-right">
-                    {["solicitado", "em_analise"].includes(w.rawStatus) ? (
-                      <button onClick={() => cancelWithdrawal(w.id)} className="text-xs font-medium text-destructive hover:underline">Cancelar</button>
-                    ) : "—"}
-                  </td>
-                </tr>
-              ))}
-              {rows.length === 0 && (
-                <tr><td colSpan={9} className="px-5 py-12 text-center text-sm text-muted-foreground">Nenhum saque encontrado com esses filtros.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      <section className="mt-4 overflow-hidden rounded-xl border border-border bg-card">
+        {loading ? <div className="p-10 text-center text-sm text-muted-foreground">Carregando saques...</div> : rows.length===0 ? (
+          <EmptyState icon={Wallet} title="Nenhum saque encontrado" description="Os pedidos reais de saque aparecerão aqui."/>
+        ) : <div className="overflow-x-auto"><table className="w-full min-w-[1120px] text-sm">
+          <thead><tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <th className="px-5 py-3">Protocolo</th><th className="px-5 py-3">Destino congelado</th><th className="px-5 py-3 text-right">Solicitado</th><th className="px-5 py-3 text-right">Taxa</th><th className="px-5 py-3 text-right">Líquido</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Data</th><th className="px-5 py-3 text-right">Ação</th>
+          </tr></thead>
+          <tbody className="divide-y divide-border">{rows.map(row=>{
+            const destination=row.destino?.chave_pix
+              ? `${row.destino.banco_nome??""} · Pix ${row.destino.chave_pix}`
+              : `${row.destino?.banco_nome??"Banco"} · Ag. ${row.destino?.agencia??"—"} · Conta ${row.destino?.conta??"—"}`;
+            const cancellable=["solicitado","em_analise"].includes(row.status);
+            return <tr key={row.id} className="hover:bg-muted/40">
+              <td className="px-5 py-3.5 font-mono text-xs">{row.protocolo}</td>
+              <td className="px-5 py-3.5"><p>{destination}</p><p className="text-[11px] text-muted-foreground">{row.modo_processamento==="manual"?"Conciliação manual":"Provedor integrado"}</p></td>
+              <td className="px-5 py-3.5 text-right tabular-nums">{formatBRL(row.valor_solicitado)}</td>
+              <td className="px-5 py-3.5 text-right tabular-nums">{formatBRL(row.taxa_saque)}</td>
+              <td className="px-5 py-3.5 text-right font-semibold tabular-nums">{formatBRL(row.valor_liquido)}</td>
+              <td className="px-5 py-3.5"><span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">{statusLabels[row.status]??row.status}</span>{row.referencia_conciliacao&&<p className="mt-1 text-[10px] text-muted-foreground">Ref. {row.referencia_conciliacao}</p>}</td>
+              <td className="px-5 py-3.5 text-xs text-muted-foreground">{formatDateTime(row.data_pagamento??row.data_solicitacao)}</td>
+              <td className="px-5 py-3.5 text-right">{cancellable&&<button onClick={()=>void cancel(row.id)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted">Cancelar</button>}</td>
+            </tr>;
+          })}</tbody>
+        </table></div>}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3">
-          <p className="text-xs text-muted-foreground">Página {current} de {totalPages}</p>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setPage(Math.max(1, current - 1))} disabled={current === 1} className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium text-foreground transition hover:bg-muted disabled:opacity-40"><ChevronLeft className="h-3.5 w-3.5" />Anterior</button>
-            <button onClick={() => setPage(Math.min(totalPages, current + 1))} disabled={current === totalPages} className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium text-foreground transition hover:bg-muted disabled:opacity-40">Próxima<ChevronRight className="h-3.5 w-3.5" /></button>
+        {rows.length>0&&<footer className="flex items-center justify-between border-t border-border px-5 py-3 text-xs text-muted-foreground">
+          <span>Página {page} de {totalPages}</span>
+          <div className="flex gap-2">
+            <button onClick={()=>setPage(v=>Math.max(1,v-1))} disabled={page<=1} className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 disabled:opacity-40"><ChevronLeft className="h-3.5 w-3.5"/>Anterior</button>
+            <button onClick={()=>setPage(v=>Math.min(totalPages,v+1))} disabled={page>=totalPages} className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 disabled:opacity-40">Próxima<ChevronRight className="h-3.5 w-3.5"/></button>
           </div>
-        </div>
-      </div>
+        </footer>}
+      </section>
     </div>
   );
 }
