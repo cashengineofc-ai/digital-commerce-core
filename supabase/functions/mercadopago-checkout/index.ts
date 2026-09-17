@@ -251,6 +251,37 @@ Deno.serve(async (request) => {
     return jsonResponse({ error: "invalid_checkout_amount" }, 422);
   }
 
+  let affiliateAttribution: { afiliado_id: string; link_afiliado_id: string } | null = null;
+  const affiliateCode = typeof body.affiliate_code === "string" ? body.affiliate_code.trim() : "";
+  if (affiliateCode) {
+    const now = new Date().toISOString();
+    const { data: affiliateLink, error: affiliateLinkError } = await supabase
+      .from("links_afiliados")
+      .select("id,empresa_id,afiliado_id,produto_id,checkout_id,link_pagamento_id")
+      .eq("codigo_rastreio", affiliateCode)
+      .eq("status", "ativo")
+      .is("deleted_at", null)
+      .or(`data_inicio.is.null,data_inicio.lte.${now}`)
+      .or(`data_fim.is.null,data_fim.gte.${now}`)
+      .limit(1)
+      .maybeSingle();
+
+    if (affiliateLinkError) {
+      console.error("Affiliate attribution lookup failed", affiliateLinkError);
+    } else if (
+      affiliateLink &&
+      affiliateLink.empresa_id === empresaId &&
+      (!affiliateLink.produto_id || affiliateLink.produto_id === product.id) &&
+      (!affiliateLink.checkout_id || affiliateLink.checkout_id === checkout?.id) &&
+      (!affiliateLink.link_pagamento_id || affiliateLink.link_pagamento_id === link?.id)
+    ) {
+      affiliateAttribution = {
+        afiliado_id: affiliateLink.afiliado_id,
+        link_afiliado_id: affiliateLink.id,
+      };
+    }
+  }
+
   if (body.action === "load") {
     return jsonResponse({
       checkout: {
@@ -383,7 +414,7 @@ Deno.serve(async (request) => {
 
   const existingTransaction = await supabase
     .from("transacoes")
-    .select("id,id_transacao_gateway,status,status_detalhe_provedor,payload_provedor")
+    .select("id,id_transacao_gateway,status,status_detalhe_provedor,payload_provedor,afiliado_id,link_afiliado_id")
     .eq("empresa_id", empresaId)
     .eq("idempotency_key", idempotencyKey)
     .maybeSingle();
@@ -411,6 +442,12 @@ Deno.serve(async (request) => {
   }
 
   let transactionId = existingTransaction.data?.id as string | undefined;
+  let transactionAffiliateAttribution = existingTransaction.data
+    ? {
+        afiliado_id: existingTransaction.data.afiliado_id as string | null,
+        link_afiliado_id: existingTransaction.data.link_afiliado_id as string | null,
+      }
+    : affiliateAttribution;
   if (!transactionId) {
     const orderNumber = `CE-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
     const { data, error } = await supabase
@@ -421,6 +458,8 @@ Deno.serve(async (request) => {
         produto_id: product.id,
         checkout_id: checkout?.id ?? null,
         link_pagamento_id: link?.id ?? null,
+        afiliado_id: affiliateAttribution?.afiliado_id ?? null,
+        link_afiliado_id: affiliateAttribution?.link_afiliado_id ?? null,
         pedido_numero: orderNumber,
         codigo_externo: link?.codigo_unico ?? checkout?.slug ?? null,
         tipo: link ? "link_pagamento" : "venda",
@@ -445,18 +484,23 @@ Deno.serve(async (request) => {
       if (error.code === "23505") {
         const raced = await supabase
           .from("transacoes")
-          .select("id")
+          .select("id,afiliado_id,link_afiliado_id")
           .eq("empresa_id", empresaId)
           .eq("idempotency_key", idempotencyKey)
           .maybeSingle();
         if (!raced.data) return jsonResponse({ error: "transaction_create_failed" }, 500);
         transactionId = raced.data.id;
+        transactionAffiliateAttribution = {
+          afiliado_id: raced.data.afiliado_id as string | null,
+          link_afiliado_id: raced.data.link_afiliado_id as string | null,
+        };
       } else {
         console.error("Transaction insert failed", error);
         return jsonResponse({ error: "transaction_create_failed" }, 500);
       }
     } else {
       transactionId = data.id;
+      transactionAffiliateAttribution = affiliateAttribution;
     }
   }
 
@@ -486,6 +530,8 @@ Deno.serve(async (request) => {
       produto_id: product.id,
       checkout_id: checkout?.id ?? null,
       link_pagamento_id: link?.id ?? null,
+      afiliado_id: transactionAffiliateAttribution?.afiliado_id ?? null,
+      link_afiliado_id: transactionAffiliateAttribution?.link_afiliado_id ?? null,
     },
     notification_url: `${supabaseUrl}/functions/v1/mercadopago-webhook`,
   };

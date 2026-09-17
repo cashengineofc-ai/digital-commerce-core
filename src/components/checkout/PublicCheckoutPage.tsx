@@ -103,11 +103,15 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
   const [customAmount, setCustomAmount] = useState("");
   const [form, setForm] = useState({ name: "", email: "", cpf: "", phone: "" });
   const idempotencyKeyRef = useRef<string | null>(null);
+  const affiliateCodeRef = useRef("");
 
   const sourceKey = "checkoutSlug" in source ? `checkout:${source.checkoutSlug}` : `link:${source.paymentLinkCode}`;
 
   useEffect(() => {
     let active = true;
+    const searchParams = new URLSearchParams(window.location.search);
+    affiliateCodeRef.current =
+      ["ref", "aff", "affiliate"].map((key) => searchParams.get(key)?.trim() ?? "").find(Boolean) ?? "";
     setLoading(true);
     setLoadError(null);
     setCheckout(null);
@@ -118,6 +122,7 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
     invokeFunction<CheckoutData>("mercadopago-checkout", {
       action: "load",
       ...sourceBody(source),
+      affiliate_code: affiliateCodeRef.current,
     })
       .then((data) => {
         if (!active) return;
@@ -193,6 +198,7 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
         amount: checkout.checkout.allow_custom_amount ? amount : undefined,
         payment_method_id: "pix",
         idempotency_key: idempotencyKeyRef.current,
+        affiliate_code: affiliateCodeRef.current,
         payer: {
           name: form.name.trim(),
           email: form.email.trim(),

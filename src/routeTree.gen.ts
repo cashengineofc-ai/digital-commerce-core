@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAuditoriaRouteImport } from './routes/admin.auditoria'
@@ -44,6 +45,8 @@ import { Route as AppTaxasRouteImport } from './routes/app.taxas'
 import { Route as AppTransacoesRouteImport } from './routes/app.transacoes'
 import { Route as AppVendasRouteImport } from './routes/app.vendas'
 import { Route as AppWebhooksRouteImport } from './routes/app.webhooks'
+import { Route as CheckoutSlugRouteImport } from './routes/checkout.$slug'
+import { Route as PagarCodeRouteImport } from './routes/pagar.$code'
 import { Route as AppConfiguracoesContaRouteImport } from './routes/app.configuracoes.conta'
 import { Route as AppConfiguracoesEmpresaRouteImport } from './routes/app.configuracoes.empresa'
 import { Route as AppConfiguracoesEquipeRouteImport } from './routes/app.configuracoes.equipe'
@@ -68,6 +71,11 @@ const AdminRoute = AdminRouteImport.update({
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -230,6 +238,16 @@ const AppWebhooksRoute = AppWebhooksRouteImport.update({
   path: '/webhooks',
   getParentRoute: () => AppRoute,
 } as any)
+const CheckoutSlugRoute = CheckoutSlugRouteImport.update({
+  id: '/checkout/$slug',
+  path: '/checkout/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagarCodeRoute = PagarCodeRouteImport.update({
+  id: '/pagar/$code',
+  path: '/pagar/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppConfiguracoesContaRoute = AppConfiguracoesContaRouteImport.update({
   id: '/configuracoes/conta',
   path: '/configuracoes/conta',
@@ -288,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
+  '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/banimentos': typeof AdminBanimentosRoute
@@ -318,6 +337,8 @@ export interface FileRoutesByFullPath {
   '/app/transacoes': typeof AppTransacoesRoute
   '/app/vendas': typeof AppVendasRoute
   '/app/webhooks': typeof AppWebhooksRoute
+  '/checkout/$slug': typeof CheckoutSlugRoute
+  '/pagar/$code': typeof PagarCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/configuracoes/conta': typeof AppConfiguracoesContaRoute
@@ -333,6 +354,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/banimentos': typeof AdminBanimentosRoute
@@ -363,6 +385,8 @@ export interface FileRoutesByTo {
   '/app/transacoes': typeof AppTransacoesRoute
   '/app/vendas': typeof AppVendasRoute
   '/app/webhooks': typeof AppWebhooksRoute
+  '/checkout/$slug': typeof CheckoutSlugRoute
+  '/pagar/$code': typeof PagarCodeRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/app/configuracoes/conta': typeof AppConfiguracoesContaRoute
@@ -381,6 +405,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
+  '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/banimentos': typeof AdminBanimentosRoute
@@ -411,6 +436,8 @@ export interface FileRoutesById {
   '/app/transacoes': typeof AppTransacoesRoute
   '/app/vendas': typeof AppVendasRoute
   '/app/webhooks': typeof AppWebhooksRoute
+  '/checkout/$slug': typeof CheckoutSlugRoute
+  '/pagar/$code': typeof PagarCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/configuracoes/conta': typeof AppConfiguracoesContaRoute
@@ -430,6 +457,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/app'
+    | '/cadastro'
     | '/login'
     | '/admin/auditoria'
     | '/admin/banimentos'
@@ -460,6 +488,8 @@ export interface FileRouteTypes {
     | '/app/transacoes'
     | '/app/vendas'
     | '/app/webhooks'
+    | '/checkout/$slug'
+    | '/pagar/$code'
     | '/admin/'
     | '/app/'
     | '/app/configuracoes/conta'
@@ -475,6 +505,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/cadastro'
     | '/login'
     | '/admin/auditoria'
     | '/admin/banimentos'
@@ -505,6 +536,8 @@ export interface FileRouteTypes {
     | '/app/transacoes'
     | '/app/vendas'
     | '/app/webhooks'
+    | '/checkout/$slug'
+    | '/pagar/$code'
     | '/admin'
     | '/app'
     | '/app/configuracoes/conta'
@@ -522,6 +555,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/app'
+    | '/cadastro'
     | '/login'
     | '/admin/auditoria'
     | '/admin/banimentos'
@@ -552,6 +586,8 @@ export interface FileRouteTypes {
     | '/app/transacoes'
     | '/app/vendas'
     | '/app/webhooks'
+    | '/checkout/$slug'
+    | '/pagar/$code'
     | '/admin/'
     | '/app/'
     | '/app/configuracoes/conta'
@@ -570,7 +606,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
+  CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
+  CheckoutSlugRoute: typeof CheckoutSlugRoute
+  PagarCodeRoute: typeof PagarCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -594,6 +633,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -820,6 +866,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWebhooksRouteImport
       parentRoute: typeof AppRoute
     }
+    '/checkout/$slug': {
+      id: '/checkout/$slug'
+      path: '/checkout/$slug'
+      fullPath: '/checkout/$slug'
+      preLoaderRoute: typeof CheckoutSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagar/$code': {
+      id: '/pagar/$code'
+      path: '/pagar/$code'
+      fullPath: '/pagar/$code'
+      preLoaderRoute: typeof PagarCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/configuracoes/conta': {
       id: '/app/configuracoes/conta'
       path: '/configuracoes/conta'
@@ -995,7 +1055,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
+  CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
+  CheckoutSlugRoute: CheckoutSlugRoute,
+  PagarCodeRoute: PagarCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
