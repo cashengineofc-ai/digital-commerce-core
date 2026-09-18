@@ -545,16 +545,81 @@ INSERT INTO public.admin_global_config(
   '{"enabled":false}'::jsonb,
   'json',
   'Canal de e-mail. Ative somente após configurar o provedor no servidor.',
-  'notificacoes','entrega',false,false,false
+  'notificacoes','entrega',true,false,false
 ),
 (
   'notifications.push',
   '{"enabled":false}'::jsonb,
   'json',
   'Canal Web Push. Ative somente após configurar VAPID, criptografia e provedor no servidor.',
-  'notificacoes','entrega',false,false,false
+  'notificacoes','entrega',true,false,false
 )
-ON CONFLICT(chave) DO NOTHING;
+ON CONFLICT(chave) DO UPDATE SET
+  somente_leitura=true,
+  updated_at=now();
+
+CREATE OR REPLACE FUNCTION public.fn_notification_channels_sync(
+  p_email_enabled boolean,
+  p_push_enabled boolean,
+  p_details jsonb DEFAULT '{}'::jsonb
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path=public
+AS $
+BEGIN
+  IF current_user NOT IN ('service_role','postgres','supabase_admin') THEN
+    RAISE EXCEPTION 'trusted_backend_required';
+  END IF;
+
+  INSERT INTO public.admin_global_config(
+    chave,valor,tipo_valor,descricao,categoria,modulo,
+    somente_leitura,sensivel,publico
+  ) VALUES
+  (
+    'notifications.email',
+    jsonb_build_object('enabled',p_email_enabled,'checked_at',now(),'details',coalesce(p_details->'email','{}'::jsonb)),
+    'json','Canal de e-mail validado pelo backend.','notificacoes','entrega',true,false,false
+  ),
+  (
+    'notifications.push',
+    jsonb_build_object('enabled',p_push_enabled,'checked_at',now(),'details',coalesce(p_details->'push','{}'::jsonb)),
+    'json','Canal Web Push validado pelo backend.','notificacoes','entrega',true,false,false
+  )
+  ON CONFLICT(chave) DO UPDATE SET
+    valor=excluded.valor,
+    somente_leitura=true,
+    updated_at=now();
+
+  RETURN true;
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.fn_notification_channels_sync(boolean,boolean,jsonb)
+FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.fn_notification_channels_sync(boolean,boolean,jsonb)
+TO service_role;
+
+CREATE OR REPLACE FUNCTION public.fn_notification_push_crypto_ready()
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path=public
+AS $
+BEGIN
+  IF current_user NOT IN ('service_role','postgres','supabase_admin') THEN
+    RAISE EXCEPTION 'trusted_backend_required';
+  END IF;
+  RETURN coalesce(current_setting('app.push_encryption_key',true),'')<>'';
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.fn_notification_push_crypto_ready()
+FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.fn_notification_push_crypto_ready()
+TO service_role;
 
 CREATE OR REPLACE FUNCTION public.fn_notificacao_canais_status()
 RETURNS jsonb
