@@ -107,6 +107,8 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
           <Link
             to="/app/ajuda"
+            preload="intent"
+            preloadDelay={0}
             aria-label="Ajuda"
             className="rounded-md border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >

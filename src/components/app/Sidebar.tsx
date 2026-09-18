@@ -60,6 +60,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   <li key={item.to}>
                     <Link
                       to={item.to as NonNullable<LinkProps["to"]>}
+                      preload="intent"
+                      preloadDelay={0}
                       onClick={onNavigate}
                       className={cn(
                         "group relative flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors",
@@ -218,6 +220,8 @@ function UserFooter() {
         <div className="flex items-center gap-1">
           <Link
             to="/app/configuracoes/conta"
+            preload="intent"
+            preloadDelay={0}
             aria-label="Configurações da conta"
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
           >
