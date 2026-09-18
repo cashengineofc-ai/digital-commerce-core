@@ -33,9 +33,7 @@ WHERE deleted_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_ajuda_artigos_search_norm
 ON public.ajuda_artigos USING gin (
-  public.fn_search_normalize(
-    titulo||' '||coalesce(resumo,'')||' '||coalesce(array_to_string(palavras_chave,' '),'')
-  ) gin_trgm_ops
+  public.fn_search_normalize(titulo||' '||coalesce(resumo,'')) gin_trgm_ops
 )
 WHERE deleted_at IS NULL AND status='publicado';
 
@@ -244,9 +242,12 @@ CREATE TABLE IF NOT EXISTS public.notificacoes_push_inscricoes (
   ultimo_sucesso_em timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(profile_id,device_id),
-  UNIQUE(endpoint_hash)
+  UNIQUE(profile_id,device_id)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_push_active_endpoint_unique
+ON public.notificacoes_push_inscricoes(endpoint_hash)
+WHERE ativo;
 
 CREATE INDEX IF NOT EXISTS idx_push_profile_active
 ON public.notificacoes_push_inscricoes(profile_id,ativo);
@@ -266,7 +267,7 @@ CREATE TABLE IF NOT EXISTS public.notificacoes_entregas (
   canal text NOT NULL CHECK(canal IN ('email','push')),
   tentativa integer NOT NULL DEFAULT 1,
   status text NOT NULL DEFAULT 'pendente'
-    CHECK(status IN ('pendente','enviado','falhou','descartado')),
+    CHECK(status IN ('pendente','processando','enviado','falhou','descartado')),
   provedor_id text,
   erro text,
   proxima_tentativa_em timestamptz,
@@ -535,6 +536,25 @@ REVOKE ALL ON FUNCTION public.fn_notificacao_preferencia_salvar(text,boolean,boo
 FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.fn_notificacao_preferencia_salvar(text,boolean,boolean,boolean)
 TO authenticated;
+
+INSERT INTO public.admin_global_config(
+  chave,valor,tipo_valor,descricao,categoria,modulo,somente_leitura,sensivel,publico
+) VALUES
+(
+  'notifications.email',
+  '{"enabled":false}'::jsonb,
+  'json',
+  'Canal de e-mail. Ative somente após configurar o provedor no servidor.',
+  'notificacoes','entrega',false,false,false
+),
+(
+  'notifications.push',
+  '{"enabled":false}'::jsonb,
+  'json',
+  'Canal Web Push. Ative somente após configurar VAPID, criptografia e provedor no servidor.',
+  'notificacoes','entrega',false,false,false
+)
+ON CONFLICT(chave) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION public.fn_notificacao_canais_status()
 RETURNS jsonb
