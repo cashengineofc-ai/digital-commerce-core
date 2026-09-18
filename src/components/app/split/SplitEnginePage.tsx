@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTempAuth } from "@/lib/auth-temp";
 import { formatBRL, formatDateTime, formatPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -119,6 +120,7 @@ function moneyInput(value: string) {
 }
 
 export function SplitEnginePage() {
+  const { user, isLoading: isAuthLoading } = useTempAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
@@ -147,15 +149,8 @@ export function SplitEnginePage() {
     setLoading(true);
     setError(null);
     try {
-      const { data: auth, error: authError } = await supabase.auth.getUser();
-      if (authError || !auth.user) throw new Error("Sessão não encontrada.");
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("empresa_id")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-      if (profileError || !profile?.empresa_id) {
+      if (isAuthLoading) return;
+      if (!user?.empresaId) {
         throw new Error("Empresa não identificada.");
       }
 
@@ -169,21 +164,21 @@ export function SplitEnginePage() {
         supabase
           .from("produtos")
           .select("id,nome,preco")
-          .eq("empresa_id", profile.empresa_id)
+          .eq("empresa_id", user.empresaId)
           .eq("status", "publicado")
           .is("deleted_at", null)
           .order("nome"),
         supabase
           .from("afiliados")
           .select("id,codigo_afiliado,profile_id")
-          .eq("empresa_id", profile.empresa_id)
+          .eq("empresa_id", user.empresaId)
           .eq("status", "ativo")
           .is("deleted_at", null)
           .order("created_at"),
         supabase
           .from("profiles")
           .select("id,nome_completo,email")
-          .eq("empresa_id", profile.empresa_id)
+          .eq("empresa_id", user.empresaId)
           .eq("status", "ativo")
           .is("deleted_at", null)
           .order("nome_completo"),
@@ -279,7 +274,7 @@ export function SplitEnginePage() {
 
   useEffect(() => {
     void load(page);
-  }, [page]);
+  }, [isAuthLoading, page, user?.empresaId]);
 
   const totalRecords = records[0]?.total_registros ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalRecords / PAGE_SIZE));

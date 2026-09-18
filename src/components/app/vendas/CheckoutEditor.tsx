@@ -15,6 +15,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTempAuth } from "@/lib/auth-temp";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -131,6 +132,7 @@ export function CheckoutEditor({
   checkoutId: string;
   onBack: () => void;
 }) {
+  const { user, isLoading: isAuthLoading } = useTempAuth();
   const [checkout, setCheckout] = useState<CheckoutRecord | null>(null);
   const [config, setConfig] = useState<DraftConfig>(defaultConfig);
   const [name, setName] = useState("");
@@ -155,23 +157,15 @@ export function CheckoutEditor({
     setLoading(true);
     setError(null);
     try {
-      const { data: auth, error: authError } = await supabase.auth.getUser();
-      if (authError || !auth.user) throw new Error("Sessão não encontrada.");
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("empresa_id")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-
-      if (profileError || !profile?.empresa_id) throw new Error("Empresa não identificada.");
-      setEmpresaId(profile.empresa_id);
+      if (isAuthLoading) return;
+      if (!user?.empresaId) throw new Error("Empresa não identificada.");
+      setEmpresaId(user.empresaId);
 
       const { data: checkoutData, error: checkoutError } = await (supabase as any)
         .from("checkouts")
         .select("id,nome,descricao,status,public_token,slug,oferta_id,rascunho_versao_id,publicado_versao_id")
         .eq("id", checkoutId)
-        .eq("empresa_id", profile.empresa_id)
+        .eq("empresa_id", user.empresaId)
         .is("deleted_at", null)
         .maybeSingle();
 
@@ -225,12 +219,12 @@ export function CheckoutEditor({
           .from("ofertas")
           .select("nome,preco")
           .eq("id", checkoutData.oferta_id)
-          .eq("empresa_id", profile.empresa_id)
+          .eq("empresa_id", user.empresaId)
           .maybeSingle(),
         supabase
           .from("produtos")
           .select("id,nome,preco,status")
-          .eq("empresa_id", profile.empresa_id)
+          .eq("empresa_id", user.empresaId)
           .eq("status", "publicado")
           .is("deleted_at", null)
           .order("nome"),
@@ -238,7 +232,7 @@ export function CheckoutEditor({
           .from("checkout_order_bumps")
           .select("id,produto_id,titulo,descricao,imagem_url,tipo_preco,preco_fixo,desconto_percentual,ordem,ativo,grupo_combinacao,max_selecao_grupo")
           .eq("checkout_id", checkoutId)
-          .eq("empresa_id", profile.empresa_id)
+          .eq("empresa_id", user.empresaId)
           .is("deleted_at", null)
           .order("ordem"),
       ]);
@@ -269,7 +263,7 @@ export function CheckoutEditor({
 
   useEffect(() => {
     void load();
-  }, [checkoutId]);
+  }, [checkoutId, isAuthLoading, user?.empresaId]);
 
   async function saveDraft() {
     if (busy || !checkout) return false;

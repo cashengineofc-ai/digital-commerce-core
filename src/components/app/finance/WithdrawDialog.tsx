@@ -11,11 +11,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useTempAuth } from "@/lib/auth-temp";
 import { formatBRL } from "@/lib/format";
 
 type BankAccount = { id: string; label: string };
 
 export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise<void> }) {
+  const { user } = useTempAuth();
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(0);
   const [available, setAvailable] = useState(0);
@@ -28,15 +30,7 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
   async function loadFinanceData() {
     setLoading(true);
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) throw new Error("Sessão não encontrada.");
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("empresa_id")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-      if (!profile?.empresa_id) throw new Error("Empresa não identificada.");
+      if (!user?.empresaId) throw new Error("Empresa não identificada.");
 
       const [{ data: balanceData, error: balanceError }, { data: bankData, error: bankError }] =
         await Promise.all([
@@ -44,7 +38,7 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
           supabase
             .from("contas_bancarias")
             .select("id,banco_nome,agencia,conta,conta_dv,chave_pix,principal")
-            .eq("empresa_id", profile.empresa_id)
+            .eq("empresa_id", user.empresaId)
             .is("deleted_at", null)
             .order("principal", { ascending: false }),
         ]);

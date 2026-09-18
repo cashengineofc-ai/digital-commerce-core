@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTempAuth } from "@/lib/auth-temp";
 import { formatBRL } from "@/lib/format";
 
 type ProductStatus = "rascunho" | "publicado" | "arquivado" | "indisponivel";
@@ -62,6 +63,7 @@ export function ProductEditor({
   onBack: () => void;
   onSaved: (id: string) => void;
 }) {
+  const { user, isLoading: isAuthLoading } = useTempAuth();
   const [form, setForm] = useState<ProductForm>(EMPTY_FORM);
   const [categories, setCategories] = useState<Category[]>([]);
   const [empresaId, setEmpresaId] = useState<string | null>(null);
@@ -79,25 +81,17 @@ export function ProductEditor({
     async function load() {
       setError(null);
       try {
-        const { data: auth, error: authError } = await supabase.auth.getUser();
-        if (authError || !auth.user) throw new Error("Sessão não encontrada.");
-
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("empresa_id")
-          .eq("id", auth.user.id)
-          .maybeSingle();
-
-        if (profileError || !profile?.empresa_id) {
+        if (isAuthLoading) return;
+        if (!user?.empresaId) {
           throw new Error("Sua conta não possui uma empresa ativa.");
         }
         if (!active) return;
-        setEmpresaId(profile.empresa_id);
+        setEmpresaId(user.empresaId);
 
         const categoryQuery = await supabase
           .from("categorias_produtos")
           .select("id,nome")
-          .eq("empresa_id", profile.empresa_id)
+          .eq("empresa_id", user.empresaId)
           .eq("ativa", true)
           .is("deleted_at", null)
           .order("nome");
@@ -112,7 +106,7 @@ export function ProductEditor({
               "id,nome,descricao_curta,categoria_id,preco,status,imagem_principal_url,galeria_urls",
             )
             .eq("id", productId)
-            .eq("empresa_id", profile.empresa_id)
+            .eq("empresa_id", user.empresaId)
             .is("deleted_at", null)
             .maybeSingle();
 
@@ -143,7 +137,7 @@ export function ProductEditor({
     return () => {
       active = false;
     };
-  }, [productId]);
+  }, [isAuthLoading, productId, user?.empresaId]);
 
   async function uploadImage(file: File, gallery = false) {
     if (!empresaId) {
