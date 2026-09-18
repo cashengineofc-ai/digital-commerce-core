@@ -68,6 +68,33 @@ Deno.serve(async (req) => {
     const payload = await req.json().catch(() => ({}));
     const limit = Math.max(1, Math.min(Number(payload?.limit ?? 25), 100));
 
+    const emailConfigured = Boolean(
+      Deno.env.get("NOTIFICATION_EMAIL_PROVIDER_URL")?.trim() &&
+      Deno.env.get("NOTIFICATION_EMAIL_PROVIDER_TOKEN")?.trim()
+    );
+    const pushProviderConfigured = Boolean(
+      Deno.env.get("NOTIFICATION_PUSH_PROVIDER_URL")?.trim() &&
+      Deno.env.get("NOTIFICATION_PUSH_PROVIDER_TOKEN")?.trim()
+    );
+
+    const cryptoCheck = await client.rpc("fn_notification_push_crypto_ready");
+    const pushConfigured =
+      pushProviderConfigured &&
+      !cryptoCheck.error &&
+      Boolean(cryptoCheck.data);
+
+    await client.rpc("fn_notification_channels_sync", {
+      p_email_enabled: emailConfigured,
+      p_push_enabled: pushConfigured,
+      p_details: {
+        email: { provider_env: emailConfigured },
+        push: {
+          provider_env: pushProviderConfigured,
+          encryption_ready: Boolean(cryptoCheck.data),
+        },
+      },
+    });
+
     const { data, error } = await client.rpc("fn_notification_delivery_claim", {
       p_limit: limit,
     });
