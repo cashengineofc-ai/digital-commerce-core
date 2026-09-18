@@ -4,7 +4,8 @@ import { ArrowUpRight, CreditCard, Users, Wallet } from "lucide-react";
 
 const bars = [42, 58, 36, 74, 51, 88, 66, 95];
 
-export function DashboardMock() {
+/** Interface ilustrativa da página institucional; não representa dados de operação. */
+export function DashboardPreview() {
   const reduced = useReducedMotion();
 
   return (

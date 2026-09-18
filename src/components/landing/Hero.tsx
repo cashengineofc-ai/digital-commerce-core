@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, PlayCircle } from "lucide-react";
-import { DashboardMock } from "./DashboardMock";
+import { DashboardPreview } from "./DashboardMock";
 import heroVideo from "@/assets/hero-bg.mp4.asset.json";
 import heroPoster from "@/assets/hero-poster.jpg.asset.json";
 
@@ -98,7 +98,7 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.2 }}
         >
-          <DashboardMock />
+          <DashboardPreview />
         </motion.div>
       </div>
     </section>
