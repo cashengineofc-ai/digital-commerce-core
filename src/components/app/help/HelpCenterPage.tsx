@@ -131,7 +131,7 @@ export function HelpCenterPage() {
             p_offset: 0,
           }),
           (supabase as any).rpc("fn_suporte_tickets_me"),
-          supabase
+          (supabase as any)
             .from("suporte_canais_config")
             .select("canal,label,valor,ativo")
             .eq("ativo", true),
@@ -183,7 +183,7 @@ export function HelpCenterPage() {
           mensagens: Number(row.mensagens ?? 0),
         })),
       );
-      setChannels((channelResult.data ?? []) as SupportChannel[]);
+      setChannels((channelResult.data ?? []) as unknown as SupportChannel[]);
     } catch (cause) {
       setError(
         cause instanceof Error
