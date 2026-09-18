@@ -312,6 +312,8 @@ BEGIN
       AND column_name='public_token' AND data_type='text'
   ) THEN
     ALTER TABLE public.checkouts
+      ALTER COLUMN public_token DROP DEFAULT;
+    ALTER TABLE public.checkouts
       ALTER COLUMN public_token TYPE uuid
       USING CASE
         WHEN nullif(trim(public_token),'') IS NULL THEN gen_random_uuid()
@@ -333,6 +335,8 @@ BEGIN
     WHERE table_schema='public' AND table_name='links_pagamento'
       AND column_name='public_token' AND data_type='text'
   ) THEN
+    ALTER TABLE public.links_pagamento
+      ALTER COLUMN public_token DROP DEFAULT;
     ALTER TABLE public.links_pagamento
       ALTER COLUMN public_token TYPE uuid
       USING CASE
