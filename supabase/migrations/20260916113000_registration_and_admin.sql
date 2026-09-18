@@ -37,6 +37,6 @@ CREATE TRIGGER trg_auth_create_profile
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.fn_handle_new_user();
 
--- Execute uma vez no SQL Editor do Supabase para liberar o seu usuário como Admin Global.
--- Troque o e-mail antes de rodar:
--- UPDATE public.profiles SET is_admin_global = TRUE WHERE email = 'SEU_EMAIL_AQUI';
+-- Administração global não é concedida por cadastro público.
+-- O primeiro administrador deve ser definido somente pelo procedimento confiável
+-- fn_admin_bootstrap_platform(profile_id), executado com service_role/backend.
