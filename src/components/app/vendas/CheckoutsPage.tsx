@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Copy,
   CreditCard,
@@ -259,12 +260,13 @@ export function CheckoutsPage() {
                   Criar checkout
                 </button>
               ) : (
-                <a
-                  href="/app/ofertas"
+                <Link
+                  to="/app/ofertas"
+                  preload="intent"
                   className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
                 >
                   Abrir ofertas
-                </a>
+                </Link>
               )
             }
           />

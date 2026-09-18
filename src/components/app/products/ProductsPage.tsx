@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Package,
   PackagePlus,
@@ -257,13 +258,14 @@ export function ProductsPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex justify-end gap-2">
-                        <a
-                          href={`/app/vendas?produto=${encodeURIComponent(product.id)}`}
+                        <Link
+                          to={`/app/vendas?produto=${encodeURIComponent(product.id)}` as never}
+                          preload="intent"
                           className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
                         >
                           <ShoppingBag className="h-3.5 w-3.5" />
                           Vendas
-                        </a>
+                        </Link>
                         <button
                           onClick={() =>
                             setEditor({ open: true, productId: product.id })
