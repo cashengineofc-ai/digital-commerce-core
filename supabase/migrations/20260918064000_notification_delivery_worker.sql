@@ -32,14 +32,16 @@ BEGIN
     SELECT d.id
     FROM public.notificacoes_entregas d
     WHERE (
+      (
         d.status='pendente'
         AND (d.proxima_tentativa_em IS NULL OR d.proxima_tentativa_em<=now())
       )
       OR (
         d.status='processando'
         AND d.updated_at<now()-interval '10 minutes'
-        AND d.tentativa<=5
       )
+    )
+      AND d.tentativa<=5
     ORDER BY d.created_at,d.id
     FOR UPDATE SKIP LOCKED
     LIMIT greatest(1,least(coalesce(p_limit,25),100))
