@@ -9,6 +9,7 @@ export type TempUser = {
   username: string;
   name: string;
   email: string;
+  empresaId: string | null;
   role: RoleKey;
   isAdminGlobal: boolean;
   createdAt: string;
@@ -28,7 +29,7 @@ const TempAuthContext = createContext<TempAuthContextValue | null>(null);
 async function loadUser(authUser: User): Promise<TempUser> {
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, nome_completo, email, is_admin_global, is_owner, created_at")
+    .select("id, nome_completo, email, empresa_id, is_admin_global, is_owner, created_at")
     .eq("id", authUser.id)
     .maybeSingle();
 
@@ -59,6 +60,7 @@ async function loadUser(authUser: User): Promise<TempUser> {
     username: authUser.email?.split("@")[0] ?? authUser.id,
     name: profile?.nome_completo ?? authUser.user_metadata?.["full_name"] ?? authUser.email ?? "Usuário",
     email: profile?.email ?? authUser.email ?? "",
+    empresaId: profile?.empresa_id ?? null,
     role,
     isAdminGlobal,
     createdAt: profile?.created_at ?? authUser.created_at,

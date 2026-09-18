@@ -9,6 +9,7 @@ import { RecentTransactions } from "@/components/app/dashboard/RecentTransaction
 import { TopProducts } from "@/components/app/dashboard/TopProducts";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatInt, formatPct } from "@/lib/format";
+import { useTempAuth } from "@/lib/auth-temp";
 
 const fade = {
   hidden: { opacity: 0, y: 8 },
@@ -17,6 +18,7 @@ const fade = {
 
 export function DashboardPage() {
   const { period } = useAppShell();
+  const { user } = useTempAuth();
   const [kpis, setKpis] = useState({ volume: 0, sales: 0, revenue: 0, approvalRate: 0 });
   const volumePoints: number[] = [];
   const salesPoints: number[] = [];
@@ -24,12 +26,9 @@ export function DashboardPage() {
     let active = true;
     const days = ({ hoje: 1, "7d": 7, "30d": 30, "90d": 90, "12m": 365 } as const)[period];
     (async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) return;
-      const { data: profile } = await supabase.from("profiles").select("empresa_id").eq("id", auth.user.id).maybeSingle();
-      if (!profile?.empresa_id) return;
+      if (!user?.empresaId) return;
       const end = new Date(); const start = new Date(end.getTime() - days * 86400000);
-      const { data } = await (supabase as any).rpc("fn_dashboard_operacional", { p_empresa_id: profile.empresa_id, p_inicio: start.toISOString(), p_fim: end.toISOString() });
+      const { data } = await (supabase as any).rpc("fn_dashboard_operacional", { p_empresa_id: user.empresaId, p_inicio: start.toISOString(), p_fim: end.toISOString() });
       const row = data?.[0];
       if (active && row) {
         const attempts = Number(row.tentativas_validas ?? 0);
@@ -43,7 +42,7 @@ export function DashboardPage() {
       }
     })();
     return () => { active = false; };
-  }, [period]);
+  }, [period, user?.empresaId]);
 
   const cards = [
     {

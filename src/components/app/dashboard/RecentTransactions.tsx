@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useTempAuth } from "@/lib/auth-temp";
 
 type Row = {
   id: string;
@@ -46,6 +47,7 @@ export function StatusBadge({ status }: { status: string }) {
 }
 
 export function RecentTransactions() {
+  const { user } = useTempAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,14 +55,7 @@ export function RecentTransactions() {
     let active = true;
     (async () => {
       setLoading(true);
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) {
-        if (active) setLoading(false);
-        return;
-      }
-
-      const { data: profile } = await supabase.from("profiles").select("empresa_id").eq("id", auth.user.id).maybeSingle();
-      if (!profile?.empresa_id) {
+      if (!user?.empresaId) {
         if (active) setLoading(false);
         return;
       }
@@ -68,7 +63,7 @@ export function RecentTransactions() {
       const { data: transactions, error } = await supabase
         .from("transacoes")
         .select("id,pedido_numero,cliente_id,metodo_pagamento,status,valor_bruto,created_at")
-        .eq("empresa_id", profile.empresa_id)
+        .eq("empresa_id", user.empresaId)
         .order("created_at", { ascending: false })
         .limit(7);
 
@@ -106,7 +101,7 @@ export function RecentTransactions() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user?.empresaId]);
 
   return (
     <section className="flex flex-col rounded-xl border border-border bg-card shadow-sm">
