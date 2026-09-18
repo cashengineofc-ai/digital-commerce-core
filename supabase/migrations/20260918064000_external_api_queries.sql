@@ -29,7 +29,7 @@ BEGIN
 
   RETURN QUERY
   SELECT
-    p.id,p.nome::text,p.descricao::text,p.status::text,p.preco,
+    p.id,p.nome::text,coalesce(p.descricao_curta,p.descricao_longa)::text,p.status::text,p.preco,
     coalesce(p.moeda,'BRL')::text,p.created_at,p.updated_at,count(*) OVER()
   FROM public.produtos p
   WHERE p.empresa_id=p_empresa_id
