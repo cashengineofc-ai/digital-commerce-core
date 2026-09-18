@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, ArrowRight, Zap, TrendingUp, CreditCard, Users } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Zap, Layers3, ShieldCheck, Network } from "lucide-react";
 import { toast } from "sonner";
 import { useTempAuth } from "@/lib/auth-temp";
 import { Button } from "@/components/ui/button";
@@ -121,13 +121,12 @@ function LoginPage() {
                     <Label htmlFor="password" className="text-sm font-medium">
                       Senha
                     </Label>
-                    <a
-                      href="#"
-                      onClick={(e) => e.preventDefault()}
+                    <Link
+                      to="/recuperar-senha"
                       className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Esqueci minha senha
-                    </a>
+                    </Link>
                   </div>
                   <div className="relative">
                     <Input
@@ -211,25 +210,25 @@ function LoginPage() {
           <div className="relative z-10 space-y-4">
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                <div className="flex items-center gap-2 text-primary">
-                  <TrendingUp className="h-4 w-4" />
+                <Layers3 className="h-4 w-4 text-primary" />
+                <div className="mt-3 text-sm font-semibold text-white">Operação</div>
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  Produtos, ofertas e checkouts
                 </div>
-                <div className="mt-3 text-2xl font-bold text-white">R$ 2,4M</div>
-                <div className="text-[11px] text-muted-foreground">Volume processado</div>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <CreditCard className="h-4 w-4" />
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <div className="mt-3 text-sm font-semibold text-white">Controle</div>
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  Permissões e auditoria
                 </div>
-                <div className="mt-3 text-2xl font-bold text-white">98,7%</div>
-                <div className="text-[11px] text-muted-foreground">Aprovação checkout</div>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                <div className="flex items-center gap-2 text-violet-400">
-                  <Users className="h-4 w-4" />
+                <Network className="h-4 w-4 text-violet-400" />
+                <div className="mt-3 text-sm font-semibold text-white">Afiliados</div>
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  Links, atribuição e comissões
                 </div>
-                <div className="mt-3 text-2xl font-bold text-white">+12k</div>
-                <div className="text-[11px] text-muted-foreground">Afiliados ativos</div>
               </div>
             </div>
           </div>
@@ -246,8 +245,8 @@ function LoginPage() {
             <ul className="space-y-3">
               {[
                 "Painel em tempo real",
-                "Checkout com alta conversão",
-                "Rede ilimitada de afiliados",
+                "Checkout configurável",
+                "Gestão de afiliados e comissões",
               ].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-sm text-white/90">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary">
