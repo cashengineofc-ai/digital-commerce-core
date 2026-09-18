@@ -3,6 +3,29 @@
 -- Financeiro: data_lancamento do razão.
 -- Períodos são datas locais da empresa e convertidos para UTC no servidor.
 
+CREATE OR REPLACE FUNCTION public.fn_relatorio_autorizado(p_recurso text)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path=public
+AS $
+  SELECT
+    auth.uid() IS NOT NULL
+    AND (
+      public.fn_is_admin_global()
+      OR public.fn_is_empresa_owner(public.current_empresa_id())
+      OR public.fn_tem_permissao(
+        'relatorios',
+        p_recurso,
+        'read'::public.tipo_operacao
+      )
+    );
+$;
+
+REVOKE ALL ON FUNCTION public.fn_relatorio_autorizado(text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.fn_relatorio_autorizado(text) TO authenticated;
+
 CREATE OR REPLACE FUNCTION public.fn_relatorio_timezone()
 RETURNS text
 LANGUAGE plpgsql
@@ -137,6 +160,7 @@ DECLARE
   v_end timestamptz;
 BEGIN
   IF auth.uid() IS NULL OR v_empresa IS NULL THEN RAISE EXCEPTION 'not_authenticated'; END IF;
+  IF NOT public.fn_relatorio_autorizado('vendas') THEN RAISE EXCEPTION 'permission_denied'; END IF;
   IF coalesce(trim(p_metodo),'')<>'' AND p_metodo<>'pix' THEN
     RAISE EXCEPTION 'payment_method_not_operational';
   END IF;
@@ -232,6 +256,7 @@ DECLARE
   v_start timestamptz;
   v_end timestamptz;
 BEGIN
+  IF NOT public.fn_relatorio_autorizado('vendas') THEN RAISE EXCEPTION 'permission_denied'; END IF;
   SELECT i.timezone,i.inicio_utc,i.fim_utc
   INTO v_tz,v_start,v_end
   FROM public.fn_relatorio_intervalo(p_inicio,p_fim) i;
@@ -286,6 +311,7 @@ DECLARE
   v_start timestamptz;
   v_end timestamptz;
 BEGIN
+  IF NOT public.fn_relatorio_autorizado('produtos') THEN RAISE EXCEPTION 'permission_denied'; END IF;
   SELECT i.inicio_utc,i.fim_utc
   INTO v_start,v_end
   FROM public.fn_relatorio_intervalo(p_inicio,p_fim) i;
@@ -375,6 +401,7 @@ DECLARE
   v_start timestamptz;
   v_end timestamptz;
 BEGIN
+  IF NOT public.fn_relatorio_autorizado('afiliados') THEN RAISE EXCEPTION 'permission_denied'; END IF;
   SELECT i.inicio_utc,i.fim_utc
   INTO v_start,v_end
   FROM public.fn_relatorio_intervalo(p_inicio,p_fim) i;
@@ -475,6 +502,7 @@ DECLARE
   v_start timestamptz;
   v_end timestamptz;
 BEGIN
+  IF NOT public.fn_relatorio_autorizado('financeiro') THEN RAISE EXCEPTION 'permission_denied'; END IF;
   SELECT i.inicio_utc,i.fim_utc
   INTO v_start,v_end
   FROM public.fn_relatorio_intervalo(p_inicio,p_fim) i;
@@ -543,6 +571,10 @@ DECLARE
   v_p public.pedidos%ROWTYPE;
 BEGIN
   IF auth.uid() IS NULL OR v_empresa IS NULL THEN RAISE EXCEPTION 'not_authenticated'; END IF;
+  IF NOT (
+    public.fn_relatorio_autorizado('vendas')
+    OR public.fn_relatorio_autorizado('financeiro')
+  ) THEN RAISE EXCEPTION 'permission_denied'; END IF;
 
   SELECT * INTO v_p
   FROM public.pedidos
