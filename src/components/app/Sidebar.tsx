@@ -1,11 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { LinkProps } from "@tanstack/react-router";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { LogOut, Settings, X } from "lucide-react";
+import { Building2, Check, ChevronUp, LogOut, Settings, X } from "lucide-react";
 import { navGroups, hiddenForAffiliate } from "./nav-config";
 import { useAppShell, roles } from "./app-shell-context";
 import { cn } from "@/lib/utils";
 import { useTempAuth } from "@/lib/auth-temp";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 function getUserInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -83,6 +85,115 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+type CompanyContext = {
+  empresa_id: string;
+  nome: string;
+  contexto_ativo: boolean;
+  vinculo: string;
+  is_owner: boolean;
+};
+
+function CompanySwitcher() {
+  const [companies, setCompanies] = useState<CompanyContext[]>([]);
+  const [open, setOpen] = useState(false);
+  const [switching, setSwitching] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const { data, error } = await (supabase as any).rpc(
+        "fn_empresas_autorizadas",
+      );
+      if (!active || error) return;
+      setCompanies(
+        ((data ?? []) as any[]).map((row) => ({
+          empresa_id: String(row.empresa_id),
+          nome: String(row.nome ?? "Empresa"),
+          contexto_ativo: Boolean(row.contexto_ativo),
+          vinculo: String(row.vinculo ?? "equipe"),
+          is_owner: Boolean(row.is_owner),
+        })),
+      );
+    }
+    void load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (companies.length <= 1) return null;
+  const current = companies.find((company) => company.contexto_ativo);
+
+  async function selectCompany(empresaId: string) {
+    if (current?.empresa_id === empresaId || switching) {
+      setOpen(false);
+      return;
+    }
+    setSwitching(true);
+    const { data, error } = await (supabase as any).rpc(
+      "fn_contexto_empresa_definir",
+      { p_empresa_id: empresaId },
+    );
+    if (!error && data) {
+      window.location.assign("/app");
+      return;
+    }
+    setSwitching(false);
+  }
+
+  return (
+    <div className="relative border-t border-border px-3 py-3">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        disabled={switching}
+        className="flex w-full items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-left disabled:opacity-50"
+      >
+        <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold text-foreground">
+            {current?.nome ?? "Selecionar empresa"}
+          </p>
+          <p className="truncate text-[10px] text-muted-foreground">
+            Contexto autorizado
+          </p>
+        </div>
+        <ChevronUp
+          className={cn(
+            "h-3.5 w-3.5 text-muted-foreground transition",
+            !open && "rotate-180",
+          )}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute bottom-full left-3 right-3 z-30 mb-2 overflow-hidden rounded-lg border border-border bg-card shadow-lg">
+          {companies.map((company) => (
+            <button
+              key={company.empresa_id}
+              type="button"
+              onClick={() => void selectCompany(company.empresa_id)}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium text-foreground">
+                  {company.nome}
+                </span>
+                <span className="block truncate text-[10px] text-muted-foreground">
+                  {company.is_owner ? "Proprietário" : company.vinculo}
+                </span>
+              </span>
+              {company.contexto_ativo && (
+                <Check className="h-3.5 w-3.5 text-primary" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function UserFooter() {
   const { user, logout, isAdminGlobal } = useTempAuth();
   const { role } = useAppShell();
@@ -131,6 +242,7 @@ export function DesktopSidebar() {
     <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-card lg:flex">
       <Brand />
       <NavLinks />
+      <CompanySwitcher />
       <UserFooter />
     </aside>
   );
@@ -169,6 +281,7 @@ export function MobileSidebar({ open, onClose }: { open: boolean; onClose: () =>
               </button>
             </div>
             <NavLinks onNavigate={onClose} />
+            <CompanySwitcher />
             <UserFooter />
           </motion.aside>
         </div>
