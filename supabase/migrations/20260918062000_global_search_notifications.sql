@@ -567,7 +567,7 @@ RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path=public
-AS $
+AS $$
 BEGIN
   IF current_user NOT IN ('service_role','postgres','supabase_admin') THEN
     RAISE EXCEPTION 'trusted_backend_required';
@@ -594,7 +594,7 @@ BEGIN
 
   RETURN true;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.fn_notification_channels_sync(boolean,boolean,jsonb)
 FROM PUBLIC,anon,authenticated;
@@ -607,14 +607,14 @@ LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path=public
-AS $
+AS $$
 BEGIN
   IF current_user NOT IN ('service_role','postgres','supabase_admin') THEN
     RAISE EXCEPTION 'trusted_backend_required';
   END IF;
   RETURN coalesce(current_setting('app.push_encryption_key',true),'')<>'';
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.fn_notification_push_crypto_ready()
 FROM PUBLIC,anon,authenticated;
