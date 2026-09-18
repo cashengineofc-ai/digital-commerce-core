@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTempAuth } from "@/lib/auth-temp";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/app/EmptyState";
@@ -87,6 +88,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export function HelpCenterPage() {
+  const { user } = useTempAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -310,8 +312,7 @@ export function HelpCenterPage() {
           throw new Error("Anexo inválido. Use imagem, PDF ou TXT de até 10 MB.");
         }
 
-        const { data: auth, error: authError } = await supabase.auth.getUser();
-        if (authError || !auth.user) throw new Error("Sessão não encontrada.");
+        if (!user) throw new Error("Sessão não encontrada.");
 
         const ticket = tickets.find((item) => item.id === selectedTicket.id);
         if (!ticket) throw new Error("Chamado não encontrado.");
