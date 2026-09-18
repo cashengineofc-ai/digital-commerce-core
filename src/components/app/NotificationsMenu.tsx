@@ -165,7 +165,7 @@ export function NotificationsMenu(){
     setError(null);
     try{
       if(!channels.push) throw new Error("Push ainda não está configurado no servidor.");
-      const publicKey=String(import.meta.env.VITE_WEB_PUSH_PUBLIC_KEY??"").trim();
+      const publicKey=String(import.meta.env["VITE_WEB_PUSH_PUBLIC_KEY"]??"").trim();
       if(!publicKey) throw new Error("Chave pública Web Push ainda não foi configurada.");
       if(!("serviceWorker" in navigator)||!("PushManager" in window)){
         throw new Error("Este navegador não oferece suporte a Web Push.");
@@ -185,8 +185,8 @@ export function NotificationsMenu(){
         {
           p_device_id:getDeviceId(),
           p_endpoint:json.endpoint??"",
-          p_p256dh:json.keys?.p256dh??"",
-          p_auth:json.keys?.auth??"",
+          p_p256dh:json.keys?.["p256dh"]??"",
+          p_auth:json.keys?.["auth"]??"",
           p_user_agent:navigator.userAgent,
         },
       );
