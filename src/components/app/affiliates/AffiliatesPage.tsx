@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTempAuth } from "@/lib/auth-temp";
 import { formatBRL, formatDateTime, formatInt, formatPct } from "@/lib/format";
 import { CardsSkeleton, TableSkeleton } from "@/components/app/Skeletons";
 import { EmptyState } from "@/components/app/EmptyState";
@@ -92,6 +93,7 @@ function inviteStatusClass(status: string) {
 }
 
 export function AffiliatesPage() {
+  const { user, isLoading: isAuthLoading } = useTempAuth();
   const [affiliates, setAffiliates] = useState<AffiliateRow[]>([]);
   const [invites, setInvites] = useState<InviteRow[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -122,15 +124,8 @@ export function AffiliatesPage() {
     setLoading(true);
     setError(null);
     try {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) throw new Error("Sessão não encontrada.");
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("empresa_id")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-      if (profileError || !profile?.empresa_id) {
+      if (isAuthLoading) return;
+      if (!user?.empresaId) {
         throw new Error("Empresa não identificada.");
       }
 
@@ -142,7 +137,7 @@ export function AffiliatesPage() {
           .select(
             "id,nome,status,taxa_comissao_afiliado,comissao_valor_fixo",
           )
-          .eq("empresa_id", profile.empresa_id)
+          .eq("empresa_id", user.empresaId)
           .is("deleted_at", null)
           .order("nome"),
       ]);
@@ -213,7 +208,7 @@ export function AffiliatesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthLoading, user?.empresaId]);
 
   useEffect(() => {
     void load();

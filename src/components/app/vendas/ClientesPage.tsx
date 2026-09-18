@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTempAuth } from "@/lib/auth-temp";
 import { formatBRL, formatDateTime, formatInt } from "@/lib/format";
 import { TableSkeleton } from "@/components/app/Skeletons";
 import { EmptyState } from "@/components/app/EmptyState";
@@ -39,6 +40,7 @@ function maskDocument(value: string | null) {
 }
 
 export function ClientesPage() {
+  const { user, isLoading: isAuthLoading } = useTempAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -51,20 +53,13 @@ export function ClientesPage() {
     async function load() {
       setLoading(true);
       try {
-        const { data: auth } = await supabase.auth.getUser();
-        if (!auth.user) return;
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("empresa_id")
-          .eq("id", auth.user.id)
-          .maybeSingle();
-        if (!profile?.empresa_id) return;
+        if (isAuthLoading) return;
+        if (!user?.empresaId) return;
 
         const { data, error } = await supabase
           .from("clientes")
           .select("id,nome_completo,email,cpf,cnpj,total_pedidos,total_gasto,data_ultima_compra")
-          .eq("empresa_id", profile.empresa_id)
+          .eq("empresa_id", user.empresaId)
           .is("deleted_at", null)
           .order("updated_at", { ascending: false });
 
@@ -94,7 +89,7 @@ export function ClientesPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [isAuthLoading, user?.empresaId]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

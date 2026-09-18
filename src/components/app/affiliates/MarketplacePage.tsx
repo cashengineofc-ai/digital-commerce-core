@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Megaphone, Search, Store } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useTempAuth } from "@/lib/auth-temp";
 import { formatBRL, formatInt, formatPct } from "@/lib/format";
 import { CardsSkeleton } from "@/components/app/Skeletons";
 import { EmptyState } from "@/components/app/EmptyState";
@@ -68,6 +69,7 @@ function ProductCard({ product, promoting, onPromote }: {
 }
 
 export function MarketplacePage() {
+  const { user } = useTempAuth();
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [promotingId, setPromotingId] = useState<string | null>(null);
@@ -144,22 +146,12 @@ export function MarketplacePage() {
   async function promote(product: MarketplaceProduct) {
     setPromotingId(product.id);
     try {
-      const { data: auth, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      if (!auth.user) throw new Error("Faça login para promover um produto.");
-
-      const { data: currentProfile, error: profileError } = await supabase
-        .from("profiles")
-        .select("empresa_id")
-        .eq("id", auth.user.id)
-        .maybeSingle();
-      if (profileError) throw profileError;
-      if (!currentProfile?.empresa_id) throw new Error("Sua conta ainda não possui uma empresa vinculada.");
+      if (!user?.empresaId) throw new Error("Sua conta ainda não possui uma empresa vinculada.");
 
       const { data: affiliate, error: affiliateError } = await supabase
         .from("afiliados")
         .select("id")
-        .eq("profile_id", auth.user.id)
+        .eq("profile_id", user.id)
         .eq("status", "ativo")
         .is("deleted_at", null)
         .limit(1)
@@ -170,7 +162,7 @@ export function MarketplacePage() {
       const { error } = await supabase.from("marketplace_inscricoes").upsert({
         marketplace_produto_id: product.id,
         afiliado_id: affiliate.id,
-        empresa_id: currentProfile.empresa_id,
+        empresa_id: user.empresaId,
         produto_id: product.productId,
         status: "pendente",
         ativa: true,
