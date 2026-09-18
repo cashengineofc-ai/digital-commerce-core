@@ -658,10 +658,6 @@ SELECT public.fn_apply_rls_empresa('ajuda_feedback');
 SELECT public.fn_apply_rls_empresa('tickets', 'suporte', 'tickets');
 SELECT public.fn_apply_rls_empresa('tickets_mensagens', 'suporte', 'tickets');
 SELECT public.fn_apply_rls_empresa('comunidade_posts');
-SELECT public.fn_apply_rls_empresa('admin_empresas_gestao', NULL, NULL, TRUE);
-SELECT public.fn_apply_rls_empresa('admin_banimentos', NULL, NULL, TRUE);
-SELECT public.fn_apply_rls_empresa('admin_moderacao', NULL, NULL, TRUE);
-SELECT public.fn_apply_rls_empresa('admin_comunicados');
 SELECT public.fn_apply_rls_empresa('integracoes', 'configuracoes', 'integracoes');
 SELECT public.fn_apply_rls_empresa('integracoes_logs', 'configuracoes', 'integracoes', TRUE);
 SELECT public.fn_apply_rls_empresa('treinamentos_cursos', 'treinamentos', 'cursos');
@@ -676,6 +672,24 @@ SELECT public.fn_apply_rls_empresa('invites');
 -- --------------------------------------------------------------------------
 -- POLÍTICAS ESPECÍFICAS PARA TABELAS QUE NÃO SEGUEM PADRÃO
 -- --------------------------------------------------------------------------
+
+-- Tabelas internas do Admin Global não usam o helper tenant genérico.
+-- A gestão completa é endurecida novamente em migration posterior.
+DROP POLICY IF EXISTS "admin_empresas_global_only" ON public.admin_empresas_gestao;
+CREATE POLICY "admin_empresas_global_only" ON public.admin_empresas_gestao
+FOR ALL USING (public.fn_is_admin_global())
+WITH CHECK (public.fn_is_admin_global());
+
+DROP POLICY IF EXISTS "admin_banimentos_global_only" ON public.admin_banimentos;
+CREATE POLICY "admin_banimentos_global_only" ON public.admin_banimentos
+FOR ALL USING (public.fn_is_admin_global())
+WITH CHECK (public.fn_is_admin_global());
+
+DROP POLICY IF EXISTS "admin_moderacao_global_only" ON public.admin_moderacao;
+CREATE POLICY "admin_moderacao_global_only" ON public.admin_moderacao
+FOR ALL USING (public.fn_is_admin_global())
+WITH CHECK (public.fn_is_admin_global());
+
 
 -- ADMIN_GLOBAL_CONFIG: Apenas admin global
 DROP POLICY IF EXISTS "agc_all" ON public.admin_global_config;
