@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Bell, CheckCheck, Loader2, Settings2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateTime } from "@/lib/format";
@@ -43,6 +44,7 @@ function vapidKey(value:string){
 }
 
 export function NotificationsMenu(){
+  const navigate=useNavigate();
   const [open,setOpen]=useState(false);
   const [settingsOpen,setSettingsOpen]=useState(false);
   const [rows,setRows]=useState<Notice[]>([]);
@@ -123,7 +125,9 @@ export function NotificationsMenu(){
       }
     }
     if(row.url_destino){
-      window.location.assign(row.url_destino);
+      if(row.url_destino.startsWith("/")&&!row.url_destino.startsWith("//")){
+        await navigate({to:row.url_destino as never});
+      }
     }
   }
 
