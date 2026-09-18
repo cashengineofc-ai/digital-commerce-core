@@ -92,6 +92,8 @@ export function NotificationsMenu(){
   },[load]);
 
   const unread=rows.at(0)?.total_nao_lidas??0;
+  const publicPushKey=String(import.meta.env["VITE_WEB_PUSH_PUBLIC_KEY"]??"").trim();
+  const pushReady=channels.push&&Boolean(publicPushKey);
 
   async function openSettings(){
     setSettingsOpen(true);
@@ -165,7 +167,7 @@ export function NotificationsMenu(){
     setError(null);
     try{
       if(!channels.push) throw new Error("Push ainda não está configurado no servidor.");
-      const publicKey=String(import.meta.env["VITE_WEB_PUSH_PUBLIC_KEY"]??"").trim();
+      const publicKey=publicPushKey;
       if(!publicKey) throw new Error("Chave pública Web Push ainda não foi configurada.");
       if(!("serviceWorker" in navigator)||!("PushManager" in window)){
         throw new Error("Este navegador não oferece suporte a Web Push.");
@@ -276,10 +278,10 @@ export function NotificationsMenu(){
             <div className="mt-5 flex flex-wrap gap-2 text-xs">
               <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-700">In-app ativo</span>
               <span className={cn("rounded-full px-2 py-1",channels.email?"bg-emerald-500/10 text-emerald-700":"bg-muted text-muted-foreground")}>E-mail {channels.email?"configurado":"indisponível"}</span>
-              <span className={cn("rounded-full px-2 py-1",channels.push?"bg-emerald-500/10 text-emerald-700":"bg-muted text-muted-foreground")}>Push {channels.push?"configurado":"indisponível"}</span>
+              <span className={cn("rounded-full px-2 py-1",channels.push?"bg-emerald-500/10 text-emerald-700":"bg-muted text-muted-foreground")}>Push {pushReady?"configurado":"indisponível"}</span>
             </div>
 
-            {channels.push&&(
+            {pushReady&&(
               <button
                 onClick={()=>void enableBrowserPush()}
                 disabled={acting}
@@ -301,8 +303,8 @@ export function NotificationsMenu(){
                     <input type="checkbox" disabled={!channels.email} checked={pref.receber_email} onChange={(e)=>updatePreference(pref.tipo,{receber_email:e.target.checked})}/>
                     E-mail
                   </label>
-                  <label className={cn("flex items-center gap-1 text-xs text-muted-foreground",!channels.push&&"opacity-40")}>
-                    <input type="checkbox" disabled={!channels.push} checked={pref.receber_push} onChange={(e)=>updatePreference(pref.tipo,{receber_push:e.target.checked})}/>
+                  <label className={cn("flex items-center gap-1 text-xs text-muted-foreground",!pushReady&&"opacity-40")}>
+                    <input type="checkbox" disabled={!pushReady} checked={pref.receber_push} onChange={(e)=>updatePreference(pref.tipo,{receber_push:e.target.checked})}/>
                     Push
                   </label>
                 </div>
