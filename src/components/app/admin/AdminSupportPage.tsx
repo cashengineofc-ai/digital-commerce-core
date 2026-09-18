@@ -147,7 +147,7 @@ export function AdminSupportPage() {
             p_query: articleQuery.trim() || null,
             p_limit: 200,
           }),
-          supabase
+          (supabase as any)
             .from("suporte_canais_config")
             .select("canal,label,valor,ativo")
             .order("canal"),
@@ -180,7 +180,7 @@ export function AdminSupportPage() {
       );
       setCategories((categoryResult.data ?? []) as Category[]);
       setArticles((articleResult.data ?? []) as Article[]);
-      setChannels((channelResult.data ?? []) as Channel[]);
+      setChannels((channelResult.data ?? []) as unknown as Channel[]);
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -503,11 +503,11 @@ export function AdminSupportPage() {
       )}
 
       <div className="mt-6 flex gap-1 rounded-xl border border-border bg-card p-1">
-        {[
+        {([
           ["tickets", "Chamados", MessageCircle],
           ["articles", "Artigos", BookOpen],
           ["channels", "Canais", Settings2],
-        ].map(([key, label, Icon]) => (
+        ] as const).map(([key, label, Icon]) => (
           <button
             key={String(key)}
             onClick={() => setTab(key as typeof tab)}
