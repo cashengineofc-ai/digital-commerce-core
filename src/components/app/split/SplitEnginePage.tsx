@@ -10,6 +10,7 @@ import {
   Settings2,
   ShieldCheck,
   Trash2,
+  type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime, formatPct } from "@/lib/format";
@@ -230,7 +231,7 @@ export function SplitEnginePage() {
       setDraftBeneficiaries(
         (rule.beneficiaries ?? []).map((beneficiary) => ({
           profile_id: beneficiary.profile_id,
-          name: beneficiary.name,
+          ...(beneficiary.name ? { name: beneficiary.name } : {}),
           percentual: Number(beneficiary.percentual ?? 0),
           prioridade: Number(beneficiary.prioridade ?? 100),
         })),
@@ -260,9 +261,10 @@ export function SplitEnginePage() {
         })),
       );
 
-      if (!productId && productRows.length > 0) {
-        setProductId(productRows[0].id);
-        setAmount(String(productRows[0].preco).replace(".", ","));
+      const firstProduct = productRows.at(0);
+      if (!productId && firstProduct) {
+        setProductId(firstProduct.id);
+        setAmount(String(firstProduct.preco).replace(".", ","));
       }
     } catch (cause) {
       setError(
@@ -449,11 +451,11 @@ export function SplitEnginePage() {
       </div>
 
       <div className="mt-6 flex gap-1 rounded-xl border border-border bg-card p-1">
-        {[
+        {([
           ["simulador", "Simulador", Calculator],
           ["registros", "Vendas registradas", History],
           ["regra", "Regra de parceiros", Settings2],
-        ].map(([key, label, Icon]) => (
+        ] satisfies Array<[typeof tab, string, LucideIcon]>).map(([key, label, Icon]) => (
           <button
             key={String(key)}
             onClick={() => setTab(key as typeof tab)}
