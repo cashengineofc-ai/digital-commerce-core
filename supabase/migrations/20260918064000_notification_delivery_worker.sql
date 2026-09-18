@@ -31,7 +31,7 @@ BEGIN
   WITH claimed AS (
     SELECT d.id
     FROM public.notificacoes_entregas d
-    WHERE d.status IN ('pendente','falhou')
+    WHERE d.status='pendente'
       AND (d.proxima_tentativa_em IS NULL OR d.proxima_tentativa_em<=now())
       AND d.tentativa<=5
     ORDER BY d.created_at,d.id
@@ -137,7 +137,7 @@ BEGIN
       UPDATE public.notificacoes_entregas
       SET status='falhou',
           erro=left(coalesce(p_error,'delivery_failed'),1000),
-          proxima_tentativa_em=now()+make_interval(secs=>greatest(60,p_retry_after_seconds)),
+          proxima_tentativa_em=NULL,
           updated_at=now()
       WHERE id=p_delivery_id;
 
