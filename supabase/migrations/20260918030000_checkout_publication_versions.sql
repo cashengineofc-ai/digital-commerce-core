@@ -176,6 +176,9 @@ FOR EACH ROW EXECUTE FUNCTION public.fn_checkout_version_immutable();
 -- =========================================================
 -- CRIAR CHECKOUT
 -- =========================================================
+-- Signature changed from the legacy p_slug argument to p_descricao.
+-- RESTRICT (the default) preserves any external dependency instead of cascading.
+DROP FUNCTION IF EXISTS public.fn_checkout_criar(text,uuid,text);
 CREATE OR REPLACE FUNCTION public.fn_checkout_criar(
   p_nome text,
   p_oferta_id uuid,
@@ -432,6 +435,7 @@ GRANT EXECUTE ON FUNCTION public.fn_checkout_bump_salvar(
 -- =========================================================
 -- PUBLICAR: copia rascunho e bumps para snapshot imutável
 -- =========================================================
+DROP FUNCTION IF EXISTS public.fn_checkout_publicar(uuid);
 CREATE OR REPLACE FUNCTION public.fn_checkout_publicar(p_checkout_id uuid)
 RETURNS TABLE(version_id uuid, public_token uuid)
 LANGUAGE plpgsql

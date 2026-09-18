@@ -50,10 +50,10 @@ BEGIN
   LIMIT 1;
 
   IF FOUND THEN
-    SELECT id INTO v_tx_id
-    FROM public.transacoes
-    WHERE pedido_id=v_existing.id
-    ORDER BY created_at LIMIT 1;
+    SELECT tx.id INTO v_tx_id
+    FROM public.transacoes tx
+    WHERE tx.pedido_id=v_existing.id
+    ORDER BY tx.created_at LIMIT 1;
     RETURN QUERY SELECT v_existing.id,v_tx_id,v_existing.numero::text,v_existing.valor_total;
     RETURN;
   END IF;

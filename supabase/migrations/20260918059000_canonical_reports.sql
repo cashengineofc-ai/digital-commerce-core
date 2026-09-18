@@ -9,7 +9,7 @@ LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path=public
-AS $
+AS $$
   SELECT
     auth.uid() IS NOT NULL
     AND (
@@ -21,7 +21,7 @@ AS $
         'read'::public.tipo_operacao
       )
     );
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.fn_relatorio_autorizado(text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.fn_relatorio_autorizado(text) TO authenticated;

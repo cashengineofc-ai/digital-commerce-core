@@ -318,6 +318,7 @@ $$;
 REVOKE ALL ON FUNCTION public.fn_solicitar_saque(numeric,uuid) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.fn_solicitar_saque(numeric,uuid) TO authenticated;
 
+DROP FUNCTION IF EXISTS public.fn_saque_liberar_reserva(uuid,text);
 CREATE OR REPLACE FUNCTION public.fn_saque_liberar_reserva(
   p_saque_id uuid,
   p_motivo text
@@ -697,7 +698,7 @@ BEGIN
       ELSE s.status::text
     END,
     s.data_solicitacao,s.data_pagamento,s.destino_snapshot,
-    s.referencia_conciliacao,s.modo_processamento,
+    s.referencia_conciliacao::text,s.modo_processamento::text,
     count(*) OVER()
   FROM public.saques s
   WHERE (

@@ -14,17 +14,21 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAuditoriaRouteImport } from './routes/admin.auditoria'
 import { Route as AdminBanimentosRouteImport } from './routes/admin.banimentos'
 import { Route as AdminComunicadosRouteImport } from './routes/admin.comunicados'
 import { Route as AdminConfiguracoesRouteImport } from './routes/admin.configuracoes'
 import { Route as AdminEmpresasRouteImport } from './routes/admin.empresas'
+import { Route as AdminFinanceiroRouteImport } from './routes/admin.financeiro'
 import { Route as AdminModeracaoRouteImport } from './routes/admin.moderacao'
 import { Route as AdminSuporteRouteImport } from './routes/admin.suporte'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppAfiliadosRouteImport } from './routes/app.afiliados'
+import { Route as AppAjudaRouteImport } from './routes/app.ajuda'
 import { Route as AppApiRouteImport } from './routes/app.api'
 import { Route as AppChargebacksRouteImport } from './routes/app.chargebacks'
 import { Route as AppCheckoutsRouteImport } from './routes/app.checkouts'
@@ -36,6 +40,7 @@ import { Route as AppLinksRouteImport } from './routes/app.links'
 import { Route as AppLinksDePagamentoRouteImport } from './routes/app.links-de-pagamento'
 import { Route as AppLogsRouteImport } from './routes/app.logs'
 import { Route as AppMarketplaceRouteImport } from './routes/app.marketplace'
+import { Route as AppOfertasRouteImport } from './routes/app.ofertas'
 import { Route as AppProdutosRouteImport } from './routes/app.produtos'
 import { Route as AppRepassesRouteImport } from './routes/app.repasses'
 import { Route as AppSaldoRouteImport } from './routes/app.saldo'
@@ -46,7 +51,10 @@ import { Route as AppTransacoesRouteImport } from './routes/app.transacoes'
 import { Route as AppVendasRouteImport } from './routes/app.vendas'
 import { Route as AppWebhooksRouteImport } from './routes/app.webhooks'
 import { Route as CheckoutSlugRouteImport } from './routes/checkout.$slug'
+import { Route as ConviteEquipeCodeRouteImport } from './routes/convite-equipe.$code'
+import { Route as ConviteCodeRouteImport } from './routes/convite.$code'
 import { Route as PagarCodeRouteImport } from './routes/pagar.$code'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AppConfiguracoesContaRouteImport } from './routes/app.configuracoes.conta'
 import { Route as AppConfiguracoesEmpresaRouteImport } from './routes/app.configuracoes.empresa'
 import { Route as AppConfiguracoesEquipeRouteImport } from './routes/app.configuracoes.equipe'
@@ -83,6 +91,16 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
+  id: '/redefinir-senha',
+  path: '/redefinir-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -113,6 +131,11 @@ const AdminEmpresasRoute = AdminEmpresasRouteImport.update({
   path: '/empresas',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminModeracaoRoute = AdminModeracaoRouteImport.update({
   id: '/moderacao',
   path: '/moderacao',
@@ -136,6 +159,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppAfiliadosRoute = AppAfiliadosRouteImport.update({
   id: '/afiliados',
   path: '/afiliados',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAjudaRoute = AppAjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
   getParentRoute: () => AppRoute,
 } as any)
 const AppApiRoute = AppApiRouteImport.update({
@@ -193,6 +221,11 @@ const AppMarketplaceRoute = AppMarketplaceRouteImport.update({
   path: '/marketplace',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOfertasRoute = AppOfertasRouteImport.update({
+  id: '/ofertas',
+  path: '/ofertas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProdutosRoute = AppProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
@@ -243,9 +276,24 @@ const CheckoutSlugRoute = CheckoutSlugRouteImport.update({
   path: '/checkout/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConviteEquipeCodeRoute = ConviteEquipeCodeRouteImport.update({
+  id: '/convite-equipe/$code',
+  path: '/convite-equipe/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConviteCodeRoute = ConviteCodeRouteImport.update({
+  id: '/convite/$code',
+  path: '/convite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PagarCodeRoute = PagarCodeRouteImport.update({
   id: '/pagar/$code',
   path: '/pagar/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppConfiguracoesContaRoute = AppConfiguracoesContaRouteImport.update({
@@ -308,15 +356,19 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/banimentos': typeof AdminBanimentosRoute
   '/admin/comunicados': typeof AdminComunicadosRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/empresas': typeof AdminEmpresasRoute
+  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/suporte': typeof AdminSuporteRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/afiliados': typeof AppAfiliadosRoute
+  '/app/ajuda': typeof AppAjudaRoute
   '/app/api': typeof AppApiRoute
   '/app/chargebacks': typeof AppChargebacksRoute
   '/app/checkouts': typeof AppCheckoutsRoute
@@ -328,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/app/links-de-pagamento': typeof AppLinksDePagamentoRoute
   '/app/logs': typeof AppLogsRoute
   '/app/marketplace': typeof AppMarketplaceRoute
+  '/app/ofertas': typeof AppOfertasRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/repasses': typeof AppRepassesRoute
   '/app/saldo': typeof AppSaldoRoute
@@ -338,7 +391,10 @@ export interface FileRoutesByFullPath {
   '/app/vendas': typeof AppVendasRoute
   '/app/webhooks': typeof AppWebhooksRoute
   '/checkout/$slug': typeof CheckoutSlugRoute
+  '/convite-equipe/$code': typeof ConviteEquipeCodeRoute
+  '/convite/$code': typeof ConviteCodeRoute
   '/pagar/$code': typeof PagarCodeRoute
+  '/r/$code': typeof RCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/configuracoes/conta': typeof AppConfiguracoesContaRoute
@@ -356,15 +412,19 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/banimentos': typeof AdminBanimentosRoute
   '/admin/comunicados': typeof AdminComunicadosRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/empresas': typeof AdminEmpresasRoute
+  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/suporte': typeof AdminSuporteRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/afiliados': typeof AppAfiliadosRoute
+  '/app/ajuda': typeof AppAjudaRoute
   '/app/api': typeof AppApiRoute
   '/app/chargebacks': typeof AppChargebacksRoute
   '/app/checkouts': typeof AppCheckoutsRoute
@@ -376,6 +436,7 @@ export interface FileRoutesByTo {
   '/app/links-de-pagamento': typeof AppLinksDePagamentoRoute
   '/app/logs': typeof AppLogsRoute
   '/app/marketplace': typeof AppMarketplaceRoute
+  '/app/ofertas': typeof AppOfertasRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/repasses': typeof AppRepassesRoute
   '/app/saldo': typeof AppSaldoRoute
@@ -386,7 +447,10 @@ export interface FileRoutesByTo {
   '/app/vendas': typeof AppVendasRoute
   '/app/webhooks': typeof AppWebhooksRoute
   '/checkout/$slug': typeof CheckoutSlugRoute
+  '/convite-equipe/$code': typeof ConviteEquipeCodeRoute
+  '/convite/$code': typeof ConviteCodeRoute
   '/pagar/$code': typeof PagarCodeRoute
+  '/r/$code': typeof RCodeRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/app/configuracoes/conta': typeof AppConfiguracoesContaRoute
@@ -407,15 +471,19 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/redefinir-senha': typeof RedefinirSenhaRoute
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/banimentos': typeof AdminBanimentosRoute
   '/admin/comunicados': typeof AdminComunicadosRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/empresas': typeof AdminEmpresasRoute
+  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/moderacao': typeof AdminModeracaoRoute
   '/admin/suporte': typeof AdminSuporteRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/app/afiliados': typeof AppAfiliadosRoute
+  '/app/ajuda': typeof AppAjudaRoute
   '/app/api': typeof AppApiRoute
   '/app/chargebacks': typeof AppChargebacksRoute
   '/app/checkouts': typeof AppCheckoutsRoute
@@ -427,6 +495,7 @@ export interface FileRoutesById {
   '/app/links-de-pagamento': typeof AppLinksDePagamentoRoute
   '/app/logs': typeof AppLogsRoute
   '/app/marketplace': typeof AppMarketplaceRoute
+  '/app/ofertas': typeof AppOfertasRoute
   '/app/produtos': typeof AppProdutosRoute
   '/app/repasses': typeof AppRepassesRoute
   '/app/saldo': typeof AppSaldoRoute
@@ -437,7 +506,10 @@ export interface FileRoutesById {
   '/app/vendas': typeof AppVendasRoute
   '/app/webhooks': typeof AppWebhooksRoute
   '/checkout/$slug': typeof CheckoutSlugRoute
+  '/convite-equipe/$code': typeof ConviteEquipeCodeRoute
+  '/convite/$code': typeof ConviteCodeRoute
   '/pagar/$code': typeof PagarCodeRoute
+  '/r/$code': typeof RCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/configuracoes/conta': typeof AppConfiguracoesContaRoute
@@ -459,15 +531,19 @@ export interface FileRouteTypes {
     | '/app'
     | '/cadastro'
     | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
     | '/admin/auditoria'
     | '/admin/banimentos'
     | '/admin/comunicados'
     | '/admin/configuracoes'
     | '/admin/empresas'
+    | '/admin/financeiro'
     | '/admin/moderacao'
     | '/admin/suporte'
     | '/admin/usuarios'
     | '/app/afiliados'
+    | '/app/ajuda'
     | '/app/api'
     | '/app/chargebacks'
     | '/app/checkouts'
@@ -479,6 +555,7 @@ export interface FileRouteTypes {
     | '/app/links-de-pagamento'
     | '/app/logs'
     | '/app/marketplace'
+    | '/app/ofertas'
     | '/app/produtos'
     | '/app/repasses'
     | '/app/saldo'
@@ -489,7 +566,10 @@ export interface FileRouteTypes {
     | '/app/vendas'
     | '/app/webhooks'
     | '/checkout/$slug'
+    | '/convite-equipe/$code'
+    | '/convite/$code'
     | '/pagar/$code'
+    | '/r/$code'
     | '/admin/'
     | '/app/'
     | '/app/configuracoes/conta'
@@ -507,15 +587,19 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
     | '/admin/auditoria'
     | '/admin/banimentos'
     | '/admin/comunicados'
     | '/admin/configuracoes'
     | '/admin/empresas'
+    | '/admin/financeiro'
     | '/admin/moderacao'
     | '/admin/suporte'
     | '/admin/usuarios'
     | '/app/afiliados'
+    | '/app/ajuda'
     | '/app/api'
     | '/app/chargebacks'
     | '/app/checkouts'
@@ -527,6 +611,7 @@ export interface FileRouteTypes {
     | '/app/links-de-pagamento'
     | '/app/logs'
     | '/app/marketplace'
+    | '/app/ofertas'
     | '/app/produtos'
     | '/app/repasses'
     | '/app/saldo'
@@ -537,7 +622,10 @@ export interface FileRouteTypes {
     | '/app/vendas'
     | '/app/webhooks'
     | '/checkout/$slug'
+    | '/convite-equipe/$code'
+    | '/convite/$code'
     | '/pagar/$code'
+    | '/r/$code'
     | '/admin'
     | '/app'
     | '/app/configuracoes/conta'
@@ -557,15 +645,19 @@ export interface FileRouteTypes {
     | '/app'
     | '/cadastro'
     | '/login'
+    | '/recuperar-senha'
+    | '/redefinir-senha'
     | '/admin/auditoria'
     | '/admin/banimentos'
     | '/admin/comunicados'
     | '/admin/configuracoes'
     | '/admin/empresas'
+    | '/admin/financeiro'
     | '/admin/moderacao'
     | '/admin/suporte'
     | '/admin/usuarios'
     | '/app/afiliados'
+    | '/app/ajuda'
     | '/app/api'
     | '/app/chargebacks'
     | '/app/checkouts'
@@ -577,6 +669,7 @@ export interface FileRouteTypes {
     | '/app/links-de-pagamento'
     | '/app/logs'
     | '/app/marketplace'
+    | '/app/ofertas'
     | '/app/produtos'
     | '/app/repasses'
     | '/app/saldo'
@@ -587,7 +680,10 @@ export interface FileRouteTypes {
     | '/app/vendas'
     | '/app/webhooks'
     | '/checkout/$slug'
+    | '/convite-equipe/$code'
+    | '/convite/$code'
     | '/pagar/$code'
+    | '/r/$code'
     | '/admin/'
     | '/app/'
     | '/app/configuracoes/conta'
@@ -608,8 +704,13 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
+  RecuperarSenhaRoute: typeof RecuperarSenhaRoute
+  RedefinirSenhaRoute: typeof RedefinirSenhaRoute
   CheckoutSlugRoute: typeof CheckoutSlugRoute
+  ConviteEquipeCodeRoute: typeof ConviteEquipeCodeRoute
+  ConviteCodeRoute: typeof ConviteCodeRoute
   PagarCodeRoute: typeof PagarCodeRoute
+  RCodeRoute: typeof RCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -647,6 +748,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redefinir-senha': {
+      id: '/redefinir-senha'
+      path: '/redefinir-senha'
+      fullPath: '/redefinir-senha'
+      preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -691,6 +806,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEmpresasRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/financeiro': {
+      id: '/admin/financeiro'
+      path: '/financeiro'
+      fullPath: '/admin/financeiro'
+      preLoaderRoute: typeof AdminFinanceiroRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/moderacao': {
       id: '/admin/moderacao'
       path: '/moderacao'
@@ -724,6 +846,13 @@ declare module '@tanstack/react-router' {
       path: '/afiliados'
       fullPath: '/app/afiliados'
       preLoaderRoute: typeof AppAfiliadosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/ajuda': {
+      id: '/app/ajuda'
+      path: '/ajuda'
+      fullPath: '/app/ajuda'
+      preLoaderRoute: typeof AppAjudaRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/api': {
@@ -803,6 +932,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMarketplaceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/ofertas': {
+      id: '/app/ofertas'
+      path: '/ofertas'
+      fullPath: '/app/ofertas'
+      preLoaderRoute: typeof AppOfertasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/produtos': {
       id: '/app/produtos'
       path: '/produtos'
@@ -873,11 +1009,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/convite-equipe/$code': {
+      id: '/convite-equipe/$code'
+      path: '/convite-equipe/$code'
+      fullPath: '/convite-equipe/$code'
+      preLoaderRoute: typeof ConviteEquipeCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/convite/$code': {
+      id: '/convite/$code'
+      path: '/convite/$code'
+      fullPath: '/convite/$code'
+      preLoaderRoute: typeof ConviteCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pagar/$code': {
       id: '/pagar/$code'
       path: '/pagar/$code'
       fullPath: '/pagar/$code'
       preLoaderRoute: typeof PagarCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/configuracoes/conta': {
@@ -959,6 +1116,7 @@ interface AdminRouteChildren {
   AdminComunicadosRoute: typeof AdminComunicadosRoute
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminEmpresasRoute: typeof AdminEmpresasRoute
+  AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminModeracaoRoute: typeof AdminModeracaoRoute
   AdminSuporteRoute: typeof AdminSuporteRoute
   AdminUsuariosRoute: typeof AdminUsuariosRoute
@@ -971,6 +1129,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminComunicadosRoute: AdminComunicadosRoute,
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminEmpresasRoute: AdminEmpresasRoute,
+  AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminModeracaoRoute: AdminModeracaoRoute,
   AdminSuporteRoute: AdminSuporteRoute,
   AdminUsuariosRoute: AdminUsuariosRoute,
@@ -981,6 +1140,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppRouteChildren {
   AppAfiliadosRoute: typeof AppAfiliadosRoute
+  AppAjudaRoute: typeof AppAjudaRoute
   AppApiRoute: typeof AppApiRoute
   AppChargebacksRoute: typeof AppChargebacksRoute
   AppCheckoutsRoute: typeof AppCheckoutsRoute
@@ -992,6 +1152,7 @@ interface AppRouteChildren {
   AppLinksDePagamentoRoute: typeof AppLinksDePagamentoRoute
   AppLogsRoute: typeof AppLogsRoute
   AppMarketplaceRoute: typeof AppMarketplaceRoute
+  AppOfertasRoute: typeof AppOfertasRoute
   AppProdutosRoute: typeof AppProdutosRoute
   AppRepassesRoute: typeof AppRepassesRoute
   AppSaldoRoute: typeof AppSaldoRoute
@@ -1016,6 +1177,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAfiliadosRoute: AppAfiliadosRoute,
+  AppAjudaRoute: AppAjudaRoute,
   AppApiRoute: AppApiRoute,
   AppChargebacksRoute: AppChargebacksRoute,
   AppCheckoutsRoute: AppCheckoutsRoute,
@@ -1027,6 +1189,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLinksDePagamentoRoute: AppLinksDePagamentoRoute,
   AppLogsRoute: AppLogsRoute,
   AppMarketplaceRoute: AppMarketplaceRoute,
+  AppOfertasRoute: AppOfertasRoute,
   AppProdutosRoute: AppProdutosRoute,
   AppRepassesRoute: AppRepassesRoute,
   AppSaldoRoute: AppSaldoRoute,
@@ -1057,8 +1220,13 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
+  RecuperarSenhaRoute: RecuperarSenhaRoute,
+  RedefinirSenhaRoute: RedefinirSenhaRoute,
   CheckoutSlugRoute: CheckoutSlugRoute,
+  ConviteEquipeCodeRoute: ConviteEquipeCodeRoute,
+  ConviteCodeRoute: ConviteCodeRoute,
   PagarCodeRoute: PagarCodeRoute,
+  RCodeRoute: RCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

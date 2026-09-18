@@ -26,7 +26,7 @@ AS $$
         AND e.status IN ('solicitado','processando','aprovado_parcial','aprovado_total','em_disputa')
     ),0)::numeric,
     coalesce((
-      SELECT sum(c.valor)
+      SELECT sum(c.valor_chargeback)
       FROM public.chargebacks c
       WHERE c.empresa_id=public.current_empresa_id()
     ),0)::numeric,

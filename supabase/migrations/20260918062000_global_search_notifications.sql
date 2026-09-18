@@ -28,7 +28,7 @@ ON public.checkouts USING gin (public.fn_search_normalize(nome) gin_trgm_ops)
 WHERE deleted_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_links_pagamento_search_norm
-ON public.links_pagamento USING gin (public.fn_search_normalize(coalesce(titulo,'')||' '||coalesce(slug,'')) gin_trgm_ops)
+ON public.links_pagamento USING gin (public.fn_search_normalize(coalesce(titulo,'')||' '||coalesce(codigo_unico,'')) gin_trgm_ops)
 WHERE deleted_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_ajuda_artigos_search_norm
@@ -130,15 +130,15 @@ BEGIN
     SELECT
       'links_pagamento'::text,
       lp.id,
-      coalesce(lp.titulo,lp.slug,'Link de pagamento')::text,
+      coalesce(lp.titulo,lp.codigo_unico,'Link de pagamento')::text,
       coalesce(lp.status::text,'')::text,
       ('/app/links-de-pagamento?link='||lp.id::text)::text,
-      similarity(public.fn_search_normalize(coalesce(lp.titulo,'')||' '||coalesce(lp.slug,'')),v_q)::numeric
+      similarity(public.fn_search_normalize(coalesce(lp.titulo,'')||' '||coalesce(lp.codigo_unico,'')),v_q)::numeric
     FROM public.links_pagamento lp
     WHERE lp.deleted_at IS NULL
       AND lp.empresa_id=v_empresa
       AND public.fn_tem_permissao('vendas','links','read'::public.tipo_operacao)
-      AND public.fn_search_normalize(coalesce(lp.titulo,'')||' '||coalesce(lp.slug,'')) % v_q
+      AND public.fn_search_normalize(coalesce(lp.titulo,'')||' '||coalesce(lp.codigo_unico,'')) % v_q
 
     UNION ALL
 
@@ -207,13 +207,13 @@ BEGIN
   ),
   ranked AS (
     SELECT raw.*,
-      row_number() OVER(PARTITION BY grupo ORDER BY score DESC,id) AS rn
+      row_number() OVER(PARTITION BY raw.grupo ORDER BY raw.score DESC,raw.id) AS rn
     FROM raw
   )
-  SELECT grupo,id,titulo,subtitulo,url,score
+  SELECT ranked.grupo,ranked.id,ranked.titulo,ranked.subtitulo,ranked.url,ranked.score
   FROM ranked
-  WHERE rn<=v_limit
-  ORDER BY grupo,score DESC,titulo;
+  WHERE ranked.rn<=v_limit
+  ORDER BY ranked.grupo,ranked.score DESC,ranked.titulo;
 END;
 $$;
 

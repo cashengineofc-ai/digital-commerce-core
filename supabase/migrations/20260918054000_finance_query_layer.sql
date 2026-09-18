@@ -72,28 +72,28 @@ BEGIN
     )
   ),
   opening AS (
-    SELECT coalesce(sum(signed_value),0) AS value
-    FROM entity_rows
+    SELECT coalesce(sum(er.signed_value),0) AS value
+    FROM entity_rows er
     WHERE p_inicio IS NOT NULL
-      AND data_lancamento<p_inicio
-      AND bucket IN ('a_receber','disponivel','reservado','bloqueado','devedor')
+      AND er.data_lancamento<p_inicio
+      AND er.bucket IN ('a_receber','disponivel','reservado','bloqueado','devedor')
   ),
   filtered AS (
     SELECT *
-    FROM entity_rows
-    WHERE (p_inicio IS NULL OR data_lancamento>=p_inicio)
-      AND (p_fim IS NULL OR data_lancamento<p_fim)
+    FROM entity_rows er
+    WHERE (p_inicio IS NULL OR er.data_lancamento>=p_inicio)
+      AND (p_fim IS NULL OR er.data_lancamento<p_fim)
       AND (coalesce(trim(p_tipo),'')='' OR
-        (p_tipo='credito' AND signed_value>=0)
-        OR (p_tipo='debito' AND signed_value<0)
+        (p_tipo='credito' AND er.signed_value>=0)
+        OR (p_tipo='debito' AND er.signed_value<0)
       )
-      AND (coalesce(trim(p_bucket),'')='' OR bucket=p_bucket)
+      AND (coalesce(trim(p_bucket),'')='' OR er.bucket=p_bucket)
       AND (
         coalesce(trim(p_busca),'')=''
-        OR descricao ILIKE '%'||trim(p_busca)||'%'
-        OR coalesce(documento_referencia,'') ILIKE '%'||trim(p_busca)||'%'
-        OR conta_contabil ILIKE '%'||trim(p_busca)||'%'
-        OR id::text ILIKE '%'||trim(p_busca)||'%'
+        OR er.descricao ILIKE '%'||trim(p_busca)||'%'
+        OR coalesce(er.documento_referencia,'') ILIKE '%'||trim(p_busca)||'%'
+        OR er.conta_contabil ILIKE '%'||trim(p_busca)||'%'
+        OR er.id::text ILIKE '%'||trim(p_busca)||'%'
       )
   ),
   period_total AS (

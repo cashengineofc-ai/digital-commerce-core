@@ -735,7 +735,7 @@ AS $$
       'chargeback'::text,
       c.transacao_id,
       t.pedido_numero::text,
-      c.valor::numeric,
+      c.valor_chargeback::numeric,
       c.status::text,
       coalesce(c.motivo_banco,'Contestação do emissor')::text,
       coalesce(c.data_ocorrencia,c.data_notificacao)::timestamptz,

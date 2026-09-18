@@ -2,6 +2,12 @@
 
 Este diretório contém verificações que **não devem criar dados demonstrativos em produção**.
 
+## Regressões transacionais
+
+`team_settings_rollback.sql` e `commerce_runtime_rollback.sql` criam fixtures sintéticas apenas dentro de transações terminadas com `ROLLBACK`. Execute sempre o arquivo inteiro, com uma conexão SQL confiável, após as migrations descritas em `../releases/20260918_STATUS.md`. Não execute trechos isolados nem substitua o rollback por commit. Não há chamadas a provedores, envio de mensagens ou movimentação real de dinheiro.
+
+O primeiro cobre autorização/equipe/configurações; o segundo cobre publicação, order bump, reserva de link único, retry de pedido e contabilização idempotente. Não substituem testes de concorrência, navegador ou provedor.
+
 ## `post_migration_diagnostic.sql`
 
 Valida, somente por leitura:

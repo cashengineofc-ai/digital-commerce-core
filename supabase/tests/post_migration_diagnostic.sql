@@ -14,7 +14,7 @@ BEGIN
       ('pedidos'),
       ('pedido_itens'),
       ('ofertas'),
-      ('checkout_versoes'),
+      ('checkout_versions'),
       ('checkout_order_bumps'),
       ('taxa_operacao_snapshots'),
       ('split_regras'),
@@ -97,7 +97,8 @@ LEFT JOIN LATERAL (
 LEFT JOIN LATERAL (
   SELECT sum(s.valor_calculado) AS fee_total
   FROM public.taxa_operacao_snapshots s
-  WHERE s.pedido_id=p.id
+  JOIN public.transacoes ft ON ft.id=s.transacao_id
+  WHERE ft.pedido_id=p.id
 ) fees ON true
 LEFT JOIN LATERAL (
   SELECT sum(greatest(c.valor_comissao_liquida-coalesce(c.valor_estornado,0),0)) AS commission_net

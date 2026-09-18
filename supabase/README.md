@@ -1,5 +1,7 @@
 # Cash Engine PRO - Banco de Dados Supabase
 
+> **Estado atual (18/09/2026):** consulte [o registro validado da aplicação](releases/20260918_STATUS.md) e seu manifesto antes de executar SQL. As instruções históricas abaixo não representam toda a cadeia atual; não reaplique a pasta nem use `db push` sem conciliar versões repetidas e os recibos do pacote já aplicado.
+
 Arquitetura de banco de dados PostgreSQL 15+ (Supabase) para o **Cash Engine PRO** — plataforma completa de vendas digitais, afiliados, marketplace, financeiro, treinamentos, CRM e administração.
 
 ---
