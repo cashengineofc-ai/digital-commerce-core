@@ -112,12 +112,26 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    supabase.auth.signOut().finally(() => {
+    async function run() {
+      if (typeof window !== "undefined") {
+        const deviceId = window.localStorage.getItem("ce-push-device-id");
+        if (deviceId) {
+          await (supabase as any)
+            .rpc("fn_push_inscricao_desativar_device", {
+              p_device_id: deviceId,
+            })
+            .catch(() => undefined);
+        }
+      }
+
+      await supabase.auth.signOut();
       setUser(null);
       router.navigate({ to: "/login", replace: true }).catch(() => {
         if (typeof window !== "undefined") window.location.href = "/login";
       });
-    });
+    }
+
+    void run();
   }
 
   const value = useMemo<TempAuthContextValue>(() => ({
