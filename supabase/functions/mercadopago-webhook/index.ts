@@ -9,6 +9,7 @@ type MercadoPagoNotification = {
 
 type MercadoPagoPayment = {
   id: number;
+  collector_id?: number;
   status?: string;
   status_detail?: string;
   payment_method_id?: string;
@@ -301,11 +302,19 @@ Deno.serve(async (request) => {
       : null;
   const externalReference = payment.external_reference || null;
 
-  let transaction: { id: string } | null = null;
+  type LocalTransaction = {
+    id: string;
+    valor_bruto: number;
+    id_transacao_gateway: string | null;
+    payload_provedor: Record<string, unknown> | null;
+    provedor_pagamento: string | null;
+  };
+  const transactionColumns = "id,valor_bruto,id_transacao_gateway,payload_provedor,provedor_pagamento";
+  let transaction: LocalTransaction | null = null;
 
   const byGateway = await supabase
     .from("transacoes")
-    .select("id")
+    .select(transactionColumns)
     .eq("provedor_pagamento", "mercadopago")
     .eq("id_transacao_gateway", paymentId)
     .maybeSingle();
@@ -319,7 +328,7 @@ Deno.serve(async (request) => {
   if (!transaction && metadataTransactionId) {
     const byMetadata = await supabase
       .from("transacoes")
-      .select("id")
+      .select(transactionColumns)
       .eq("id", metadataTransactionId)
       .maybeSingle();
 
@@ -333,7 +342,7 @@ Deno.serve(async (request) => {
   if (!transaction && externalReference) {
     const byReference = await supabase
       .from("transacoes")
-      .select("id")
+      .select(transactionColumns)
       .or(`id.eq.${externalReference},pedido_numero.eq.${externalReference},codigo_externo.eq.${externalReference}`)
       .limit(1)
       .maybeSingle();
@@ -350,11 +359,37 @@ Deno.serve(async (request) => {
     return jsonResponse({ ok: true, ignored: true, reason: "local_transaction_not_found" });
   }
 
+  const mappedStatus = mapStatus(payment.status);
+  const isPaidTransition = new Set(["aprovada", "capturada", "paga", "disponivel"]).has(mappedStatus);
+  if (isPaidTransition) {
+    const originalPayload = transaction.payload_provedor ?? {};
+    const originalCollector = originalPayload.collector_id;
+    const amount = numberOrUndefined(payment.transaction_amount);
+    const providerMatches = transaction.provedor_pagamento === "mercadopago";
+    const gatewayMatches = !transaction.id_transacao_gateway || transaction.id_transacao_gateway === paymentId;
+    const referenceMatches = externalReference === transaction.id || metadataTransactionId === transaction.id;
+    const amountMatches = amount !== undefined && Math.abs(amount - Number(transaction.valor_bruto)) <= 0.01;
+    const collectorMatches = originalCollector == null || String(originalCollector) === String(payment.collector_id ?? "");
+
+    if (!providerMatches || !gatewayMatches || !referenceMatches || !amountMatches || !collectorMatches) {
+      const reason = !providerMatches
+        ? "provider_mismatch"
+        : !gatewayMatches
+          ? "gateway_id_mismatch"
+          : !referenceMatches
+            ? "transaction_reference_mismatch"
+            : !amountMatches
+              ? "transaction_amount_mismatch"
+              : "collector_id_mismatch";
+      await finishEvent("failed", { transaction_id: transaction.id, error: reason });
+      return jsonResponse({ error: "payment_validation_failed", reason }, 422);
+    }
+  }
+
   const processingFee = Array.isArray(payment.fee_details)
     ? payment.fee_details.reduce((sum, fee) => sum + (numberOrUndefined(fee.amount) ?? 0), 0)
     : undefined;
 
-  const mappedStatus = mapStatus(payment.status);
   const refundedAmount = numberOrUndefined(payment.transaction_amount_refunded);
   const updatePayload: Record<string, unknown> = {
     provedor_pagamento: "mercadopago",
@@ -366,9 +401,6 @@ Deno.serve(async (request) => {
     updated_at: new Date().toISOString(),
   };
 
-  if (numberOrUndefined(payment.transaction_amount) !== undefined) {
-    updatePayload.valor_bruto = payment.transaction_amount;
-  }
   if (numberOrUndefined(payment.transaction_details?.net_received_amount) !== undefined) {
     updatePayload.valor_liquido = payment.transaction_details?.net_received_amount;
   }
