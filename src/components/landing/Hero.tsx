@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from "motion/react";
+import { Link } from "@tanstack/react-router";
 import { ArrowRight, PlayCircle } from "lucide-react";
 import { DashboardPreview } from "./DashboardMock";
 import heroVideo from "@/assets/hero-bg.mp4.asset.json";
@@ -76,13 +77,14 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.24 }}
             className="mt-9 flex flex-col gap-3 sm:flex-row"
           >
-            <a
-              href="/login"
+            <Link
+              to="/login"
+              preload="intent"
               className="group inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02]"
             >
               Quero conhecer o Cash Engine PRO
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
+            </Link>
             <a
               href="#como-funciona"
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-transparent px-6 py-3.5 text-sm font-medium text-foreground transition-colors hover:bg-surface"

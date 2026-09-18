@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, X, Zap } from "lucide-react";
 
@@ -51,12 +52,13 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <a
-            href="/login"
+          <Link
+            to="/login"
+            preload="intent"
             className="hidden rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02] sm:inline-flex"
           >
             Começar agora
-          </a>
+          </Link>
           <button
             type="button"
             aria-label={open ? "Fechar menu" : "Abrir menu"}
@@ -89,13 +91,14 @@ export function Header() {
                   {l.label}
                 </a>
               ))}
-              <a
-                href="/login"
+              <Link
+                to="/login"
+                preload="intent"
                 onClick={() => setOpen(false)}
                 className="mt-2 rounded-lg bg-primary px-4 py-3 text-center text-sm font-medium text-primary-foreground"
               >
                 Começar agora
-              </a>
+              </Link>
             </div>
           </motion.div>
         ) : null}

@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Reveal } from "./primitives";
 
 export function FinalCta() {
@@ -23,13 +24,14 @@ export function FinalCta() {
         </Reveal>
         <Reveal delay={0.18}>
           <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
-            <a
-              href="/login"
+            <Link
+              to="/login"
+              preload="intent"
               className="group inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02]"
             >
               Começar agora
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
+            </Link>
             <a
               href="#recursos"
               className="inline-flex items-center justify-center rounded-xl border border-border px-7 py-3.5 text-sm font-medium transition-colors hover:bg-surface"
