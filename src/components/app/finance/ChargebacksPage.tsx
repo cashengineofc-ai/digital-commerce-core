@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime, formatPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useTempAuth } from "@/lib/auth-temp";
 
 type ChargebackStatus = "em_disputa" | "perdido" | "ganho";
 type ChargebackRow = {
@@ -46,6 +47,7 @@ function KpiCard({ label, value, isPct, accent }: { label: string; value: number
 }
 
 export function ChargebacksPage() {
+  const { user } = useTempAuth();
   const [rows, setRows] = useState<ChargebackRow[]>([]);
   const [status, setStatus] = useState<ChargebackStatus | "todos">("todos");
   const [loading, setLoading] = useState(true);
@@ -54,15 +56,12 @@ export function ChargebacksPage() {
     let active = true;
     (async () => {
       setLoading(true);
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) { if (active) setLoading(false); return; }
-      const { data: profile } = await supabase.from("profiles").select("empresa_id").eq("id", auth.user.id).maybeSingle();
-      if (!profile?.empresa_id) { if (active) setLoading(false); return; }
+      if (!user?.empresaId) { if (active) setLoading(false); return; }
 
       const { data, error } = await supabase
         .from("chargebacks")
         .select("id,protocolo,codigo_chargeback_banco,motivo_banco,valor_chargeback,valor_total_prejuizo,data_limite_resposta,status,decisao_final,transacao_id,clientes(nome_completo),transacoes(pedido_numero,produtos(nome))")
-        .eq("empresa_id", profile.empresa_id)
+        .eq("empresa_id", user.empresaId)
         .order("created_at", { ascending: false });
 
       if (!active) return;
@@ -85,7 +84,7 @@ export function ChargebacksPage() {
       setLoading(false);
     })();
     return () => { active = false; };
-  }, []);
+  }, [user?.empresaId]);
 
   const filtered = useMemo(() => status === "todos" ? rows : rows.filter((row) => row.status === status), [rows, status]);
   const byStatus = useMemo(() => rows.reduce((acc, row) => { acc[row.status] += row.amount; return acc; }, { em_disputa: 0, perdido: 0, ganho: 0 } as Record<ChargebackStatus, number>), [rows]);

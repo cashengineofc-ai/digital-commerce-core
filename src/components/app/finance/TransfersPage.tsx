@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useTempAuth } from "@/lib/auth-temp";
 
 type TransferStatus = "agendado" | "em_andamento" | "concluido" | "falhou" | "cancelado";
 type TransferRow = {
@@ -43,6 +44,7 @@ function KpiCard({ label, value, accent }: { label: string; value: number; accen
 }
 
 export function TransfersPage() {
+  const { user } = useTempAuth();
   const [transfers, setTransfers] = useState<TransferRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,15 +52,12 @@ export function TransfersPage() {
     let active = true;
     (async () => {
       setLoading(true);
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) { if (active) setLoading(false); return; }
-      const { data: profile } = await supabase.from("profiles").select("empresa_id").eq("id", auth.user.id).maybeSingle();
-      if (!profile?.empresa_id) { if (active) setLoading(false); return; }
+      if (!user?.empresaId) { if (active) setLoading(false); return; }
 
       const { data, error } = await supabase
         .from("repasses")
         .select("id,destinatario_nome,destinatario_documento,valor_bruto,taxa_administrativa,valor_liquido,status,data_agendada,data_envio,data_recebimento,data_confirmacao,id_repasse_externo")
-        .eq("empresa_id", profile.empresa_id)
+        .eq("empresa_id", user.empresaId)
         .order("created_at", { ascending: false });
 
       if (!active) return;
@@ -82,7 +81,7 @@ export function TransfersPage() {
       setLoading(false);
     })();
     return () => { active = false; };
-  }, []);
+  }, [user?.empresaId]);
 
   const kpis = useMemo(() => transfers.reduce((acc, transfer) => { acc[transfer.status] += transfer.net; return acc; }, { agendado: 0, em_andamento: 0, concluido: 0, falhou: 0, cancelado: 0 } as Record<TransferStatus, number>), [transfers]);
 
