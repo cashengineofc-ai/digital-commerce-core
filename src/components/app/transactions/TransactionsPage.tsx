@@ -6,6 +6,7 @@ import type { TransactionView } from "@/components/app/transactions/types";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime, formatInt } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useTempAuth } from "@/lib/auth-temp";
 
 type StatusFilter = "todos" | "aprovada" | "pendente" | "recusada" | "estornada";
 type MethodFilter = "todos" | "Pix" | "Cartão" | "Boleto" | "Outro";
@@ -41,6 +42,7 @@ function csvCell(value: unknown) {
 }
 
 export function TransactionsPage() {
+  const { user } = useTempAuth();
   const [allTransactions, setAllTransactions] = useState<TransactionView[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("todos");
@@ -53,13 +55,7 @@ export function TransactionsPage() {
     let active = true;
     async function load() {
       setLoading(true);
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) {
-        if (active) setLoading(false);
-        return;
-      }
-      const { data: profile } = await supabase.from("profiles").select("empresa_id").eq("id", auth.user.id).maybeSingle();
-      if (!profile?.empresa_id) {
+      if (!user?.empresaId) {
         if (active) setLoading(false);
         return;
       }
@@ -67,7 +63,7 @@ export function TransactionsPage() {
       const { data, error } = await supabase
         .from("transacoes")
         .select("id,pedido_numero,valor_bruto,valor_liquido,valor_taxa_processamento,status,metodo_pagamento,created_at,data_pagamento,id_transacao_gateway,provedor_pagamento,status_detalhe_provedor,clientes(nome_completo,email),produtos(nome),afiliados(codigo_afiliado)")
-        .eq("empresa_id", profile.empresa_id)
+        .eq("empresa_id", user.empresaId)
         .order("created_at", { ascending: false });
 
       if (!active) return;
@@ -104,7 +100,7 @@ export function TransactionsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user?.empresaId]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
