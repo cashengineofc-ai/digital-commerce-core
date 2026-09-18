@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Search, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -118,9 +119,10 @@ export function GlobalSearch() {
                       {groupLabels[group]??group}
                     </p>
                     {results.filter((item)=>item.grupo===group).map((item)=>(
-                      <a
+                      <Link
                         key={`${item.grupo}:${item.id}`}
-                        href={item.url}
+                        to={item.url as never}
+                        preload="intent"
                         onClick={()=>setOpen(false)}
                         className="block rounded-lg px-3 py-2 hover:bg-muted"
                       >
@@ -130,7 +132,7 @@ export function GlobalSearch() {
                         <p className="mt-0.5 truncate text-xs text-muted-foreground">
                           {item.subtitulo}
                         </p>
-                      </a>
+                      </Link>
                     ))}
                   </section>
                 ))}
