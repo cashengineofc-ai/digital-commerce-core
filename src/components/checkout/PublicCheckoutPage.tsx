@@ -555,7 +555,7 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                     <p className="text-sm font-medium">Pix</p>
                     <p className="text-xs text-white/45">
                       {manualPix
-                        ? "A confirmação ocorre somente após conferência do recebimento"
+                        ? "Pix por chave · conciliação manual"
                         : "Confirmação automática quando o provedor informar o pagamento"}
                     </p>
                   </div>

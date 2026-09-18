@@ -51,7 +51,7 @@ function valueText(value: unknown) {
   return typeof value === "string" ? value : value == null ? "" : String(value);
 }
 
-async function getPixConfig(supabase: ReturnType<typeof createClient>, hasProvider: boolean) {
+async function getPixConfig(supabase: any, hasProvider: boolean) {
   const { data, error } = await supabase
     .from("admin_global_config")
     .select("chave,valor")
@@ -82,7 +82,7 @@ type Source = {
   empresaId: string;
 };
 
-async function findCheckoutByPublicValue(supabase: ReturnType<typeof createClient>, value: string) {
+async function findCheckoutByPublicValue(supabase: any, value: string) {
   if (isUuid(value)) {
     const byToken = await supabase
       .from("checkouts")
@@ -107,7 +107,7 @@ async function findCheckoutByPublicValue(supabase: ReturnType<typeof createClien
   return bySlug.data![0];
 }
 
-async function loadSource(supabase: ReturnType<typeof createClient>, body: Record<string, any>): Promise<Source> {
+async function loadSource(supabase: any, body: Record<string, any>): Promise<Source> {
   let link: Record<string, any> | null = null;
   let checkout: Record<string, any> | null = null;
   const paymentLinkValue = typeof body.payment_link_code === "string" ? body.payment_link_code.trim() : "";
@@ -157,31 +157,29 @@ async function loadSource(supabase: ReturnType<typeof createClient>, body: Recor
   return { checkout, version: versionResult.data, offer, product: productResult.data!, link, empresaId: checkout.empresa_id };
 }
 
-async function loadBumps(supabase: ReturnType<typeof createClient>, source: Source) {
-  const { data, error } = await supabase
-    .from("checkout_version_order_bumps")
-    .select("id,produto_id,titulo_snapshot,descricao_snapshot,imagem_snapshot,preco_publicado_snapshot,grupo_combinacao,max_selecao_grupo,ordem")
-    .eq("checkout_version_id", source.version.id)
-    .eq("checkout_id", source.checkout.id)
-    .eq("empresa_id", source.empresaId)
-    .order("ordem", { ascending: true });
-
-  if (error) throw error;
-  if (!data?.length) return [];
-
-  const productIds = [...new Set(data.map((row: any) => row.produto_id).filter(Boolean))];
+async function loadBumps(supabase: any, source: Source) {
+  const configured = (Array.isArray(source.checkout.produtos_config) ? source.checkout.produtos_config : [])
+    .filter((item: unknown): item is Record<string, any> => Boolean(item && typeof item === "object"))
+    .filter((item: Record<string, any>) => item.tipo === "order_bump" || item.type === "order_bump" || item.order_bump === true)
+    .map((item: Record<string, any>) => ({
+      id: String(item.id ?? item.bump_id ?? item.produto_id ?? item.product_id ?? ""),
+      productId: String(item.produto_id ?? item.product_id ?? ""),
+    }))
+    .filter((item: { id: string; productId: string }) => item.id && isUuid(item.productId));
+  if (!configured.length) return [];
+  const productIds = [...new Set(configured.map((item: { productId: string }) => item.productId))];
   const productsResult = await supabase
     .from("produtos")
-    .select("id,status,deleted_at,gerencia_estoque,estoque,estoque_reservado")
+    .select("id,nome,descricao_curta,imagem_principal_url,preco,preco_promocional,promocao_inicio,promocao_fim,status,deleted_at,gerencia_estoque,estoque,estoque_reservado")
     .in("id", productIds)
     .eq("empresa_id", source.empresaId);
 
   if (productsResult.error) throw productsResult.error;
   const products = new Map((productsResult.data ?? []).map((product: any) => [product.id, product]));
 
-  return data.flatMap((row: any) => {
-    const product = products.get(row.produto_id) as Record<string, any> | undefined;
-    if (!product || product.status !== "publicado" || product.deleted_at) return [];
+  return configured.flatMap((item: { id: string; productId: string }) => {
+    const product = products.get(item.productId) as Record<string, any> | undefined;
+    if (!product || !validProduct(product)) return [];
     if (
       product.gerencia_estoque &&
       Number(product.estoque ?? 0) - Number(product.estoque_reservado ?? 0) <= 0
@@ -190,14 +188,12 @@ async function loadBumps(supabase: ReturnType<typeof createClient>, source: Sour
     }
 
     return [{
-      id: row.id as string,
-      product_id: row.produto_id as string,
-      name: row.titulo_snapshot as string,
-      description: (row.descricao_snapshot ?? null) as string | null,
-      image_url: (row.imagem_snapshot ?? null) as string | null,
-      amount: Number(row.preco_publicado_snapshot ?? 0),
-      group: row.grupo_combinacao ?? null,
-      max_group_selection: row.max_selecao_grupo ?? null,
+      id: item.id,
+      product_id: item.productId,
+      name: String(product.nome),
+      description: (product.descricao_curta ?? null) as string | null,
+      image_url: (product.imagem_principal_url ?? null) as string | null,
+      amount: activePromotionPrice(product),
     }];
   });
 }
@@ -214,7 +210,7 @@ function checkoutBaseAmount(source: Source, requested: unknown) {
   return amount;
 }
 
-async function resolveAffiliate(supabase: ReturnType<typeof createClient>, code: string, source: Source) {
+async function resolveAffiliate(supabase: any, code: string, source: Source) {
   if (!code) return null;
   const now = new Date().toISOString();
   const { data, error } = await supabase
@@ -373,63 +369,62 @@ Deno.serve(async (request) => {
   const attribution = await resolveAffiliate(supabase, affiliateCode, source);
   const provider = pixConfig.mode === "chave" ? "pix_chave" : "mercadopago";
 
-  const orderResult = await supabase.rpc("fn_checkout_criar_pedido_pix", {
-    p_empresa_id: source.empresaId,
-    p_cliente_id: customer!.id,
-    p_checkout_id: source.checkout.id,
-    p_link_pagamento_id: source.link?.id ?? null,
-    p_idempotency_key: idempotencyKey,
-    p_valor_solicitado: body.amount == null ? null : Number(body.amount),
-    p_order_bump_ids: selectedBumpIds,
-    p_afiliado_id: attribution?.afiliado_id ?? null,
-    p_link_afiliado_id: attribution?.link_afiliado_id ?? null,
-    p_provedor: provider,
-  });
-
-  if (orderResult.error) {
-    const raw = orderResult.error.message || "order_create_failed";
-    const known = [
-      "checkout_unavailable",
-      "offer_unavailable",
-      "payment_link_unavailable",
-      "payment_link_expired",
-      "payment_link_limit_reached",
-      "payment_link_mismatch",
-      "product_unavailable",
-      "product_out_of_stock",
-      "invalid_checkout_amount",
-      "amount_below_minimum",
-      "amount_above_maximum",
-      "invalid_order_bumps",
-      "duplicate_order_bump",
-      "order_bump_combination_not_allowed",
-    ].find((code) => raw.includes(code));
-    console.error("Order creation failed", orderResult.error);
-    return jsonResponse({ error: known ?? "order_create_failed" }, known ? 422 : 500);
-  }
-
-  const order = Array.isArray(orderResult.data) ? orderResult.data[0] : orderResult.data;
-  if (!order?.pedido_id || !order?.transacao_id) {
-    return jsonResponse({ error: "order_create_failed" }, 500);
-  }
-
-  const existing = await supabase
+  const baseAmount = Number(checkoutBaseAmount(source, body.amount).toFixed(2));
+  if (!Number.isFinite(baseAmount) || baseAmount <= 0) return jsonResponse({ error: "invalid_checkout_amount" }, 422);
+  const bumpsAmount = Number(bumpSnapshot.reduce((sum, bump) => sum + Number(bump.amount), 0).toFixed(2));
+  const totalAmount = Number((baseAmount + bumpsAmount).toFixed(2));
+  const metadata = {
+    checkout_source: source.link ? "payment_link" : "checkout",
+    public_checkout: true,
+    order_bumps: bumpSnapshot,
+    total_components: { base_amount: baseAmount, order_bumps_amount: bumpsAmount, total: totalAmount },
+  };
+  let existing = await supabase
     .from("transacoes")
     .select("id,pedido_id,status,status_detalhe_provedor,id_transacao_gateway,pix_copia_cola,pix_qrcode,pix_modo,pix_recebedor_nome,pix_recebedor_cidade,payload_provedor,valor_bruto,afiliado_id,link_afiliado_id")
-    .eq("id", order.transacao_id)
     .eq("empresa_id", source.empresaId)
-    .single();
-
-  if (existing.error || !existing.data) {
-    return jsonResponse({ error: "transaction_lookup_failed" }, 500);
+    .eq("idempotency_key", idempotencyKey)
+    .maybeSingle();
+  if (existing.error) return jsonResponse({ error: "idempotency_lookup_failed" }, 500);
+  if (!existing.data) {
+    const orderNumber = `CE-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+    const inserted = await supabase.from("transacoes").insert({
+      empresa_id: source.empresaId,
+      cliente_id: customer?.id,
+      produto_id: source.product.id,
+      checkout_id: source.checkout.id,
+      link_pagamento_id: source.link?.id ?? null,
+      afiliado_id: attribution?.afiliado_id ?? null,
+      link_afiliado_id: attribution?.link_afiliado_id ?? null,
+      pedido_numero: orderNumber,
+      codigo_externo: source.link?.codigo_unico ?? source.checkout.slug,
+      tipo: source.link ? "link_pagamento" : "venda",
+      metodo_pagamento: "pix",
+      status: "pendente",
+      valor_bruto: totalAmount,
+      valor_liquido: totalAmount,
+      moeda: source.offer.moeda ?? "BRL",
+      idempotency_key: idempotencyKey,
+      provedor_pagamento: provider,
+      origem_dispositivo: "web",
+      ip_cliente: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 45) ?? null,
+      metadata,
+    }).select("id,pedido_id,status,status_detalhe_provedor,id_transacao_gateway,pix_copia_cola,pix_qrcode,pix_modo,pix_recebedor_nome,pix_recebedor_cidade,payload_provedor,valor_bruto,afiliado_id,link_afiliado_id").single();
+    if (inserted.error?.code === "23505") {
+      existing = await supabase.from("transacoes").select("id,pedido_id,status,status_detalhe_provedor,id_transacao_gateway,pix_copia_cola,pix_qrcode,pix_modo,pix_recebedor_nome,pix_recebedor_cidade,payload_provedor,valor_bruto,afiliado_id,link_afiliado_id").eq("empresa_id", source.empresaId).eq("idempotency_key", idempotencyKey).single();
+    } else {
+      existing = inserted;
+    }
+    if (existing.error || !existing.data) return jsonResponse({ error: "transaction_create_failed" }, 500);
   }
 
   const tx = existing.data;
-  const persistedTotal = Number(order.valor_total ?? tx.valor_bruto);
+  const persistedTotal = Number(tx.valor_bruto);
+  const orderId = tx.pedido_id ?? undefined;
 
   if (provider === "pix_chave") {
     if (tx.pix_copia_cola && tx.pix_qrcode) {
-      return jsonResponse({ ok: true, duplicate: true, order_id: order.pedido_id, transaction_id: tx.id, payment_id: tx.id, status: tx.status, status_detail: tx.status_detalhe_provedor, amount: persistedTotal, receiver_name: tx.pix_recebedor_nome, receiver_city: tx.pix_recebedor_cidade, manual_confirmation: true, message: "Aguardando conferência", pix: { qr_code: tx.pix_copia_cola, qr_code_base64: tx.pix_qrcode, ticket_url: null }, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
+      return jsonResponse({ ok: true, duplicate: true, order_id: orderId, transaction_id: tx.id, payment_id: tx.id, status: tx.status, status_detail: tx.status_detalhe_provedor, amount: persistedTotal, receiver_name: tx.pix_recebedor_nome, receiver_city: tx.pix_recebedor_cidade, manual_confirmation: true, message: "Aguardando conferência", pix: { qr_code: tx.pix_copia_cola, qr_code_base64: tx.pix_qrcode, ticket_url: null }, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
     }
     const txid = normalizePixTxid(tx.id);
     let payload: string;
@@ -462,14 +457,14 @@ Deno.serve(async (request) => {
     if (updateError) return jsonResponse({ error: "pix_persist_failed" }, 500);
     const persisted = await supabase.from("transacoes").select("status,status_detalhe_provedor,pix_copia_cola,pix_qrcode,pix_recebedor_nome,pix_recebedor_cidade,valor_bruto").eq("id", tx.id).single();
     if (persisted.error || !persisted.data?.pix_copia_cola || !persisted.data.pix_qrcode) return jsonResponse({ error: "pix_persist_failed" }, 500);
-    return jsonResponse({ ok: true, order_id: order.pedido_id, transaction_id: tx.id, payment_id: tx.id, status: persisted.data.status, status_detail: persisted.data.status_detalhe_provedor, amount: Number(persisted.data.valor_bruto), receiver_name: persisted.data.pix_recebedor_nome, receiver_city: persisted.data.pix_recebedor_cidade, manual_confirmation: true, message: "Aguardando conferência", pix: { qr_code: persisted.data.pix_copia_cola, qr_code_base64: persisted.data.pix_qrcode, ticket_url: null }, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
+    return jsonResponse({ ok: true, order_id: orderId, transaction_id: tx.id, payment_id: tx.id, status: persisted.data.status, status_detail: persisted.data.status_detalhe_provedor, amount: Number(persisted.data.valor_bruto), receiver_name: persisted.data.pix_recebedor_nome, receiver_city: persisted.data.pix_recebedor_cidade, manual_confirmation: true, message: "Aguardando conferência", pix: { qr_code: persisted.data.pix_copia_cola, qr_code_base64: persisted.data.pix_qrcode, ticket_url: null }, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
   }
 
   if (!accessToken) return jsonResponse({ error: "mercadopago_not_configured" }, 503);
   if (tx.id_transacao_gateway) {
     const payload = tx.payload_provedor as Record<string, any> | null;
     const pix = payload?.point_of_interaction?.transaction_data;
-    return jsonResponse({ ok: true, duplicate: true, order_id: order.pedido_id, transaction_id: tx.id, payment_id: tx.id_transacao_gateway, status: tx.status, status_detail: tx.status_detalhe_provedor, amount: persistedTotal, manual_confirmation: false, message: null, pix: pix ? { qr_code: pix.qr_code ?? null, qr_code_base64: pix.qr_code_base64 ?? null, ticket_url: pix.ticket_url ?? null } : null, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
+    return jsonResponse({ ok: true, duplicate: true, order_id: orderId, transaction_id: tx.id, payment_id: tx.id_transacao_gateway, status: tx.status, status_detail: tx.status_detalhe_provedor, amount: persistedTotal, manual_confirmation: false, message: null, pix: pix ? { qr_code: pix.qr_code ?? null, qr_code_base64: pix.qr_code_base64 ?? null, ticket_url: pix.ticket_url ?? null } : null, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
   }
 
   const { firstName, lastName } = splitName(fullName);
@@ -479,7 +474,7 @@ Deno.serve(async (request) => {
     payment_method_id: "pix",
     payer: { email, first_name: firstName, last_name: lastName, ...(cpf ? { identification: { type: "CPF", number: cpf } } : {}) },
     external_reference: tx.id,
-    metadata: { cash_engine_transaction_id: tx.id, cash_engine_order_id: order.pedido_id, empresa_id: source.empresaId, produto_id: source.product.id, checkout_id: source.checkout.id, link_pagamento_id: source.link?.id ?? null, afiliado_id: tx.afiliado_id ?? null, link_afiliado_id: tx.link_afiliado_id ?? null, order_bump_ids: selectedBumpIds },
+    metadata: { cash_engine_transaction_id: tx.id, cash_engine_order_id: orderId ?? null, empresa_id: source.empresaId, produto_id: source.product.id, checkout_id: source.checkout.id, link_pagamento_id: source.link?.id ?? null, afiliado_id: tx.afiliado_id ?? null, link_afiliado_id: tx.link_afiliado_id ?? null, order_bumps: bumpSnapshot, total_components: metadata.total_components },
     notification_url: `${supabaseUrl}/functions/v1/mercadopago-webhook`,
   };
   let response: Response;
@@ -518,5 +513,5 @@ Deno.serve(async (request) => {
     updated_at: new Date().toISOString(),
   }).eq("id", tx.id);
   if (updateError.error) return jsonResponse({ error: "payment_persist_failed" }, 500);
-  return jsonResponse({ ok: true, order_id: order.pedido_id, transaction_id: tx.id, payment_id: String(payment.id), status: mapped, status_detail: payment.status_detail ?? null, amount: persistedTotal, manual_confirmation: false, message: null, pix: pixData ? { qr_code: pixData.qr_code ?? null, qr_code_base64: pixData.qr_code_base64 ?? null, ticket_url: pixData.ticket_url ?? null } : null, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
+  return jsonResponse({ ok: true, order_id: orderId, transaction_id: tx.id, payment_id: String(payment.id), status: mapped, status_detail: payment.status_detail ?? null, amount: persistedTotal, manual_confirmation: false, message: null, pix: pixData ? { qr_code: pixData.qr_code ?? null, qr_code_base64: pixData.qr_code_base64 ?? null, ticket_url: pixData.ticket_url ?? null } : null, success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null });
 });
