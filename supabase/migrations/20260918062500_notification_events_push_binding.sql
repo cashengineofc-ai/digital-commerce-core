@@ -431,6 +431,16 @@ BEGIN
     RAISE EXCEPTION 'push_subscription_invalid';
   END IF;
 
+  -- O endpoint físico só pode estar ativo para uma conta por vez.
+  UPDATE public.notificacoes_push_inscricoes
+  SET ativo=false,
+      erro_ultimo='device_reassigned_to_another_account',
+      erro_em=now(),
+      updated_at=now()
+  WHERE endpoint_hash=encode(digest(trim(p_endpoint),'sha256'),'hex')
+    AND profile_id<>auth.uid()
+    AND ativo;
+
   INSERT INTO public.notificacoes_push_inscricoes(
     profile_id,device_id,endpoint_hash,endpoint_ciphertext,
     p256dh_ciphertext,auth_ciphertext,user_agent,ativo,erro_ultimo,erro_em
@@ -454,17 +464,6 @@ BEGIN
     erro_em=NULL,
     updated_at=now()
   RETURNING id INTO v_id;
-
-  -- Se o mesmo endpoint havia ficado associado a outra conta, desativa o vínculo antigo.
-  UPDATE public.notificacoes_push_inscricoes
-  SET ativo=false,
-      erro_ultimo='device_reassigned_to_another_account',
-      erro_em=now(),
-      updated_at=now()
-  WHERE endpoint_hash=encode(digest(trim(p_endpoint),'sha256'),'hex')
-    AND profile_id<>auth.uid()
-    AND id<>v_id
-    AND ativo;
 
   RETURN v_id;
 END;
