@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Bell, ChevronDown, HelpCircle, Menu, Search, ShieldCheck } from "lucide-react";
+import { ChevronDown, HelpCircle, Menu, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { periods, roles, useAppShell, periodLabel } from "./app-shell-context";
 import { cn } from "@/lib/utils";
+import { GlobalSearch } from "@/components/app/GlobalSearch";
+import { NotificationsMenu } from "@/components/app/NotificationsMenu";
 
 function Dropdown({
   label,
@@ -64,14 +67,8 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           <Menu className="h-5 w-5" />
         </button>
 
-        <div className="relative hidden min-w-0 flex-1 md:block">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            placeholder="Buscar no sistema..."
-            aria-label="Pesquisa global"
-            className="h-9 w-full max-w-md rounded-md border border-border bg-card pl-9 pr-3 text-[13px] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
-          />
+        <div className="hidden min-w-0 flex-1 md:block">
+          <GlobalSearch />
         </div>
 
         <div className="ml-auto flex items-center gap-2">
@@ -106,21 +103,15 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
             )}
           </Dropdown>
 
-          <button
-            type="button"
-            aria-label="Notificações"
-            className="rounded-md border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <Bell className="h-4 w-4" />
-          </button>
+          <NotificationsMenu />
 
-          <button
-            type="button"
+          <Link
+            to="/app/ajuda"
             aria-label="Ajuda"
             className="rounded-md border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <HelpCircle className="h-4 w-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </header>
