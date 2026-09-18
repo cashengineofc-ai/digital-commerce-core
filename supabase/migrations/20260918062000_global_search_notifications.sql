@@ -80,7 +80,7 @@ BEGIN
       p.id,
       p.nome::text AS titulo,
       coalesce(p.status::text,'')||' · '||to_char(p.preco,'FM999G999G990D00') AS subtitulo,
-      ('/app/produtos/'||p.id::text)::text AS url,
+      ('/app/produtos?produto='||p.id::text)::text AS url,
       similarity(public.fn_search_normalize(p.nome),v_q)::numeric AS score
     FROM public.produtos p
     WHERE p.deleted_at IS NULL
@@ -119,7 +119,7 @@ BEGIN
       c.id,
       c.nome::text,
       coalesce(c.status::text,'')::text,
-      ('/app/checkouts/'||c.id::text)::text,
+      ('/app/checkouts?checkout='||c.id::text)::text,
       similarity(public.fn_search_normalize(c.nome),v_q)::numeric
     FROM public.checkouts c
     WHERE c.deleted_at IS NULL
@@ -134,7 +134,7 @@ BEGIN
       lp.id,
       coalesce(lp.titulo,lp.slug,'Link de pagamento')::text,
       coalesce(lp.status::text,'')::text,
-      ('/app/links-pagamento?link='||lp.id::text)::text,
+      ('/app/links-de-pagamento?link='||lp.id::text)::text,
       similarity(public.fn_search_normalize(coalesce(lp.titulo,'')||' '||coalesce(lp.slug,'')),v_q)::numeric
     FROM public.links_pagamento lp
     WHERE lp.deleted_at IS NULL
