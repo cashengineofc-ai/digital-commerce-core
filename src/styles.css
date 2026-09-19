@@ -151,6 +151,10 @@
   --ring: #2563EB;
   --radius: 0.875rem;
   color-scheme: light;
+  background-image:
+    radial-gradient(900px 420px at 82% -180px, rgb(37 99 235 / 10%), transparent 70%),
+    linear-gradient(180deg, #F8FAFD 0%, #F6F8FB 42%, #F5F7FA 100%);
+  background-attachment: fixed;
 }
 .ce-workspace.ce-dark {
   --background: #05070D;
@@ -174,11 +178,125 @@
   --success: #4ADE80;
   --destructive: #F87171;
   color-scheme: dark;
+  background-image:
+    radial-gradient(900px 460px at 82% -200px, rgb(56 130 246 / 18%), transparent 70%),
+    linear-gradient(180deg, #070A10 0%, #05070D 48%, #05070D 100%);
 }
 .ce-workspace :is(h1,h2,h3,h4) { font-family: var(--font-app); }
 .ce-workspace :is(button,a,input,select,textarea):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .ce-workspace table th { font-size: 0.6875rem; letter-spacing: 0.06em; }
 .ce-workspace table { font-variant-numeric: tabular-nums; }
+
+/* Acabamento visual compartilhado da área operacional. */
+.ce-workspace main > div {
+  min-width: 0;
+}
+
+.ce-workspace main header h1 {
+  letter-spacing: -0.035em;
+}
+
+.ce-workspace main header p {
+  max-width: 52rem;
+  line-height: 1.55;
+}
+
+.ce-workspace .shadow-sm.rounded-xl.border.bg-card,
+.ce-workspace section.rounded-xl.border.bg-card {
+  border-color: color-mix(in srgb, var(--border) 88%, transparent);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 4%),
+    0 10px 30px rgb(15 23 42 / 4%);
+}
+
+.ce-workspace.ce-dark .shadow-sm.rounded-xl.border.bg-card,
+.ce-workspace.ce-dark section.rounded-xl.border.bg-card {
+  border-color: rgb(255 255 255 / 8%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 2%),
+    0 18px 45px rgb(0 0 0 / 18%);
+}
+
+.ce-workspace table thead {
+  background: color-mix(in srgb, var(--foreground) 2.5%, var(--card));
+}
+
+.ce-workspace.ce-dark table thead {
+  background: rgb(255 255 255 / 2.5%);
+}
+
+.ce-workspace table tbody tr {
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ce-workspace table tbody tr:hover {
+  background: color-mix(in srgb, var(--primary) 4%, var(--card));
+}
+
+.ce-workspace.ce-dark table tbody tr:hover {
+  background: rgb(56 130 246 / 7%);
+}
+
+.ce-workspace table :is(th, td) {
+  white-space: nowrap;
+}
+
+.ce-workspace table td:first-child,
+.ce-workspace table th:first-child {
+  padding-left: 1.25rem;
+}
+
+.ce-workspace table td:last-child,
+.ce-workspace table th:last-child {
+  padding-right: 1.25rem;
+}
+
+.ce-workspace :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.ce-workspace :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select):hover {
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--border));
+}
+
+.ce-workspace :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select):focus {
+  border-color: color-mix(in srgb, var(--primary) 58%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.ce-workspace button:not(:disabled),
+.ce-workspace a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ce-workspace.ce-dark .text-emerald-700 { color: #86EFAC; }
+.ce-workspace.ce-dark .text-amber-700 { color: #FCD34D; }
+.ce-workspace.ce-dark .text-orange-700 { color: #FDBA74; }
+.ce-workspace.ce-dark .text-zinc-700 { color: #D4D4D8; }
+
+@media (max-width: 640px) {
+  .ce-workspace main header {
+    align-items: flex-start;
+  }
+
+  .ce-workspace main header > :last-child:not(:first-child) {
+    width: 100%;
+  }
+
+  .ce-workspace main header > :last-child:not(:first-child) > button,
+  .ce-workspace main header > :last-child:not(:first-child) > a {
+    flex: 1 1 0%;
+    justify-content: center;
+  }
+
+  .ce-workspace table :is(th, td) {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}
 
 @layer base {
   * {
