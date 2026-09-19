@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import QRCode from "https://esm.sh/qrcode@1.5.4";
+import * as QRCode from "https://esm.sh/qrcode@1.5.4";
 import { buildStaticPixPayload, normalizePixTxid } from "../_shared/pix-brcode.ts";
 
 const corsHeaders = {
@@ -95,7 +95,12 @@ async function getPixConfig(supabase: any, hasProvider: boolean) {
     ]);
   if (error) throw error;
 
-  const map = new Map((data ?? []).map((row: any) => [row.chave, valueText(row.valor)]));
+  const map = new Map<string, string>(
+    (data ?? []).map((row: any): [string, string] => [
+      String(row.chave),
+      valueText(row.valor),
+    ]),
+  );
   const configuredMode = map.get("pix_modo_recebimento") || "desativado";
 
   if (configuredMode === "chave") {
@@ -192,12 +197,13 @@ async function loadSource(supabase: any, body: Record<string, any>): Promise<Sou
     if (data.data_expiracao && new Date(data.data_expiracao).getTime() <= Date.now()) throw new Error("payment_link_expired");
     if (data.max_usos != null && Number(data.contador_usos ?? 0) >= Number(data.max_usos)) throw new Error("payment_link_limit_reached");
 
-    link = data;
-    if (!link.checkout_id) throw new Error("checkout_unavailable");
+    const paymentLink = data as Record<string, any>;
+    link = paymentLink;
+    if (!paymentLink.checkout_id) throw new Error("checkout_unavailable");
     const result = await supabase
       .from("checkouts")
       .select("*")
-      .eq("id", link.checkout_id)
+      .eq("id", paymentLink.checkout_id)
       .eq("status", "publicado")
       .is("deleted_at", null)
       .maybeSingle();
