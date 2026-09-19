@@ -1,10 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "@tanstack/react-router";
 import type { User } from "@supabase/supabase-js";
 import type { RoleKey } from "@/components/app/app-shell-context";
 import { supabase } from "@/integrations/supabase/client";
 
 export const ACCOUNT_ACCESS_DISABLED = "ACCOUNT_ACCESS_DISABLED";
+export const MFA_FACTOR_NOT_AVAILABLE = "MFA_FACTOR_NOT_AVAILABLE";
 
 export type TempUser = {
   id: string;
@@ -17,11 +18,18 @@ export type TempUser = {
   createdAt: string;
 };
 
+export type LoginResult =
+  | { status: "authenticated"; user: TempUser }
+  | { status: "mfa_required" };
+
 type TempAuthContextValue = {
   user: TempUser | null;
   isAuthed: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<TempUser | null>;
+  login: (email: string, password: string) => Promise<LoginResult | null>;
+  mfaRequired: boolean;
+  verifyMfa: (code: string) => Promise<TempUser>;
+  cancelMfa: () => Promise<void>;
   logout: () => void;
   isAdminGlobal: boolean;
 };
@@ -90,10 +98,49 @@ async function loadUser(authUser: User): Promise<TempUser> {
   };
 }
 
+async function getPendingTotpFactorId(): Promise<string | null> {
+  const { data: aalData, error: aalError } =
+    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aalError) throw aalError;
+
+  if (aalData.currentLevel === "aal2" || aalData.nextLevel !== "aal2") {
+    return null;
+  }
+
+  const { data: factorData, error: factorError } =
+    await supabase.auth.mfa.listFactors();
+  if (factorError) throw factorError;
+
+  const verifiedTotp = factorData.totp.find(
+    (factor) => factor.status === "verified",
+  );
+
+  if (!verifiedTotp) {
+    throw new Error(MFA_FACTOR_NOT_AVAILABLE);
+  }
+
+  return verifiedTotp.id;
+}
+
 export function TempAuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<TempUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+
+  const syncAuthenticatedUser = useCallback(async (authUser: User) => {
+    const pendingFactorId = await getPendingTotpFactorId();
+    if (pendingFactorId) {
+      setMfaFactorId(pendingFactorId);
+      setUser(null);
+      return null;
+    }
+
+    const nextUser = await loadUser(authUser);
+    setMfaFactorId(null);
+    setUser(nextUser);
+    return nextUser;
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -106,21 +153,27 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
 
         if (!data.session?.user) {
           setUser(null);
+          setMfaFactorId(null);
           return;
         }
 
         try {
-          const nextUser = await loadUser(data.session.user);
-          if (alive) setUser(nextUser);
+          await syncAuthenticatedUser(data.session.user);
         } catch (error) {
-          console.error("Sessão recusada pelo contexto de perfil", error);
-          if (alive) setUser(null);
+          console.error("Sessão recusada pelo contexto de autenticação", error);
+          if (alive) {
+            setUser(null);
+            setMfaFactorId(null);
+          }
           await supabase.auth.signOut().catch(() => undefined);
         }
       })
       .catch((error) => {
         console.error("Falha ao restaurar sessão", error);
-        if (alive) setUser(null);
+        if (alive) {
+          setUser(null);
+          setMfaFactorId(null);
+        }
       })
       .finally(() => {
         if (alive) setIsLoading(false);
@@ -129,26 +182,28 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
         setUser(null);
+        setMfaFactorId(null);
         return;
       }
 
-      void loadUser(session.user)
-        .then((nextUser) => {
-          if (alive) setUser(nextUser);
-        })
-        .catch((error) => {
+      // Executa fora do callback síncrono do Auth para evitar encadear novas
+      // operações de autenticação dentro do mesmo lock interno do provedor.
+      window.setTimeout(() => {
+        if (!alive) return;
+        void syncAuthenticatedUser(session.user).catch((error) => {
           console.error("Contexto autenticado recusado", error);
           if (alive) setUser(null);
         });
+      }, 0);
     });
 
     return () => {
       alive = false;
       subscription.subscription.unsubscribe();
     };
-  }, []);
+  }, [syncAuthenticatedUser]);
 
-  async function login(email: string, password: string): Promise<TempUser | null> {
+  async function login(email: string, password: string): Promise<LoginResult | null> {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
@@ -158,14 +213,68 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
     if (!data.user) return null;
 
     try {
+      const pendingFactorId = await getPendingTotpFactorId();
+      if (pendingFactorId) {
+        setMfaFactorId(pendingFactorId);
+        setUser(null);
+        return { status: "mfa_required" };
+      }
+
       const nextUser = await loadUser(data.user);
+      setMfaFactorId(null);
       setUser(nextUser);
-      return nextUser;
+      return { status: "authenticated", user: nextUser };
     } catch (accessError) {
       await supabase.auth.signOut().catch(() => undefined);
+      setMfaFactorId(null);
       setUser(null);
       throw accessError;
     }
+  }
+
+  async function verifyMfa(code: string): Promise<TempUser> {
+    if (!mfaFactorId) {
+      throw new Error(MFA_FACTOR_NOT_AVAILABLE);
+    }
+
+    const normalizedCode = code.replace(/\D/g, "").slice(0, 6);
+    if (normalizedCode.length !== 6) {
+      throw new Error("MFA_CODE_INVALID");
+    }
+
+    const { data: challenge, error: challengeError } =
+      await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
+    if (challengeError) throw challengeError;
+
+    const { error: verifyError } = await supabase.auth.mfa.verify({
+      factorId: mfaFactorId,
+      challengeId: challenge.id,
+      code: normalizedCode,
+    });
+    if (verifyError) throw verifyError;
+
+    const { data: aalData, error: aalError } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalError) throw aalError;
+    if (aalData.currentLevel !== "aal2") {
+      throw new Error("MFA_AAL2_NOT_REACHED");
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      throw authError ?? new Error("AUTH_USER_NOT_AVAILABLE");
+    }
+
+    const nextUser = await loadUser(authData.user);
+    setMfaFactorId(null);
+    setUser(nextUser);
+    return nextUser;
+  }
+
+  async function cancelMfa() {
+    await supabase.auth.signOut().catch(() => undefined);
+    setMfaFactorId(null);
+    setUser(null);
   }
 
   function logout() {
@@ -182,6 +291,7 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
       }
 
       await supabase.auth.signOut();
+      setMfaFactorId(null);
       setUser(null);
       router.navigate({ to: "/login", replace: true }).catch(() => {
         if (typeof window !== "undefined") window.location.href = "/login";
@@ -197,10 +307,13 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
       isAuthed: !!user,
       isLoading,
       login,
+      mfaRequired: !!mfaFactorId,
+      verifyMfa,
+      cancelMfa,
       logout,
       isAdminGlobal: user?.isAdminGlobal ?? false,
     }),
-    [user, isLoading],
+    [user, isLoading, mfaFactorId],
   );
 
   return <TempAuthContext.Provider value={value}>{children}</TempAuthContext.Provider>;
