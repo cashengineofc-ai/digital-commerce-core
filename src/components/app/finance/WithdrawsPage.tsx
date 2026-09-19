@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatDateTime, formatInt } from "@/lib/format";
 import { EmptyState } from "@/components/app/EmptyState";
 import { WithdrawDialog } from "@/components/app/finance/WithdrawDialog";
+import { usePermission } from "@/lib/use-permission";
 import { cn } from "@/lib/utils";
 
 type Withdraw = {
@@ -43,6 +44,7 @@ function csvCell(value: unknown) {
 }
 
 export function WithdrawsPage() {
+  const readPermission=usePermission("financeiro","saques","read");
   const [rows,setRows]=useState<Withdraw[]>([]);
   const [status,setStatus]=useState("");
   const [page,setPage]=useState(1);
@@ -50,6 +52,14 @@ export function WithdrawsPage() {
   const [error,setError]=useState<string|null>(null);
 
   const load=useCallback(async()=>{
+    if(readPermission.loading) return;
+    if(!readPermission.allowed){
+      setRows([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -73,7 +83,7 @@ export function WithdrawsPage() {
     } finally {
       setLoading(false);
     }
-  },[status,page]);
+  },[readPermission.allowed,readPermission.loading,status,page]);
 
   useEffect(()=>{ void load(); },[load]);
 
@@ -100,6 +110,7 @@ export function WithdrawsPage() {
   }
 
   async function exportCsv() {
+    if(!readPermission.allowed) return;
     const all:any[]=[];
     let offset=0;
     while(true) {
@@ -123,6 +134,20 @@ export function WithdrawsPage() {
     ].join("\n");
     const url=URL.createObjectURL(new Blob(["\ufeff",csv],{type:"text/csv;charset=utf-8"}));
     const a=document.createElement("a");a.href=url;a.download=`saques-${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url);
+  }
+
+  if(!readPermission.loading&&!readPermission.allowed){
+    return (
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight">Saques</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Você não possui permissão para visualizar os saques desta empresa.</p>
+        </header>
+        <div className="mt-6">
+          <EmptyState icon={Wallet} title="Acesso financeiro restrito" description="Solicite a um administrador da empresa a permissão Saques - Visualizar."/>
+        </div>
+      </div>
+    );
   }
 
   return (
