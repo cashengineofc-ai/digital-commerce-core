@@ -1,17 +1,55 @@
 -- Strengthen payment-link invariants and make late successful payments
 -- account for their link usage even if the temporary reservation expired.
+--
+-- The constraint creation is intentionally idempotent because this hardening
+-- may already have been applied manually to an active environment before the
+-- migration runner sees this file.
 
 BEGIN;
 
-ALTER TABLE public.links_pagamento
-  ADD CONSTRAINT links_pagamento_valor_positivo_chk
-    CHECK (valor > 0),
-  ADD CONSTRAINT links_pagamento_max_usos_positivo_chk
-    CHECK (max_usos IS NULL OR max_usos > 0),
-  ADD CONSTRAINT links_pagamento_contador_usos_nao_negativo_chk
-    CHECK (contador_usos IS NULL OR contador_usos >= 0),
-  ADD CONSTRAINT links_pagamento_uso_unico_max_chk
-    CHECK (NOT uso_unico OR max_usos = 1);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.links_pagamento'::regclass
+      AND conname = 'links_pagamento_valor_positivo_chk'
+  ) THEN
+    ALTER TABLE public.links_pagamento
+      ADD CONSTRAINT links_pagamento_valor_positivo_chk
+      CHECK (valor > 0);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.links_pagamento'::regclass
+      AND conname = 'links_pagamento_max_usos_positivo_chk'
+  ) THEN
+    ALTER TABLE public.links_pagamento
+      ADD CONSTRAINT links_pagamento_max_usos_positivo_chk
+      CHECK (max_usos IS NULL OR max_usos > 0);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.links_pagamento'::regclass
+      AND conname = 'links_pagamento_contador_usos_nao_negativo_chk'
+  ) THEN
+    ALTER TABLE public.links_pagamento
+      ADD CONSTRAINT links_pagamento_contador_usos_nao_negativo_chk
+      CHECK (contador_usos IS NULL OR contador_usos >= 0);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.links_pagamento'::regclass
+      AND conname = 'links_pagamento_uso_unico_max_chk'
+  ) THEN
+    ALTER TABLE public.links_pagamento
+      ADD CONSTRAINT links_pagamento_uso_unico_max_chk
+      CHECK (NOT uso_unico OR max_usos = 1);
+  END IF;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.fn_link_finalizar_reserva()
 RETURNS trigger
