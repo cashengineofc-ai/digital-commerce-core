@@ -35,9 +35,11 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: Deno type-check Pix payment functions
-        run: |
-          deno check --node-modules-dir=auto supabase/functions/_shared/pix-brcode.ts
-          deno check --node-modules-dir=auto supabase/functions/mercadopago-checkout/index.ts
-          deno check --node-modules-dir=auto supabase/functions/mercadopago-payment-status/index.ts
-          deno check --node-modules-dir=auto supabase/functions/mercadopago-webhook/index.ts
+      - name: Check shared Pix BR Code helper
+        run: deno check --node-modules-dir=auto supabase/functions/_shared/pix-brcode.ts
+      - name: Check Mercado Pago checkout
+        run: deno check --node-modules-dir=auto supabase/functions/mercadopago-checkout/index.ts
+      - name: Check Mercado Pago payment status
+        run: deno check --node-modules-dir=auto supabase/functions/mercadopago-payment-status/index.ts
+      - name: Check Mercado Pago webhook
+        run: deno check --node-modules-dir=auto supabase/functions/mercadopago-webhook/index.ts
