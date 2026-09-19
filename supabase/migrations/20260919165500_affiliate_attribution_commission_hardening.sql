@@ -7,7 +7,7 @@ BEGIN;
 CREATE OR REPLACE FUNCTION public.fn_afiliado_link_resolver(
   p_code text,
   p_fingerprint text,
-  p_referrer text
+  p_referrer text DEFAULT NULL::text
 )
 RETURNS jsonb
 LANGUAGE plpgsql
