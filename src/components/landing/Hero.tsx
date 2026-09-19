@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, PlayCircle } from "lucide-react";
@@ -7,6 +8,16 @@ import heroPoster from "@/assets/hero-poster.jpg.asset.json";
 
 export function Hero() {
   const reduced = useReducedMotion();
+  const [videoEnabled, setVideoEnabled] = useState(false);
+
+  useEffect(() => {
+    if (reduced) {
+      setVideoEnabled(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setVideoEnabled(true), 800);
+    return () => window.clearTimeout(timer);
+  }, [reduced]);
 
   return (
     <section
@@ -14,7 +25,7 @@ export function Hero() {
       className="relative overflow-hidden px-5 pb-16 pt-32 sm:px-8 md:pb-24 md:pt-40"
     >
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        {reduced ? (
+        {reduced || !videoEnabled ? (
           <img
             src={heroPoster.url}
             alt=""
@@ -28,7 +39,7 @@ export function Hero() {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             poster={heroPoster.url}
             src={heroVideo.url}
             className="h-full w-full object-cover"
