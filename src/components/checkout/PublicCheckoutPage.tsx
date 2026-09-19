@@ -439,6 +439,8 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                         <img
                           src={bump.image_url}
                           alt=""
+                          loading="lazy"
+                          decoding="async"
                           className="h-12 w-12 rounded-lg object-cover"
                         />
                       )}

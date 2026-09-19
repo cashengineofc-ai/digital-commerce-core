@@ -44,7 +44,7 @@ function ProductCard({ product, promoting, onPromote }: {
     <div className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm transition hover:border-border/80 hover:shadow-md">
       <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-[#0b1e3f] via-[#111827] to-black">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15),transparent_50%)]" />
-        {product.image ? <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 flex items-center justify-center"><Store className="h-10 w-10 text-white/30" /></div>}
+        {product.image ? <img src={product.image} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 flex items-center justify-center"><Store className="h-10 w-10 text-white/30" /></div>}
         {product.tag && <div className="absolute left-3 top-3"><TagPill tag={product.tag} /></div>}
       </div>
       <div className="p-5">

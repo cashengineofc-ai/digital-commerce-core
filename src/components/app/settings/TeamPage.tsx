@@ -402,6 +402,8 @@ export function TeamPage() {
                           <img
                             src={member.avatar_url}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="h-9 w-9 rounded-full object-cover"
                           />
                         ) : (
