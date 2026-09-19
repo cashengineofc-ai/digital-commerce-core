@@ -52,46 +52,74 @@ function AdminGlobalSearch() {
     setIsLoading(true);
     const timer = window.setTimeout(async () => {
       try {
-      const { data, error } = await (supabase as any).rpc("fn_admin_pesquisa_global", {
-        p_query: normalized,
-        p_limit: 12,
-      });
-      if (!active) return;
-      if (error) throw error;
-      setResults((data ?? []) as AdminSearchResult[]);
+        const { data, error } = await (supabase as any).rpc("fn_admin_pesquisa_global", {
+          p_query: normalized,
+          p_limit: 12,
+        });
+        if (!active) return;
+        if (error) throw error;
+        setResults((data ?? []) as AdminSearchResult[]);
       } catch {
-        if (active) setSearchError("Não foi possível consultar a busca. Verifique a conexão e a configuração do banco.");
+        if (active) {
+          setSearchError(
+            "Não foi possível consultar a busca. Verifique a conexão e a configuração do banco.",
+          );
+        }
       } finally {
         if (active) setIsLoading(false);
       }
     }, 250);
-    return () => { active = false; window.clearTimeout(timer); };
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, [query]);
 
   return (
-    <div className="relative hidden min-w-0 flex-1 md:block ml-4">
+    <div className="relative ml-4 hidden min-w-0 flex-1 md:block">
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <input
         ref={inputRef}
         value={query}
-        onChange={(event) => { setQuery(event.target.value); setIsOpen(true); }}
+        onChange={(event) => {
+          setQuery(event.target.value);
+          setIsOpen(true);
+        }}
         onFocus={() => setIsOpen(true)}
         type="search"
         aria-label="Buscar empresas, usuários ou pedidos"
         placeholder="Buscar empresa, usuário ou pedido..."
         className="h-9 w-full max-w-md rounded-md border border-border bg-card pl-9 pr-14 text-[13px] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-destructive focus:ring-2 focus:ring-destructive/15"
       />
-      <kbd className="pointer-events-none absolute left-[23.5rem] top-1/2 hidden -translate-y-1/2 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground lg:block">⌘K</kbd>
+      <kbd className="pointer-events-none absolute left-[23.5rem] top-1/2 hidden -translate-y-1/2 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground lg:block">
+        ⌘K
+      </kbd>
       {isOpen && query.trim().length >= 2 && (
         <div className="absolute z-50 mt-2 w-full max-w-xl overflow-hidden rounded-md border border-border bg-card shadow-lg">
-          {searchError ? <p role="alert" className="px-3 py-3 text-sm text-destructive">{searchError}</p> : isLoading ? <p className="px-3 py-3 text-sm text-muted-foreground">Buscando dados reais...</p> : results.length === 0 ? (
+          {searchError ? (
+            <p role="alert" className="px-3 py-3 text-sm text-destructive">
+              {searchError}
+            </p>
+          ) : isLoading ? (
+            <p className="px-3 py-3 text-sm text-muted-foreground">Buscando dados reais...</p>
+          ) : results.length === 0 ? (
             <p className="px-3 py-3 text-sm text-muted-foreground">Nenhum resultado encontrado.</p>
-          ) : results.map((result) => (
-            <Link key={`${result.tipo}-${result.id}`} to={result.destino} preload="intent" onClick={() => setIsOpen(false)} className="block border-b border-border/70 px-3 py-2.5 last:border-0 hover:bg-muted">
-              <p className="text-sm font-medium text-foreground">{result.titulo}</p>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">{result.tipo} · {result.subtitulo || "Sem detalhes adicionais"}</p>
-            </Link>
-          ))}
+          ) : (
+            results.map((result) => (
+              <Link
+                key={`${result.tipo}-${result.id}`}
+                to={result.destino}
+                preload="intent"
+                onClick={() => setIsOpen(false)}
+                className="block border-b border-border/70 px-3 py-2.5 last:border-0 hover:bg-muted"
+              >
+                <p className="text-sm font-medium text-foreground">{result.titulo}</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  {result.tipo} · {result.subtitulo || "Sem detalhes adicionais"}
+                </p>
+              </Link>
+            ))
+          )}
         </div>
       )}
     </div>
@@ -196,12 +224,12 @@ function AdminShellInner() {
   }
 
   return (
-    <div className="app-light min-h-screen bg-background text-foreground antialiased">
+    <div className="app-light ce-workspace min-h-screen bg-background text-foreground antialiased">
       <DesktopSidebar />
       <MobileSidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div className="lg:pl-64">
         <AdminTopbar onOpenMenu={() => setMenuOpen(true)} />
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <main className="min-w-0 px-2 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 xl:px-8">
           <Outlet />
         </main>
       </div>
