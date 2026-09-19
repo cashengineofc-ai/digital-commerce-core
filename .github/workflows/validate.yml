@@ -37,7 +37,7 @@ jobs:
           deno-version: v2.x
       - name: Deno type-check Pix payment functions
         run: |
-          deno check supabase/functions/_shared/pix-brcode.ts
-          deno check supabase/functions/mercadopago-checkout/index.ts
-          deno check supabase/functions/mercadopago-payment-status/index.ts
-          deno check supabase/functions/mercadopago-webhook/index.ts
+          deno check --node-modules-dir=auto supabase/functions/_shared/pix-brcode.ts
+          deno check --node-modules-dir=auto supabase/functions/mercadopago-checkout/index.ts
+          deno check --node-modules-dir=auto supabase/functions/mercadopago-payment-status/index.ts
+          deno check --node-modules-dir=auto supabase/functions/mercadopago-webhook/index.ts
