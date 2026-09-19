@@ -154,8 +154,8 @@ export function PaymentLinksPage() {
       ? Number(form.valor.replace(",", "."))
       : checkout.preco;
 
-    if (!Number.isFinite(amount) || amount < 0) {
-      setError("Informe um valor válido.");
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError("Informe um valor maior que zero.");
       return;
     }
 
