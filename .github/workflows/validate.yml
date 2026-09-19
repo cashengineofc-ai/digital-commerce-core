@@ -38,7 +38,23 @@ jobs:
       - name: Check shared Pix BR Code helper
         run: deno check --node-modules-dir=auto supabase/functions/_shared/pix-brcode.ts
       - name: Check Mercado Pago checkout
-        run: deno check --node-modules-dir=auto supabase/functions/mercadopago-checkout/index.ts
+        id: checkout_check
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          deno check --node-modules-dir=auto supabase/functions/mercadopago-checkout/index.ts 2>&1 | tee checkout-deno-check.log
+      - name: Upload checkout Deno diagnostics
+        if: steps.checkout_check.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkout-deno-check
+          path: checkout-deno-check.log
+          if-no-files-found: error
+          retention-days: 3
+      - name: Fail if checkout check failed
+        if: steps.checkout_check.outcome == 'failure'
+        run: exit 1
       - name: Check Mercado Pago payment status
         run: deno check --node-modules-dir=auto supabase/functions/mercadopago-payment-status/index.ts
       - name: Check Mercado Pago webhook
