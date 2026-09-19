@@ -1,8 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, ArrowRight, Zap, Layers3, ShieldCheck, Network } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Layers3,
+  Network,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
 import { toast } from "sonner";
-import { ACCOUNT_ACCESS_DISABLED, useTempAuth } from "@/lib/auth-temp";
+import {
+  ACCOUNT_ACCESS_DISABLED,
+  MFA_FACTOR_NOT_AVAILABLE,
+  useTempAuth,
+} from "@/lib/auth-temp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,11 +44,20 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { user, isAuthed, isLoading, login } = useTempAuth();
+  const {
+    user,
+    isAuthed,
+    isLoading,
+    login,
+    mfaRequired,
+    verifyMfa,
+    cancelMfa,
+  } = useTempAuth();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,10 +73,13 @@ function LoginPage() {
 
     setSubmitting(true);
     try {
-      const loggedUser = await login(username, password);
-      if (loggedUser) {
-        toast.success(`Bem-vindo, ${loggedUser.name}!`);
+      const result = await login(username, password);
+      if (result?.status === "authenticated") {
+        toast.success(`Bem-vindo, ${result.user.name}!`);
         navigate({ to: "/app" }).catch(() => {});
+      } else if (result?.status === "mfa_required") {
+        setPassword("");
+        setMfaCode("");
       } else {
         toast.error("Usuário ou senha incorretos");
       }
@@ -66,9 +92,53 @@ function LoginPage() {
         toast.error("E-mail ou senha incorretos.");
       } else if (message.includes(ACCOUNT_ACCESS_DISABLED)) {
         toast.error("Esta conta não está ativa ou não possui acesso à plataforma.");
+      } else if (message.includes(MFA_FACTOR_NOT_AVAILABLE)) {
+        toast.error("O segundo fator configurado não está disponível. Fale com o suporte.");
       } else {
         toast.error("Não foi possível entrar agora. Tente novamente.");
       }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleMfaSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+
+    const code = mfaCode.replace(/\D/g, "").slice(0, 6);
+    if (code.length !== 6) {
+      toast.error("Digite o código de 6 dígitos do seu aplicativo autenticador.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const loggedUser = await verifyMfa(code);
+      toast.success(`Bem-vindo, ${loggedUser.name}!`);
+      navigate({ to: "/app", replace: true }).catch(() => {});
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes(ACCOUNT_ACCESS_DISABLED)) {
+        toast.error("Esta conta não está ativa ou não possui acesso à plataforma.");
+      } else if (message.includes(MFA_FACTOR_NOT_AVAILABLE)) {
+        toast.error("O segundo fator não está disponível. Entre novamente.");
+        await cancelMfa();
+      } else {
+        toast.error("Código inválido ou expirado. Gere um novo código e tente novamente.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleCancelMfa() {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await cancelMfa();
+      setMfaCode("");
+      setPassword("");
     } finally {
       setSubmitting(false);
     }
@@ -92,82 +162,154 @@ function LoginPage() {
                 </span>
               </div>
               <CardTitle className="text-2xl font-semibold tracking-tight">
-                Acessar Cash Engine PRO
+                {mfaRequired ? "Confirme seu acesso" : "Acessar Cash Engine PRO"}
               </CardTitle>
               <CardDescription className="text-sm text-muted-foreground">
-                Entre com suas credenciais
+                {mfaRequired
+                  ? "Digite o código do aplicativo autenticador para concluir o login."
+                  : "Entre com suas credenciais"}
               </CardDescription>
             </CardHeader>
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-5 px-0">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium">
-                    E-mail
-                  </Label>
-                  <Input
-                    id="username"
-                    type="email"
-                    autoCapitalize="none"
-                    autoComplete="username"
-                    placeholder="voce@empresa.com"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    className="h-10"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-sm font-medium">
-                      Senha
+
+            {mfaRequired ? (
+              <form onSubmit={handleMfaSubmit}>
+                <CardContent className="space-y-5 px-0">
+                  <div className="rounded-xl border border-primary/15 bg-primary/5 p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                        <KeyRound className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Autenticação em duas etapas</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          A senha foi validada. Falta confirmar o segundo fator TOTP configurado nesta conta.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="mfa-code" className="text-sm font-medium">
+                      Código de 6 dígitos
                     </Label>
-                    <Link
-                      to="/recuperar-senha"
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Esqueci minha senha
-                    </Link>
-                  </div>
-                  <div className="relative">
                     <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      id="mfa-code"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      autoFocus
+                      maxLength={6}
+                      value={mfaCode}
+                      onChange={(e) =>
+                        setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      }
+                      placeholder="000000"
                       required
-                      className="h-10 pr-10"
+                      className="h-11 text-center font-mono text-lg tracking-[0.3em]"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
                   </div>
-                </div>
-                <Button
-                  type="submit"
-                  disabled={submitting || isLoading}
-                  className="w-full h-10 gap-2"
-                >
-                  {submitting ? (
-                    <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                      Entrando...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowRight className="h-4 w-4" />
-                      Entrar
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </form>
+
+                  <Button
+                    type="submit"
+                    disabled={submitting || mfaCode.length !== 6}
+                    className="w-full h-10 gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                        Verificando...
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="h-4 w-4" />
+                        Confirmar código
+                      </>
+                    )}
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => void handleCancelMfa()}
+                    disabled={submitting}
+                    className="inline-flex w-full items-center justify-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Entrar com outra conta
+                  </button>
+                </CardContent>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-5 px-0">
+                  <div className="space-y-2">
+                    <Label htmlFor="username" className="text-sm font-medium">
+                      E-mail
+                    </Label>
+                    <Input
+                      id="username"
+                      type="email"
+                      autoCapitalize="none"
+                      autoComplete="username"
+                      placeholder="voce@empresa.com"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                      className="h-10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="text-sm font-medium">
+                        Senha
+                      </Label>
+                      <Link
+                        to="/recuperar-senha"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Esqueci minha senha
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="h-10 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={submitting || isLoading}
+                    className="w-full h-10 gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                        Entrando...
+                      </>
+                    ) : (
+                      <>
+                        <ArrowRight className="h-4 w-4" />
+                        Entrar
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </form>
+            )}
+
             <CardFooter className="px-0 pt-6 text-center">
               <p className="w-full text-xs text-muted-foreground">
                 Primeiro acesso?{" "}
