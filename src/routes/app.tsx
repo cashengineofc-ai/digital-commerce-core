@@ -72,12 +72,14 @@ function AppShellInner() {
   }
 
   return (
-    <div className={`app-light ce-workspace ${theme === "dark" ? "ce-dark dark" : ""} min-h-screen bg-background text-foreground antialiased`}>
+    <div
+      className={`app-light ce-workspace ${theme === "dark" ? "ce-dark dark" : ""} min-h-screen bg-background text-foreground antialiased`}
+    >
       <DesktopSidebar />
       <MobileSidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div className={collapsed ? "lg:pl-20" : "lg:pl-64"}>
         <Topbar onOpenMenu={() => setMenuOpen(true)} />
-        <main className="px-1 py-4 sm:px-3 lg:px-5">
+        <main className="min-w-0 px-2 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 xl:px-8">
           <Outlet />
         </main>
       </div>
