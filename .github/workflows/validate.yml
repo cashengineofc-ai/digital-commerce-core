@@ -37,6 +37,8 @@ jobs:
           deno-version: v2.x
       - name: Check shared Pix BR Code helper
         run: deno check --node-modules-dir=auto supabase/functions/_shared/pix-brcode.ts
+      - name: Test Pix BR Code helper
+        run: deno test --node-modules-dir=auto supabase/functions/_shared/pix-brcode_test.ts
       - name: Check Mercado Pago checkout
         id: checkout_check
         continue-on-error: true
