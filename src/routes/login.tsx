@@ -2,11 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, ArrowRight, Zap, Layers3, ShieldCheck, Network } from "lucide-react";
 import { toast } from "sonner";
-import { useTempAuth } from "@/lib/auth-temp";
+import { ACCOUNT_ACCESS_DISABLED, useTempAuth } from "@/lib/auth-temp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardHeader,
@@ -36,7 +35,6 @@ function LoginPage() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -66,6 +64,8 @@ function LoginPage() {
         toast.error("Confirme seu e-mail antes de entrar.");
       } else if (message.includes("Invalid login credentials")) {
         toast.error("E-mail ou senha incorretos.");
+      } else if (message.includes(ACCOUNT_ACCESS_DISABLED)) {
+        toast.error("Esta conta não está ativa ou não possui acesso à plataforma.");
       } else {
         toast.error("Não foi possível entrar agora. Tente novamente.");
       }
@@ -149,19 +149,6 @@ function LoginPage() {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <Checkbox
-                    id="remember"
-                    checked={remember}
-                    onCheckedChange={(v) => setRemember(v === true)}
-                  />
-                  <Label
-                    htmlFor="remember"
-                    className="text-sm font-normal text-muted-foreground cursor-pointer"
-                  >
-                    Lembrar-me
-                  </Label>
-                </div>
                 <Button
                   type="submit"
                   disabled={submitting || isLoading}
@@ -184,7 +171,9 @@ function LoginPage() {
             <CardFooter className="px-0 pt-6 text-center">
               <p className="w-full text-xs text-muted-foreground">
                 Primeiro acesso?{" "}
-                <Link to="/cadastro" className="font-medium text-primary">Criar minha conta.</Link>
+                <Link to="/cadastro" className="font-medium text-primary">
+                  Criar minha conta.
+                </Link>
               </p>
             </CardFooter>
           </Card>
