@@ -4,8 +4,10 @@ import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
 import { CardsSkeleton } from "@/components/app/Skeletons";
+import { EmptyState } from "@/components/app/EmptyState";
 import { StatementTable } from "@/components/app/finance/StatementTable";
 import { WithdrawDialog } from "@/components/app/finance/WithdrawDialog";
+import { usePermission } from "@/lib/use-permission";
 import type { LucideIcon } from "lucide-react";
 
 type WalletBalance = {
@@ -47,6 +49,8 @@ function BalanceCard({
 }
 
 export function BalancePage() {
+  const balancePermission = usePermission("financeiro", "saldo", "read");
+  const statementPermission = usePermission("financeiro", "extrato", "read");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [balance, setBalance] = useState<WalletBalance>({
@@ -59,6 +63,13 @@ export function BalancePage() {
   });
 
   const loadBalance = useCallback(async () => {
+    if (balancePermission.loading) return;
+    if (!balancePermission.allowed) {
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -85,11 +96,31 @@ export function BalancePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [balancePermission.allowed, balancePermission.loading]);
 
   useEffect(() => {
     void loadBalance();
   }, [loadBalance]);
+
+  if (!balancePermission.loading && !balancePermission.allowed) {
+    return (
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight">Saldo</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Você não possui permissão para visualizar o saldo desta empresa.
+          </p>
+        </header>
+        <div className="mt-6">
+          <EmptyState
+            icon={Wallet}
+            title="Acesso financeiro restrito"
+            description="Solicite a um administrador da empresa a permissão Saldo - Visualizar."
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
@@ -110,7 +141,7 @@ export function BalancePage() {
       )}
 
       <div className="mt-6">
-        {loading ? (
+        {loading || balancePermission.loading ? (
           <CardsSkeleton count={6} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -128,17 +159,21 @@ export function BalancePage() {
         O saldo acima é o saldo contábil do Cash Engine PRO. Ele não deve ser interpretado como saldo bancário conciliado sem conferência da conta recebedora.
       </div>
 
-      <div className="mt-8 flex items-end justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold">Últimos lançamentos</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">Venda, taxa, comissão, reserva, saque e estorno usam o mesmo razão.</p>
-        </div>
-        <Link to="/app/extrato" className="text-xs font-medium text-primary hover:underline">Ver extrato completo</Link>
-      </div>
+      {!statementPermission.loading && statementPermission.allowed ? (
+        <>
+          <div className="mt-8 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold">Últimos lançamentos</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">Venda, taxa, comissão, reserva, saque e estorno usam o mesmo razão.</p>
+            </div>
+            <Link to="/app/extrato" className="text-xs font-medium text-primary hover:underline">Ver extrato completo</Link>
+          </div>
 
-      <div className="mt-3">
-        <StatementTable pageSize={8} limit={8} showFilters={false} />
-      </div>
+          <div className="mt-3">
+            <StatementTable pageSize={8} limit={8} showFilters={false} />
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }
