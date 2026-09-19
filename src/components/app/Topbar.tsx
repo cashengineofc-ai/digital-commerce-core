@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, HelpCircle, Menu, ShieldCheck, Moon, Sun, UserRound } from "lucide-react";
+import { ChevronDown, HelpCircle, Menu, ShieldCheck, Moon, Sun, UserRound, Search } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { periods, roles, useAppShell, periodLabel } from "./app-shell-context";
@@ -52,6 +52,7 @@ function Dropdown({
 }
 
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
+  const [mobileSearch, setMobileSearch] = useState(false);
   const { period, setPeriod, role, theme, setTheme } = useAppShell();
   const activeRole = roles.find((r) => r.key === role);
 
@@ -71,7 +72,8 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           <GlobalSearch />
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <button type="button" onClick={() => setMobileSearch(!mobileSearch)} aria-label="Abrir pesquisa" aria-expanded={mobileSearch} className="rounded-lg border border-border bg-card p-2 text-muted-foreground md:hidden"><Search className="h-4 w-4" /></button>
           <span
             title="Papel obtido do backend"
             className="hidden items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium text-muted-foreground sm:inline-flex"
@@ -120,6 +122,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           </Link>
         </div>
       </div>
+      {mobileSearch && <div className="border-t border-border px-4 py-3 md:hidden"><GlobalSearch /></div>}
     </header>
   );
 }

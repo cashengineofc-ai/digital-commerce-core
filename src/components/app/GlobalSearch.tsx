@@ -75,6 +75,7 @@ export function GlobalSearch() {
 
     return ()=>{
       window.clearTimeout(timer);
+      abortRef.current?.abort();
     };
   },[query]);
 
@@ -88,7 +89,8 @@ export function GlobalSearch() {
         onChange={(e)=>setQuery(e.target.value)}
         onFocus={()=>query.trim().length>=2&&setOpen(true)}
         type="search"
-        placeholder="Buscar no sistema..."
+        onKeyDown={(event)=>{if(event.key === "Escape") setOpen(false);}}
+        placeholder="Buscar no Cash Engine PRO..."
         aria-label="Pesquisa global"
         className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-9 text-[13px] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15"
       />
