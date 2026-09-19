@@ -43,7 +43,7 @@ export type NavGroup = {
 export const navGroups: NavGroup[] = [
   {
     label: "Visão geral",
-    items: [{ label: "Dashboard", to: "/app", icon: Gauge }],
+    items: [{ label: "Visão geral", to: "/app", icon: Gauge }],
   },
   {
     label: "Vendas",
@@ -54,11 +54,10 @@ export const navGroups: NavGroup[] = [
       { label: "Ofertas", to: "/app/ofertas", icon: BadgePercent },
       { label: "Checkouts", to: "/app/checkouts", icon: Ticket },
       { label: "Links de pagamento", to: "/app/links-de-pagamento", icon: Link2 },
-      { label: "Clientes", to: "/app/clientes", icon: Users },
     ],
   },
   {
-    label: "Afiliados",
+    label: "Crescimento",
     items: [
       { label: "Afiliados", to: "/app/afiliados", icon: Handshake },
       { label: "Marketplace", to: "/app/marketplace", icon: Store },
@@ -67,7 +66,7 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Financeiro",
+    label: "Operação",
     items: [
       { label: "Split Engine", to: "/app/split", icon: CircleDollarSign },
       { label: "Saldo", to: "/app/saldo", icon: Wallet },
@@ -96,12 +95,18 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Gestão",
+    items: [
+      { label: "Clientes", to: "/app/clientes", icon: Users },
+      { label: "Equipe", to: "/app/configuracoes/equipe", icon: Users },
+      { label: "Permissões", to: "/app/configuracoes/permissoes", icon: Settings },
+    ],
+  },
+  {
     label: "Configurações",
     items: [
       { label: "Conta", to: "/app/configuracoes/conta", icon: UserCog },
       { label: "Empresa", to: "/app/configuracoes/empresa", icon: Building2 },
-      { label: "Equipe", to: "/app/configuracoes/equipe", icon: Users },
-      { label: "Permissões", to: "/app/configuracoes/permissoes", icon: Settings },
       { label: "Segurança", to: "/app/configuracoes/seguranca", icon: Lock },
       { label: "Integrações", to: "/app/configuracoes/integracoes", icon: Plug },
     ],

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, HelpCircle, Menu, ShieldCheck } from "lucide-react";
+import { ChevronDown, HelpCircle, Menu, ShieldCheck, Moon, Sun, UserRound } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { periods, roles, useAppShell, periodLabel } from "./app-shell-context";
@@ -52,7 +52,7 @@ function Dropdown({
 }
 
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
-  const { period, setPeriod, role } = useAppShell();
+  const { period, setPeriod, role, theme, setTheme } = useAppShell();
   const activeRole = roles.find((r) => r.key === role);
 
   return (
@@ -104,6 +104,10 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           </Dropdown>
 
           <NotificationsMenu />
+          <button type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:text-primary">
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <Link to="/app/configuracoes/conta" preload="intent" aria-label="Meu perfil" className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:text-primary"><UserRound className="h-4 w-4" /></Link>
 
           <Link
             to="/app/ajuda"

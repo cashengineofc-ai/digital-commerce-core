@@ -7,6 +7,8 @@ import { KpiCard } from "@/components/app/dashboard/KpiCard";
 import { SalesChart } from "@/components/app/dashboard/SalesChart";
 import { RecentTransactions } from "@/components/app/dashboard/RecentTransactions";
 import { TopProducts } from "@/components/app/dashboard/TopProducts";
+import { RecentActivity } from "@/components/app/dashboard/RecentActivity";
+import { CardsSkeleton } from "@/components/app/Skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL, formatInt, formatPct } from "@/lib/format";
 import { useTempAuth } from "@/lib/auth-temp";
@@ -22,13 +24,19 @@ export function DashboardPage() {
   const [kpis, setKpis] = useState({ volume: 0, sales: 0, revenue: 0, approvalRate: 0 });
   const volumePoints: number[] = [];
   const salesPoints: number[] = [];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setError(null);
     const days = ({ hoje: 1, "7d": 7, "30d": 30, "90d": 90, "12m": 365 } as const)[period];
     (async () => {
-      if (!user?.empresaId) return;
+      try {
+      if (!user?.empresaId) throw new Error("Selecione uma empresa para consultar os indicadores.");
       const end = new Date(); const start = new Date(end.getTime() - days * 86400000);
-      const { data } = await (supabase as any).rpc("fn_dashboard_operacional", { p_empresa_id: user.empresaId, p_inicio: start.toISOString(), p_fim: end.toISOString() });
+      const { data, error: rpcError } = await (supabase as any).rpc("fn_dashboard_operacional", { p_empresa_id: user.empresaId, p_inicio: start.toISOString(), p_fim: end.toISOString() });
+      if (rpcError) throw rpcError;
       const row = data?.[0];
       if (active && row) {
         const attempts = Number(row.tentativas_validas ?? 0);
@@ -40,6 +48,10 @@ export function DashboardPage() {
           approvalRate: attempts > 0 ? (approved / attempts) * 100 : 0,
         });
       }
+      if (active && !row) setKpis({ volume: 0, sales: 0, revenue: 0, approvalRate: 0 });
+      } catch {
+        if (active) setError("Não foi possível consultar os indicadores deste período.");
+      } finally { if (active) setLoading(false); }
     })();
     return () => { active = false; };
   }, [period, user?.empresaId]);
@@ -87,12 +99,19 @@ export function DashboardPage() {
             Visão geral
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sua operação nos últimos {periodLabel(period).toLowerCase()} · atualizado agora
+            Acompanhe sua operação em tempo real. · {periodLabel(period)}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
+            disabled={loading || Boolean(error)}
+            onClick={() => {
+              const csv = "Indicador;Valor;Período\n" + cards.map(card => `${card.label};${card.value};${periodLabel(period)}`).join("\n");
+              const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
+              const link = document.createElement("a"); link.href = url; link.download = "cash-engine-resumo.csv"; link.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }}
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
           >
             <Download className="h-4 w-4" />
@@ -108,7 +127,8 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <motion.div
+      {error && <p role="alert" className="mt-6 rounded-xl border border-destructive/20 p-4 text-sm text-destructive">{error}</p>}
+      {loading ? <div className="mt-6"><CardsSkeleton count={4} /></div> : !error && <motion.div
         initial="hidden"
         animate="show"
         transition={{ staggerChildren: 0.06 }}
@@ -123,7 +143,7 @@ export function DashboardPage() {
             <KpiCard {...c} />
           </motion.div>
         ))}
-      </motion.div>
+      </motion.div>}
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -141,8 +161,9 @@ export function DashboardPage() {
         className="mt-5 grid gap-5 lg:grid-cols-2"
       >
         <RecentTransactions />
-        <TopProducts />
+        <RecentActivity />
       </motion.div>
+      <div className="mt-5"><TopProducts /></div>
     </div>
   );
 }

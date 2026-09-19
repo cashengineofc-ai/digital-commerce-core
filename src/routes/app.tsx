@@ -22,7 +22,7 @@ export const Route = createFileRoute("/app")({
 
 function AppShellInner() {
   const { user, isAuthed, isLoading } = useTempAuth();
-  const { setRole } = useAppShell();
+  const { setRole, theme, collapsed } = useAppShell();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -72,12 +72,12 @@ function AppShellInner() {
   }
 
   return (
-    <div className="app-light min-h-screen bg-background text-foreground antialiased">
+    <div className={`app-light ce-workspace ${theme === "dark" ? "ce-dark dark" : ""} min-h-screen bg-background text-foreground antialiased`}>
       <DesktopSidebar />
       <MobileSidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <div className="lg:pl-64">
+      <div className={collapsed ? "lg:pl-20" : "lg:pl-64"}>
         <Topbar onOpenMenu={() => setMenuOpen(true)} />
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <main className="px-1 py-4 sm:px-3 lg:px-5">
           <Outlet />
         </main>
       </div>

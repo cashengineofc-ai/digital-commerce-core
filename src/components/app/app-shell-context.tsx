@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type PeriodKey = "hoje" | "7d" | "30d" | "90d" | "12m";
 export type RoleKey = "admin_global" | "super-admin" | "produtor" | "afiliado";
@@ -35,6 +35,10 @@ export const roles: { key: RoleKey; label: string; description: string }[] = [
 ];
 
 type AppShellState = {
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
+  collapsed: boolean;
+  setCollapsed: (value: boolean) => void;
   period: PeriodKey;
   setPeriod: (p: PeriodKey) => void;
   role: RoleKey;
@@ -45,10 +49,28 @@ type AppShellState = {
 const AppShellContext = createContext<AppShellState | null>(null);
 
 export function AppShellProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [collapsed, setCollapsed] = useState(false);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("ce-interface-theme");
+      setTheme(saved === "dark" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light");
+      setCollapsed(localStorage.getItem("ce-sidebar-collapsed") === "true");
+    } catch { /* Storage may be disabled by the browser. */ }
+    setReady(true);
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      localStorage.setItem("ce-interface-theme", theme);
+      localStorage.setItem("ce-sidebar-collapsed", String(collapsed));
+    } catch { /* The controls remain functional without persistence. */ }
+  }, [theme, collapsed, ready]);
   const [period, setPeriod] = useState<PeriodKey>("30d");
   const [role, setRole] = useState<RoleKey>("produtor");
 
-  const value = useMemo(() => ({ period, setPeriod, role, setRole }), [period, role]);
+  const value = useMemo(() => ({ period, setPeriod, role, setRole, theme, setTheme, collapsed, setCollapsed }), [period, role, theme, collapsed]);
 
   return <AppShellContext.Provider value={value}>{children}</AppShellContext.Provider>;
 }

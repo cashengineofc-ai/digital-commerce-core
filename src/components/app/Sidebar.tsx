@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { LinkProps } from "@tanstack/react-router";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { Building2, Check, ChevronUp, LogOut, Settings, X } from "lucide-react";
+import { Building2, Check, ChevronUp, LogOut, Settings, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { navGroups, hiddenForAffiliate } from "./nav-config";
 import { useAppShell, roles } from "./app-shell-context";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ function Brand() {
   );
 }
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ onNavigate, compact = false }: { onNavigate?: () => void; compact?: boolean }) {
   const { role } = useAppShell();
   const { isAdminGlobal } = useTempAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -48,13 +48,13 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
         return (
           <div key={group.label}>
-            <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <p className={cn("px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground", compact && "sr-only")}>
               {group.label}
             </p>
             <ul className="space-y-0.5">
               {items.map((item) => {
                 const active =
-                  item.to === "/app" ? pathname === "/app" : pathname.startsWith(item.to);
+                  pathname === item.to || (item.to !== "/app" && pathname.startsWith(item.to + "/"));
                 const Icon = item.icon;
                 return (
                   <li key={item.to}>
@@ -63,6 +63,9 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                       preload="intent"
                       preloadDelay={0}
                       onClick={onNavigate}
+                      title={compact ? item.label : undefined}
+                      aria-label={item.label}
+                      aria-current={active ? "page" : undefined}
                       className={cn(
                         "group relative flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors",
                         active
@@ -74,7 +77,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                         <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
                       )}
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2.2 : 1.8} />
-                      <span className="truncate">{item.label}</span>
+                      <span className={compact ? "sr-only" : "truncate"}>{item.label}</span>
                     </Link>
                   </li>
                 );
@@ -242,12 +245,15 @@ function UserFooter() {
 }
 
 export function DesktopSidebar() {
+  const { collapsed, setCollapsed } = useAppShell();
   return (
-    <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-border bg-card lg:flex">
-      <Brand />
-      <NavLinks />
-      <CompanySwitcher />
-      <UserFooter />
+    <aside className={cn("fixed inset-y-0 left-0 hidden flex-col border-r border-border bg-card lg:flex", collapsed ? "w-20" : "w-64")}>
+      {!collapsed && <Brand />}
+      <button type="button" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? "Expandir navegação" : "Recolher navegação"} aria-expanded={!collapsed} className="mx-4 my-3 flex justify-center rounded-lg border border-border p-2 text-muted-foreground hover:text-primary">
+        {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+      </button>
+      <NavLinks compact={collapsed} />
+      {!collapsed && <><CompanySwitcher /><UserFooter /></>}
     </aside>
   );
 }
