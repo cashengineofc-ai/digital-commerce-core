@@ -21,8 +21,8 @@ Deno.test("buildStaticPixPayload emits deterministic BR Code with valid CRC", ()
 
   assertEquals(
     payload,
-    "00020126410014BR.GOV.BCB.PIX0119pix@example.invalid520400005303986540547.005802BR5911CASH ENGINE6008CURITIBA62100506ABC1236304B251",
+    "00020126410014br.gov.bcb.pix0119pix@example.invalid520400005303986540547.005802BR5911CASH ENGINE6008CURITIBA62100506ABC1236304E019",
     "Pix BR Code payload",
   );
-  assertEquals(payload.slice(-4), "B251", "CRC16-CCITT-FALSE");
+  assertEquals(payload.slice(-4), "E019", "CRC16-CCITT-FALSE");
 });
