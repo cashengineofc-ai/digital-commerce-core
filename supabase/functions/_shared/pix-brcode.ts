@@ -33,7 +33,10 @@ export function normalizePixText(value: string, maxLength: number) {
 
 export function normalizePixTxid(value?: string | null) {
   if (!value) return "***";
-  const normalized = value.replace(/[^A-Za-z0-9]/g, "").slice(0, 25);
+  const normalized = value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 25);
   return normalized || "***";
 }
 
