@@ -121,11 +121,17 @@ export function NotificationsMenu(){
         "fn_notificacao_marcar_lida",{p_id:row.id},
       );
       if(!rpcError){
-        setRows((current)=>current.map((item)=>item.id===row.id?{...item,lida:true}:item));
+        setRows((current)=>{
+          if (!current.some((item)=>item.id===row.id&&!item.lida)) return current;
+          return current.map((item)=>({...item,lida:item.id===row.id?true:item.lida,total_nao_lidas:Math.max(0,item.total_nao_lidas-1)}));
+        });
+      } else {
+        setError(rpcError.message);
       }
     }
     if(row.url_destino){
       if(row.url_destino.startsWith("/")&&!row.url_destino.startsWith("//")){
+        setOpen(false);
         await navigate({to:row.url_destino as never});
       }
     }
@@ -154,16 +160,14 @@ export function NotificationsMenu(){
       },
     );
     if(rpcError) setError(rpcError.message);
+    else setPreferences((current)=>current.map((item)=>item.tipo===pref.tipo?pref:item));
     setActing(false);
   }
 
   function updatePreference(type:string,patch:Partial<Preference>){
-    setPreferences((current)=>current.map((pref)=>{
-      if(pref.tipo!==type) return pref;
-      const next={...pref,...patch};
-      void savePreference(next);
-      return next;
-    }));
+    if (acting) return;
+    const pref=preferences.find((item)=>item.tipo===type);
+    if(pref) void savePreference({...pref,...patch});
   }
 
   async function enableBrowserPush(){
@@ -295,7 +299,8 @@ export function NotificationsMenu(){
               </button>
             )}
 
-            <div className="mt-5 divide-y divide-border rounded-xl border border-border">
+            {error&&<p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
+            <fieldset disabled={acting} className="mt-5 divide-y divide-border rounded-xl border border-border">
               {preferences.map((pref)=>(
                 <div key={pref.tipo} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 px-4 py-3 text-sm">
                   <span className="capitalize">{pref.tipo.replaceAll("_"," ")}</span>
@@ -313,7 +318,7 @@ export function NotificationsMenu(){
                   </label>
                 </div>
               ))}
-            </div>
+            </fieldset>
           </div>
         </div>
       )}

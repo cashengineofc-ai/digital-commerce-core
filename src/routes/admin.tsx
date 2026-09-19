@@ -24,6 +24,7 @@ function AdminGlobalSearch() {
   const [results, setResults] = useState<AdminSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -40,22 +41,31 @@ function AdminGlobalSearch() {
 
   useEffect(() => {
     const normalized = query.trim();
+    let active = true;
+    setSearchError(null);
+    setResults([]);
     if (normalized.length < 2) {
       setResults([]);
       setIsLoading(false);
       return;
     }
+    setIsLoading(true);
     const timer = window.setTimeout(async () => {
-      setIsLoading(true);
+      try {
       const { data, error } = await (supabase as any).rpc("fn_admin_pesquisa_global", {
         p_query: normalized,
         p_limit: 12,
       });
-      if (!error) setResults((data ?? []) as AdminSearchResult[]);
-      else setResults([]);
-      setIsLoading(false);
+      if (!active) return;
+      if (error) throw error;
+      setResults((data ?? []) as AdminSearchResult[]);
+      } catch {
+        if (active) setSearchError("Não foi possível consultar a busca. Verifique a conexão e a configuração do banco.");
+      } finally {
+        if (active) setIsLoading(false);
+      }
     }, 250);
-    return () => window.clearTimeout(timer);
+    return () => { active = false; window.clearTimeout(timer); };
   }, [query]);
 
   return (
@@ -74,7 +84,7 @@ function AdminGlobalSearch() {
       <kbd className="pointer-events-none absolute left-[23.5rem] top-1/2 hidden -translate-y-1/2 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground lg:block">⌘K</kbd>
       {isOpen && query.trim().length >= 2 && (
         <div className="absolute z-50 mt-2 w-full max-w-xl overflow-hidden rounded-md border border-border bg-card shadow-lg">
-          {isLoading ? <p className="px-3 py-3 text-sm text-muted-foreground">Buscando dados reais...</p> : results.length === 0 ? (
+          {searchError ? <p role="alert" className="px-3 py-3 text-sm text-destructive">{searchError}</p> : isLoading ? <p className="px-3 py-3 text-sm text-muted-foreground">Buscando dados reais...</p> : results.length === 0 ? (
             <p className="px-3 py-3 text-sm text-muted-foreground">Nenhum resultado encontrado.</p>
           ) : results.map((result) => (
             <Link key={`${result.tipo}-${result.id}`} to={result.destino} preload="intent" onClick={() => setIsOpen(false)} className="block border-b border-border/70 px-3 py-2.5 last:border-0 hover:bg-muted">
