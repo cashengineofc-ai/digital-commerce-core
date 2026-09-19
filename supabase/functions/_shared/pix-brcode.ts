@@ -1,93 +1,87 @@
+export type StaticPixPayloadInput = {
+  key: string;
+  receiverName: string;
+  receiverCity: string;
+  amount?: number | null;
+  txid?: string | null;
+};
+
 const encoder = new TextEncoder();
 
 function byteLength(value: string) {
   return encoder.encode(value).length;
 }
 
-function tlv(id: string, value: string) {
+function emv(id: string, value: string) {
   const length = byteLength(value);
-  if (length > 99) throw new Error(`pix_field_too_long:${id}`);
+  if (id.length !== 2 || length > 99) {
+    throw new Error("invalid_emv_field");
+  }
   return `${id}${String(length).padStart(2, "0")}${value}`;
 }
 
-function normalizeMerchantText(value: string, maxLength: number) {
-  const normalized = value
+export function normalizePixText(value: string, maxLength: number) {
+  return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toUpperCase()
     .replace(/[^A-Z0-9 $%*+\-./:]/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
-
-  return normalized.slice(0, maxLength);
+    .trim()
+    .slice(0, maxLength);
 }
 
-function crc16CcittFalse(value: string) {
+export function normalizePixTxid(value?: string | null) {
+  if (!value) return "***";
+  const normalized = value.replace(/[^A-Za-z0-9]/g, "").slice(0, 25);
+  return normalized || "***";
+}
+
+export function crc16Ccitt(payloadWithCrcHeader: string) {
   let crc = 0xffff;
-  const bytes = encoder.encode(value);
+  const bytes = encoder.encode(payloadWithCrcHeader);
 
   for (const byte of bytes) {
     crc ^= byte << 8;
     for (let bit = 0; bit < 8; bit += 1) {
-      crc = (crc & 0x8000) !== 0
-        ? ((crc << 1) ^ 0x1021) & 0xffff
-        : (crc << 1) & 0xffff;
+      crc = (crc & 0x8000) !== 0 ? ((crc << 1) ^ 0x1021) : (crc << 1);
+      crc &= 0xffff;
     }
   }
 
   return crc.toString(16).toUpperCase().padStart(4, "0");
 }
 
-export function normalizePixTxid(value: string) {
-  const normalized = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 25);
-  if (!normalized) throw new Error("pix_txid_invalid");
-  return normalized;
-}
+export function buildStaticPixPayload(input: StaticPixPayloadInput) {
+  const key = input.key.trim();
+  if (!key || byteLength(key) > 77) throw new Error("invalid_pix_key");
 
-export function buildStaticPixPayload({
-  key,
-  receiverName,
-  receiverCity,
-  amount,
-  txid,
-}: {
-  key: string;
-  receiverName: string;
-  receiverCity: string;
-  amount: number;
-  txid: string;
-}) {
-  const normalizedKey = key.trim();
-  const merchantName = normalizeMerchantText(receiverName, 25);
-  const merchantCity = normalizeMerchantText(receiverCity, 15);
-  const normalizedTxid = normalizePixTxid(txid);
+  const receiverName = normalizePixText(input.receiverName, 25);
+  const receiverCity = normalizePixText(input.receiverCity, 15);
+  if (!receiverName || !receiverCity) throw new Error("invalid_pix_receiver");
 
-  if (!normalizedKey || byteLength(normalizedKey) > 77) {
-    throw new Error("pix_key_invalid");
-  }
-  if (!merchantName || !merchantCity) {
-    throw new Error("pix_receiver_invalid");
-  }
-  if (!Number.isFinite(amount) || amount <= 0 || amount >= 10000000000) {
-    throw new Error("pix_amount_invalid");
+  const amount = input.amount == null ? null : Number(input.amount);
+  if (amount != null && (!Number.isFinite(amount) || amount <= 0)) {
+    throw new Error("invalid_pix_amount");
   }
 
-  const merchantAccount = tlv("00", "BR.GOV.BCB.PIX") + tlv("01", normalizedKey);
-  const additionalData = tlv("05", normalizedTxid);
-  const amountText = amount.toFixed(2);
+  const merchantAccount = emv("00", "br.gov.bcb.pix") + emv("01", key);
+  const additionalData = emv("05", normalizePixTxid(input.txid));
 
-  const withoutCrc = [
-    tlv("00", "01"),
-    tlv("26", merchantAccount),
-    tlv("52", "0000"),
-    tlv("53", "986"),
-    tlv("54", amountText),
-    tlv("58", "BR"),
-    tlv("59", merchantName),
-    tlv("60", merchantCity),
-    tlv("62", additionalData),
-    "6304",
-  ].join("");
+  let payload =
+    emv("00", "01") +
+    emv("26", merchantAccount) +
+    emv("52", "0000") +
+    emv("53", "986");
 
-  return `${withoutCrc}${crc16CcittFalse(withoutCrc)}`;
+  if (amount != null) payload += emv("54", amount.toFixed(2));
+
+  payload +=
+    emv("58", "BR") +
+    emv("59", receiverName) +
+    emv("60", receiverCity) +
+    emv("62", additionalData);
+
+  const withCrcHeader = `${payload}6304`;
+  return `${withCrcHeader}${crc16Ccitt(withCrcHeader)}`;
 }

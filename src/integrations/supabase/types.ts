@@ -10378,6 +10378,16 @@ export type Database = {
           updated_at: string
         }[]
       }
+      fn_admin_pesquisa_global: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          destino: string
+          id: string
+          subtitulo: string
+          tipo: string
+          titulo: string
+        }[]
+      }
       fn_admin_saque_preparar_tentativa_provedor: {
         Args: {
           p_idempotency_key: string
