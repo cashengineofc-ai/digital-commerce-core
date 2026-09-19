@@ -12,12 +12,16 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useTempAuth } from "@/lib/auth-temp";
+import { usePermission } from "@/lib/use-permission";
 import { formatBRL } from "@/lib/format";
 
 type BankAccount = { id: string; label: string };
 
 export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise<void> }) {
   const { user } = useTempAuth();
+  const withdrawPermission = usePermission("financeiro", "saques", "create");
+  const balancePermission = usePermission("financeiro", "saldo", "read");
+  const accountPermission = usePermission("financeiro", "contas", "read");
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(0);
   const [available, setAvailable] = useState(0);
@@ -27,9 +31,15 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
   const [submitting, setSubmitting] = useState(false);
   const requestKey = useRef(crypto.randomUUID());
 
+  const permissionLoading =
+    withdrawPermission.loading || balancePermission.loading || accountPermission.loading;
+  const canWithdraw =
+    withdrawPermission.allowed && balancePermission.allowed && accountPermission.allowed;
+
   async function loadFinanceData() {
     setLoading(true);
     try {
+      if (!canWithdraw) throw new Error("Você não possui permissão para solicitar saques.");
       if (!user?.empresaId) throw new Error("Empresa não identificada.");
 
       const [{ data: balanceData, error: balanceError }, { data: bankData, error: bankError }] =
@@ -69,6 +79,7 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
   }
 
   async function handleOpenChange(next: boolean) {
+    if (next && !canWithdraw) return;
     setOpen(next);
     if (next) {
       requestKey.current = crypto.randomUUID();
@@ -78,7 +89,7 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
 
   async function submitWithdrawal() {
     const value = Number(amount);
-    if (!account || !Number.isFinite(value) || value <= 0 || value > available) return;
+    if (!canWithdraw || !account || !Number.isFinite(value) || value <= 0 || value > available) return;
 
     setSubmitting(true);
     try {
@@ -105,6 +116,8 @@ export function WithdrawDialog({ onSuccess }: { onSuccess?: () => void | Promise
       setSubmitting(false);
     }
   }
+
+  if (permissionLoading || !canWithdraw) return null;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
