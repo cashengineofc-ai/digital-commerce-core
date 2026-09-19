@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { LogOut, Settings, X } from "lucide-react";
 import { navGroups } from "./admin-nav-config";
 import { cn } from "@/lib/utils";
+import { useTempAuth } from "@/lib/auth-temp";
 
 function Brand() {
   return (
@@ -68,27 +69,32 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function UserFooter() {
+  const { user, logout } = useTempAuth();
+  const label = user?.name || "Admin Global";
+  const initial = label.trim().charAt(0).toUpperCase() || "A";
+
   return (
     <div className="border-t border-border p-3">
       <div className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted">
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-destructive text-xs font-semibold text-destructive-foreground">
-          ADM
+          {initial}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold text-foreground">Admin Global</p>
+          <p className="truncate text-[13px] font-semibold text-foreground">{label}</p>
           <p className="truncate text-[11px] text-muted-foreground">Admin Global · Acesso Total</p>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            type="button"
+          <Link
+            to="/app/configuracoes/conta"
             aria-label="Configurações da conta"
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
           >
             <Settings className="h-4 w-4" />
-          </button>
+          </Link>
           <button
             type="button"
             aria-label="Sair"
+            onClick={logout}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-background hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />

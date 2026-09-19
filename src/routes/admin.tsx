@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShellProvider, useAppShell } from "@/components/app/app-shell-context";
 import {
@@ -44,21 +44,23 @@ function AdminTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
+          <Link
+            to="/admin/comunicados"
+            preload="intent"
             aria-label="Notificações"
             className="relative rounded-md border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <Bell className="h-4 w-4" />
-          </button>
+          </Link>
 
-          <button
-            type="button"
+          <Link
+            to="/admin/suporte"
+            preload="intent"
             aria-label="Ajuda"
             className="rounded-md border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <HelpCircle className="h-4 w-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </header>

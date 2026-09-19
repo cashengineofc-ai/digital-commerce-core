@@ -5,8 +5,6 @@ import {
   Bell,
   Building2,
   Gauge,
-  GraduationCap,
-  Plug,
   ScrollText,
   Settings,
   ShieldAlert,
@@ -51,10 +49,8 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: "Configurações globais", to: "/admin/configuracoes", icon: Settings },
       { label: "Auditoria", to: "/admin/auditoria", icon: ScrollText },
-      { label: "Suporte tickets", to: "/admin/tickets", icon: Ticket },
+      { label: "Suporte tickets", to: "/admin/suporte", icon: Ticket },
       { label: "Comunicados", to: "/admin/comunicados", icon: Bell },
-      { label: "Integrações plataforma", to: "/admin/integracoes", icon: Plug },
-      { label: "Treinamentos LMS", to: "/admin/treinamentos", icon: GraduationCap },
     ],
   },
   {
