@@ -173,6 +173,9 @@ export function SecurityPage() {
       });
       if (enrollError) throw enrollError;
       if (!data.totp?.qr_code || !data.id) {
+        if (data.id) {
+          await supabase.auth.mfa.unenroll({ factorId: data.id }).catch(() => undefined);
+        }
         throw new Error("O provedor não retornou os dados do TOTP.");
       }
       setEnrollment({
@@ -219,6 +222,30 @@ export function SecurityPage() {
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Não foi possível verificar o 2FA.",
+      );
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function cancelTotpEnrollment() {
+    if (!enrollment || acting) return;
+
+    setActing(true);
+    setError(null);
+    try {
+      const { error: unenrollError } = await supabase.auth.mfa.unenroll({
+        factorId: enrollment.factorId,
+      });
+      if (unenrollError) throw unenrollError;
+
+      setEnrollment(null);
+      setVerifyCode("");
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Não foi possível cancelar a configuração do 2FA.",
       );
     } finally {
       setActing(false);
@@ -598,10 +625,11 @@ export function SecurityPage() {
 
             <div className="mt-5 flex gap-2">
               <button
-                onClick={() => setEnrollment(null)}
-                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium"
+                onClick={() => void cancelTotpEnrollment()}
+                disabled={acting}
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium disabled:opacity-50"
               >
-                Cancelar
+                {acting ? "Cancelando..." : "Cancelar"}
               </button>
               <button
                 onClick={() => void verifyTotp()}
