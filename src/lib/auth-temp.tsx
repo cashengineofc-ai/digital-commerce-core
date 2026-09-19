@@ -260,15 +260,24 @@ export function TempAuthProvider({ children }: { children: ReactNode }) {
       throw new Error("MFA_AAL2_NOT_REACHED");
     }
 
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData.user) {
-      throw authError ?? new Error("AUTH_USER_NOT_AVAILABLE");
-    }
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) {
+        throw authError ?? new Error("AUTH_USER_NOT_AVAILABLE");
+      }
 
-    const nextUser = await loadUser(authData.user);
-    setMfaFactorId(null);
-    setUser(nextUser);
-    return nextUser;
+      const nextUser = await loadUser(authData.user);
+      setMfaFactorId(null);
+      setUser(nextUser);
+      return nextUser;
+    } catch (accessError) {
+      // Um segundo fator válido não substitui o status/permissão da conta.
+      // Se o contexto da plataforma for recusado, a sessão elevada também é encerrada.
+      await supabase.auth.signOut().catch(() => undefined);
+      setMfaFactorId(null);
+      setUser(null);
+      throw accessError;
+    }
   }
 
   async function cancelMfa() {
