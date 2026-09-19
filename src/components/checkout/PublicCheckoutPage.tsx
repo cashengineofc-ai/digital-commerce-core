@@ -317,7 +317,6 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
     } catch (error) {
       const code = error instanceof Error ? error.message : "payment_failed";
       setPayError(errorLabels[code] ?? "Não foi possível gerar o Pix. Tente novamente.");
-      idempotencyKeyRef.current = null;
     } finally {
       setPaying(false);
     }
