@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  Search,
+  ShoppingBag,
+  UserRoundCheck,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTempAuth } from "@/lib/auth-temp";
 import { formatBRL, formatDateTime, formatInt } from "@/lib/format";
@@ -43,6 +51,7 @@ export function ClientesPage() {
   const { user, isLoading: isAuthLoading } = useTempAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [segment, setSegment] = useState<SegmentFilter>("todos");
   const [page, setPage] = useState(1);
@@ -52,9 +61,13 @@ export function ClientesPage() {
 
     async function load() {
       setLoading(true);
+      setLoadError(null);
       try {
         if (isAuthLoading) return;
-        if (!user?.empresaId) return;
+        if (!user?.empresaId) {
+          if (active) setCustomers([]);
+          return;
+        }
 
         const { data, error } = await supabase
           .from("clientes")
@@ -79,7 +92,14 @@ export function ClientesPage() {
         );
       } catch (error) {
         console.error("Falha ao carregar clientes", error);
-        if (active) setCustomers([]);
+        if (active) {
+          setCustomers([]);
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : "Não foi possível carregar os clientes reais.",
+          );
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -104,6 +124,20 @@ export function ClientesPage() {
     });
   }, [customers, query, segment]);
 
+  const overview = useMemo(
+    () =>
+      customers.reduce(
+        (acc, customer) => {
+          acc.purchases += customer.purchases;
+          acc.spent += customer.totalSpent;
+          acc.active += customer.lastPurchase ? 1 : 0;
+          return acc;
+        },
+        { purchases: 0, spent: 0, active: 0 },
+      ),
+    [customers],
+  );
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
   const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
@@ -126,7 +160,59 @@ export function ClientesPage() {
         </div>
       </header>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
+      {loadError && (
+        <div className="mt-5 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {loadError}
+        </div>
+      )}
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Clientes</span>
+            <Users className="h-4 w-4 text-primary" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">
+            {loading ? "—" : formatInt(customers.length)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">registros da empresa atual</p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Com histórico</span>
+            <UserRoundCheck className="h-4 w-4 text-emerald-600" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">
+            {loading ? "—" : formatInt(overview.active)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">clientes com última compra registrada</p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Compras</span>
+            <ShoppingBag className="h-4 w-4 text-primary" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">
+            {loading ? "—" : formatInt(overview.purchases)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">total registrado na base</p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Valor acumulado</span>
+            <CircleDollarSign className="h-4 w-4 text-primary" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">
+            {loading ? "—" : formatBRL(overview.spent, { compact: true })}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">soma do total gasto por clientes</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
         <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
