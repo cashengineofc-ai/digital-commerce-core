@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, Search } from "lucide-react";
+import { Download, FileText, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/format";
+import { EmptyState } from "@/components/app/EmptyState";
 import { StatementTable, type StatementFilters } from "@/components/app/finance/StatementTable";
+import { usePermission } from "@/lib/use-permission";
 
 type Summary = {
   saldo_abertura: number;
@@ -28,6 +30,7 @@ function csvCell(value: unknown) {
 }
 
 export function StatementPage() {
+  const permission = usePermission("financeiro", "extrato", "read");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [search, setSearch] = useState("");
@@ -50,6 +53,13 @@ export function StatementPage() {
   );
 
   useEffect(() => {
+    if (permission.loading) return;
+    if (!permission.allowed) {
+      setLoadingSummary(false);
+      setError(null);
+      return;
+    }
+
     let active = true;
     async function load() {
       setLoadingSummary(true);
@@ -78,10 +88,10 @@ export function StatementPage() {
     }
     void load();
     return () => { active = false; };
-  }, [start, end]);
+  }, [end, permission.allowed, permission.loading, start]);
 
   async function exportCsv() {
-    if (exporting) return;
+    if (exporting || !permission.allowed) return;
     setExporting(true);
     setError(null);
     try {
@@ -135,6 +145,26 @@ export function StatementPage() {
     }
   }
 
+  if (!permission.loading && !permission.allowed) {
+    return (
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight">Extrato</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Você não possui permissão para visualizar o extrato desta empresa.
+          </p>
+        </header>
+        <div className="mt-6">
+          <EmptyState
+            icon={FileText}
+            title="Acesso financeiro restrito"
+            description="Solicite a um administrador da empresa a permissão Extrato - Visualizar."
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -146,7 +176,7 @@ export function StatementPage() {
         </div>
         <button
           onClick={() => void exportCsv()}
-          disabled={exporting}
+          disabled={exporting || permission.loading}
           className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3.5 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
         >
           <Download className="h-4 w-4" />
@@ -171,7 +201,7 @@ export function StatementPage() {
           <div key={String(label)} className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <p className="text-xs font-medium text-muted-foreground">{label}</p>
             <p className="mt-2 text-lg font-semibold tabular-nums">
-              {loadingSummary ? "—" : formatBRL(Number(value))}
+              {loadingSummary || permission.loading ? "—" : formatBRL(Number(value))}
             </p>
           </div>
         ))}
