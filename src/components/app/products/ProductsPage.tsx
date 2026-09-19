@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
+  BadgeCheck,
+  CircleDollarSign,
   Package,
   PackagePlus,
   Pencil,
@@ -121,6 +123,20 @@ export function ProductsPage() {
     });
   }, [products, query, status]);
 
+  const overview = useMemo(
+    () =>
+      products.reduce(
+        (acc, product) => {
+          acc.published += product.status === "publicado" ? 1 : 0;
+          acc.sales += product.vendas_confirmadas;
+          acc.revenue += product.faturamento_bruto;
+          return acc;
+        },
+        { published: 0, sales: 0, revenue: 0 },
+      ),
+    [products],
+  );
+
   if (editor.open) {
     return (
       <ProductEditor
@@ -169,7 +185,53 @@ export function ProductsPage() {
         </div>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Produtos</span>
+            <Package className="h-4 w-4 text-primary" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">
+            {loading ? "—" : formatInt(products.length)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">registros operacionais</p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Publicados</span>
+            <BadgeCheck className="h-4 w-4 text-emerald-600" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">
+            {loading ? "—" : formatInt(overview.published)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">disponíveis na operação</p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Vendas confirmadas</span>
+            <ShoppingBag className="h-4 w-4 text-primary" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">
+            {loading ? "—" : formatInt(overview.sales)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">pedidos pagos vinculados</p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Faturamento</span>
+            <CircleDollarSign className="h-4 w-4 text-primary" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">
+            {loading ? "—" : formatBRL(overview.revenue, { compact: true })}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">somente pagamentos confirmados</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
         <div className="relative min-w-[220px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
