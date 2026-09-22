@@ -474,6 +474,10 @@ Deno.serve(async (request) => {
         font: config.theme?.font ?? "Inter",
       },
       banners: config.banners ?? {},
+      legal: {
+        terms_url: config.legal?.terms_url ?? null,
+        privacy_url: config.legal?.privacy_url ?? null,
+      },
     });
   }
 
