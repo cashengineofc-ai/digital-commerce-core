@@ -1,5 +1,5 @@
 # Roadmap
 
-- [ ] Aplicar integralmente a personalização salva no checkout público sem alterar pagamentos.
-- [ ] Expor banners responsivos e links legais já persistidos.
-- [ ] Validar TypeScript, build e compilação da função de checkout.
+- [x] Aplicar integralmente a personalização salva no checkout público sem alterar pagamentos.
+- [x] Expor banners responsivos e links legais já persistidos.
+- [x] Validar TypeScript, build e compilação da função de checkout.
