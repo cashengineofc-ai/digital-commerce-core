@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   CheckCircle2,
   Copy,
@@ -72,6 +72,16 @@ type CheckoutData = {
     subtitle: string | null;
     button_text?: string | null;
     font?: string | null;
+  };
+  banners: {
+    desktop_url?: string | null;
+    mobile_url?: string | null;
+    image_url?: string | null;
+    alt?: string | null;
+  };
+  legal: {
+    terms_url: string | null;
+    privacy_url: string | null;
   };
 };
 
@@ -359,20 +369,38 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
   }
 
   const manualPix = checkout.pix_confirmation === "manual";
+  const primary = checkout.theme.primary || "#2563eb";
+  const secondary = checkout.theme.secondary || "#0f172a";
+  const text = checkout.theme.text || "#ffffff";
+  const desktopBanner = checkout.banners.desktop_url || checkout.banners.image_url || checkout.checkout.banner_url;
+  const mobileBanner = checkout.banners.mobile_url || desktopBanner;
+  const themedStyle = {
+    "--checkout-primary": primary,
+    "--checkout-secondary": secondary,
+    "--checkout-text": text,
+    background: checkout.theme.background || "#05070a",
+    color: text,
+    fontFamily: checkout.theme.font || "Inter",
+  } as CSSProperties;
+  const panelStyle = { backgroundColor: `color-mix(in srgb, ${secondary} 78%, transparent)` };
+  const subtlePanelStyle = { backgroundColor: `color-mix(in srgb, ${secondary} 58%, transparent)` };
 
   return (
     <main
-      className="min-h-screen px-4 py-8 text-white sm:py-12"
-      style={{ background: checkout.theme.background || "#05070a" }}
+      className="min-h-screen px-4 py-8 sm:py-12"
+      style={themedStyle}
     >
       <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] shadow-2xl">
-          {checkout.checkout.banner_url && (
-            <img
-              src={checkout.checkout.banner_url}
-              alt=""
-              className="h-40 w-full object-cover"
-            />
+        <section className="overflow-hidden rounded-2xl border border-current/10 shadow-2xl" style={panelStyle}>
+          {desktopBanner && (
+            <picture>
+              {mobileBanner && <source media="(max-width: 639px)" srcSet={mobileBanner} />}
+              <img
+                src={desktopBanner}
+                alt={checkout.banners.alt ?? ""}
+                className="h-40 w-full object-cover"
+              />
+            </picture>
           )}
           <div className="p-6 sm:p-8">
             {checkout.theme.logo_url && (
@@ -382,7 +410,7 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                 className="mb-5 max-h-10 max-w-[180px] object-contain"
               />
             )}
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-blue-400">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em]" style={{ color: primary }}>
               <ShieldCheck className="h-4 w-4" /> Checkout seguro
             </div>
             <div className="mt-5 flex gap-4">
@@ -397,7 +425,7 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                 <h1 className="text-2xl font-semibold tracking-tight">
                   {checkout.theme.title || checkout.checkout.name}
                 </h1>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-white/55">
+                <p className="mt-2 max-w-xl text-sm leading-6 opacity-55">
                   {checkout.theme.subtitle ||
                     checkout.checkout.description ||
                     checkout.product.name}
@@ -407,7 +435,7 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
 
             {checkout.order_bumps.length > 0 && (
               <div className="mt-8 space-y-3">
-                <p className="text-xs font-medium uppercase tracking-[0.14em] text-white/45">
+                <p className="text-xs font-medium uppercase tracking-[0.14em] opacity-45">
                   Adicione à sua compra
                 </p>
                 {checkout.order_bumps.map((bump) => {
@@ -417,20 +445,15 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                       type="button"
                       key={bump.id}
                       onClick={() => toggleBump(bump)}
-                      className={
-                        "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition " +
-                        (selected
-                          ? "border-blue-500/50 bg-blue-500/[0.08]"
-                          : "border-white/10 bg-black/15 hover:bg-white/[0.04]")
-                      }
+                      className="flex w-full items-center gap-3 rounded-xl border border-current/10 p-3 text-left transition hover:opacity-90"
+                      style={selected ? {
+                        borderColor: `color-mix(in srgb, ${primary} 55%, transparent)`,
+                        backgroundColor: `color-mix(in srgb, ${primary} 10%, ${secondary})`,
+                      } : subtlePanelStyle}
                     >
                       <span
-                        className={
-                          "grid h-5 w-5 shrink-0 place-items-center rounded border " +
-                          (selected
-                            ? "border-blue-400 bg-blue-500 text-white"
-                            : "border-white/20")
-                        }
+                        className="grid h-5 w-5 shrink-0 place-items-center rounded border border-current/20"
+                        style={selected ? { borderColor: primary, backgroundColor: primary, color: text } : undefined}
                       >
                         {selected && <CheckCircle2 className="h-3.5 w-3.5" />}
                       </span>
@@ -446,7 +469,7 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-medium">{bump.name}</span>
                         {bump.description && (
-                          <span className="mt-0.5 line-clamp-2 block text-xs text-white/45">
+                          <span className="mt-0.5 line-clamp-2 block text-xs opacity-45">
                             {bump.description}
                           </span>
                         )}
@@ -460,14 +483,14 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
               </div>
             )}
 
-            <div className="mt-8 rounded-xl border border-white/10 bg-black/20 p-5">
+            <div className="mt-8 rounded-xl border border-current/10 p-5" style={subtlePanelStyle}>
               <div className="flex items-center justify-between gap-4">
-                <span className="text-sm text-white/55">Total</span>
+                <span className="text-sm opacity-55">Total</span>
                 <strong className="text-2xl tabular-nums">{formatBRL(visualTotal)}</strong>
               </div>
               {checkout.checkout.allow_custom_amount && (
                 <div className="mt-4">
-                  <label className="text-xs text-white/55">Valor principal</label>
+                  <label className="text-xs opacity-55">Valor principal</label>
                   <input
                     inputMode="decimal"
                     value={customAmount}
@@ -475,13 +498,13 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                       setCustomAmount(event.target.value);
                       idempotencyKeyRef.current = null;
                     }}
-                    className="mt-1.5 h-11 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 text-white outline-none focus:border-blue-500/60"
+                    className="mt-1.5 h-11 w-full rounded-lg border border-current/10 bg-transparent px-3 text-current outline-none focus:border-[var(--checkout-primary)]"
                   />
                 </div>
               )}
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs text-white/45">
+            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs opacity-45">
               <span className="inline-flex items-center gap-1.5">
                 <LockKeyhole className="h-3.5 w-3.5" /> Dados protegidos
               </span>
@@ -495,66 +518,66 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-6 shadow-2xl sm:p-8">
+        <section className="rounded-2xl border border-current/10 p-6 shadow-2xl sm:p-8" style={panelStyle}>
           {!payment ? (
             <form onSubmit={submit}>
               <h2 className="text-lg font-semibold">Seus dados</h2>
-              <p className="mt-1 text-sm text-white/50">
+              <p className="mt-1 text-sm opacity-50">
                 Preencha para gerar o Pix da compra.
               </p>
 
               <div className="mt-6 space-y-4">
                 <label className="block">
-                  <span className="text-xs text-white/55">Nome completo</span>
+                   <span className="text-xs opacity-55">Nome completo</span>
                   <input
                     required
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="mt-1.5 h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 outline-none focus:border-blue-500/60"
+                    className="mt-1.5 h-11 w-full rounded-lg border border-current/10 bg-transparent px-3 text-current outline-none focus:border-[var(--checkout-primary)]"
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs text-white/55">E-mail</span>
+                   <span className="text-xs opacity-55">E-mail</span>
                   <input
                     required
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="mt-1.5 h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 outline-none focus:border-blue-500/60"
+                    className="mt-1.5 h-11 w-full rounded-lg border border-current/10 bg-transparent px-3 text-current outline-none focus:border-[var(--checkout-primary)]"
                   />
                 </label>
                 {checkout.fields.cpf && (
                   <label className="block">
-                    <span className="text-xs text-white/55">CPF</span>
+                    <span className="text-xs opacity-55">CPF</span>
                     <input
                       required
                       inputMode="numeric"
                       value={form.cpf}
                       onChange={(e) => setForm({ ...form, cpf: e.target.value })}
                       placeholder="000.000.000-00"
-                      className="mt-1.5 h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 outline-none focus:border-blue-500/60"
+                      className="mt-1.5 h-11 w-full rounded-lg border border-current/10 bg-transparent px-3 text-current outline-none focus:border-[var(--checkout-primary)]"
                     />
                   </label>
                 )}
                 {checkout.fields.phone && (
                   <label className="block">
-                    <span className="text-xs text-white/55">Telefone</span>
+                    <span className="text-xs opacity-55">Telefone</span>
                     <input
                       inputMode="tel"
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="mt-1.5 h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 outline-none focus:border-blue-500/60"
+                      className="mt-1.5 h-11 w-full rounded-lg border border-current/10 bg-transparent px-3 text-current outline-none focus:border-[var(--checkout-primary)]"
                     />
                   </label>
                 )}
               </div>
 
-              <div className="mt-6 rounded-xl border border-blue-500/20 bg-blue-500/[0.07] p-4">
+              <div className="mt-6 rounded-xl border p-4" style={{ borderColor: `color-mix(in srgb, ${primary} 28%, transparent)`, backgroundColor: `color-mix(in srgb, ${primary} 9%, ${secondary})` }}>
                 <div className="flex items-center gap-3">
-                  <QrCode className="h-5 w-5 text-blue-400" />
+                  <QrCode className="h-5 w-5" style={{ color: primary }} />
                   <div className="flex-1">
                     <p className="text-sm font-medium">Pix</p>
-                    <p className="text-xs text-white/45">
+                    <p className="text-xs opacity-45">
                       {manualPix
                         ? "Pix por chave · conciliação manual"
                         : "Confirmação automática quando o provedor informar o pagamento"}
@@ -563,14 +586,12 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <div className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/35">
-                  Cartão · Em breve
+              {(checkout.payment_methods.card || checkout.payment_methods.boleto) && (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {checkout.payment_methods.card && <div className="rounded-lg border border-current/10 px-3 py-2 text-xs opacity-35">Cartão</div>}
+                  {checkout.payment_methods.boleto && <div className="rounded-lg border border-current/10 px-3 py-2 text-xs opacity-35">Boleto</div>}
                 </div>
-                <div className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/35">
-                  Boleto · Em breve
-                </div>
-              </div>
+              )}
 
               {payError && (
                 <p className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
@@ -581,7 +602,8 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
               <button
                 type="submit"
                 disabled={paying || !checkout.payment_methods.pix}
-                className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl font-semibold transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ backgroundColor: primary, color: text }}
               >
                 {paying ? (
                   <>
@@ -606,18 +628,19 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                 <CheckCircle2 className="h-8 w-8" />
               </span>
               <h2 className="mt-5 text-2xl font-semibold">Pagamento confirmado</h2>
-              <p className="mt-2 text-sm text-white/55">
+              <p className="mt-2 text-sm opacity-55">
                 O recebimento foi confirmado e o pedido foi atualizado.
               </p>
               {payment.order_id && (
-                <p className="mt-2 font-mono text-[11px] text-white/30">
+                <p className="mt-2 font-mono text-[11px] opacity-30">
                   Pedido {payment.order_id}
                 </p>
               )}
               {payment.success_url && (
                 <a
                   href={payment.success_url}
-                  className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-5 text-sm font-semibold hover:bg-blue-500"
+                  className="mt-6 inline-flex h-11 items-center justify-center rounded-lg px-5 text-sm font-semibold hover:opacity-90"
+                  style={{ backgroundColor: primary, color: text }}
                 >
                   Continuar
                 </a>
@@ -626,29 +649,29 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
           ) : (
             <div>
               <div className="text-center">
-                <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-blue-500/10 text-blue-400">
+                <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl" style={{ backgroundColor: `color-mix(in srgb, ${primary} 12%, transparent)`, color: primary }}>
                   <QrCode className="h-6 w-6" />
                 </span>
                 <h2 className="mt-4 text-xl font-semibold">Pix gerado</h2>
-                <p className="mt-1 text-sm text-white/50">
+                <p className="mt-1 text-sm opacity-50">
                   Escaneie o QR Code ou copie o código abaixo.
                 </p>
               </div>
 
-              <div className="mt-5 grid gap-2 rounded-xl border border-white/10 bg-black/20 p-4 text-sm">
+              <div className="mt-5 grid gap-2 rounded-xl border border-current/10 p-4 text-sm" style={subtlePanelStyle}>
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-white/45">Valor</span>
+                  <span className="opacity-45">Valor</span>
                   <strong>{formatBRL(displayedPaymentAmount)}</strong>
                 </div>
                 {payment.receiver_name && (
                   <div className="flex items-center justify-between gap-4">
-                    <span className="text-white/45">Recebedor</span>
+                    <span className="opacity-45">Recebedor</span>
                     <span className="text-right">{payment.receiver_name}</span>
                   </div>
                 )}
                 {payment.receiver_city && (
                   <div className="flex items-center justify-between gap-4">
-                    <span className="text-white/45">Cidade</span>
+                    <span className="opacity-45">Cidade</span>
                     <span className="text-right">{payment.receiver_city}</span>
                   </div>
                 )}
@@ -665,13 +688,13 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
               )}
 
               {payment.pix?.qr_code && (
-                <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-3">
-                  <p className="line-clamp-3 break-all font-mono text-[11px] leading-5 text-white/55">
+                <div className="mt-5 rounded-xl border border-current/10 p-3" style={subtlePanelStyle}>
+                  <p className="line-clamp-3 break-all font-mono text-[11px] leading-5 opacity-55">
                     {payment.pix.qr_code}
                   </p>
                   <button
                     onClick={copyPix}
-                    className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.05] text-sm font-medium hover:bg-white/[0.08]"
+                    className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-current/10 text-sm font-medium hover:opacity-80"
                   >
                     {copied ? (
                       <CheckCircle2 className="h-4 w-4 text-emerald-400" />
@@ -699,12 +722,12 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                       ? "Aguardando conferência"
                       : "Aguardando confirmação do pagamento"}
                 </div>
-                <p className="mt-1 text-xs text-white/45">
+                <p className="mt-1 text-xs opacity-45">
                   {payment.manual_confirmation
                     ? "Gerar ou copiar o Pix não marca a venda como paga. A confirmação depende da conciliação bancária."
                     : "A situação será atualizada quando o provedor confirmar o recebimento."}
                 </p>
-                <p className="mt-2 text-[11px] text-white/35">
+                <p className="mt-2 text-[11px] opacity-35">
                   Status: {currentStatus ?? "pendente"}
                 </p>
               </div>
@@ -717,7 +740,7 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                     setPayError(null);
                     idempotencyKeyRef.current = null;
                   }}
-                  className="mt-4 h-11 w-full rounded-lg border border-white/10 text-sm font-medium hover:bg-white/[0.05]"
+                  className="mt-4 h-11 w-full rounded-lg border border-current/10 text-sm font-medium hover:opacity-80"
                 >
                   Tentar novamente
                 </button>
@@ -727,9 +750,11 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
         </section>
       </div>
 
-      <p className="mx-auto mt-6 flex max-w-5xl items-center justify-center gap-2 text-center text-[11px] text-white/30">
-        <Zap className="h-3 w-3" /> Cash Engine PRO · infraestrutura de pagamentos
-      </p>
+      <footer className="mx-auto mt-6 flex max-w-5xl flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center text-[11px] opacity-35">
+        <span className="inline-flex items-center gap-2"><Zap className="h-3 w-3" style={{ color: primary }} /> Cash Engine PRO · infraestrutura de pagamentos</span>
+        {checkout.legal.terms_url && <a href={checkout.legal.terms_url} target="_blank" rel="noreferrer" className="underline-offset-4 hover:underline" style={{ color: primary }}>Termos</a>}
+        {checkout.legal.privacy_url && <a href={checkout.legal.privacy_url} target="_blank" rel="noreferrer" className="underline-offset-4 hover:underline" style={{ color: primary }}>Privacidade</a>}
+      </footer>
     </main>
   );
 }
