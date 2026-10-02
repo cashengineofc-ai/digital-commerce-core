@@ -363,6 +363,26 @@ async function mercadoPagoIdentity(accessToken: string) {
   return { id: String(body.id), isTestUser };
 }
 
+function providerPixData(payload: Record<string, any> | null | undefined) {
+  const orderPayment = payload?.transactions?.payments?.[0];
+  const orderPix = orderPayment?.payment_method;
+  if (orderPix && (orderPix.qr_code || orderPix.qr_code_base64 || orderPix.ticket_url)) {
+    return {
+      qr_code: orderPix.qr_code ?? null,
+      qr_code_base64: orderPix.qr_code_base64 ?? null,
+      ticket_url: orderPix.ticket_url ?? null,
+    };
+  }
+
+  const legacyPix = payload?.point_of_interaction?.transaction_data;
+  if (!legacyPix) return null;
+  return {
+    qr_code: legacyPix.qr_code ?? null,
+    qr_code_base64: legacyPix.qr_code_base64 ?? null,
+    ticket_url: legacyPix.ticket_url ?? null,
+  };
+}
+
 async function markFailed(
   supabase: any,
   transactionId: string,
@@ -711,7 +731,8 @@ Deno.serve(async (request) => {
 
   if (tx.id_transacao_gateway) {
     const payload = tx.payload_provedor as Record<string, any> | null;
-    const pix = payload?.point_of_interaction?.transaction_data;
+    const pix = providerPixData(payload);
+    const sandbox = payload?._cash_engine?.sandbox === true;
     return jsonResponse({
       ok: true,
       duplicate: true,
@@ -720,10 +741,14 @@ Deno.serve(async (request) => {
       payment_id: tx.id_transacao_gateway,
       status: tx.status,
       status_detail: tx.status_detalhe_provedor,
-      amount: persistedTotal,
+      amount: sandbox ? Number(payload?._cash_engine?.provider_amount ?? 50) : persistedTotal,
+      checkout_amount: sandbox ? persistedTotal : undefined,
+      sandbox,
       manual_confirmation: false,
-      message: null,
-      pix: pix ? { qr_code: pix.qr_code ?? null, qr_code_base64: pix.qr_code_base64 ?? null, ticket_url: pix.ticket_url ?? null } : null,
+      message: sandbox
+        ? "Ambiente de teste Mercado Pago: o Pix sandbox usa o valor predefinido de R$ 50,00."
+        : null,
+      pix,
       success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null,
     });
   }
@@ -755,6 +780,178 @@ Deno.serve(async (request) => {
   if (identityPersistError) {
     await markFailed(supabase, tx.id, "provider_identity_persist_failed");
     return jsonResponse({ error: "payment_persist_failed" }, 500);
+  }
+
+  if (providerTestMode) {
+    // Mercado Pago's official Pix sandbox only accepts the predefined test
+    // scenario: R$ 50,00, test_user_br@testuser.com and first_name APRO.
+    // Keep the real checkout amount in Cash Engine; the provider amount is
+    // isolated inside the sandbox payload so it never feeds real settlement.
+    const sandboxAmount = 50;
+    const sandboxAmountText = sandboxAmount.toFixed(2);
+    const orderBody = {
+      type: "online",
+      processing_mode: "automatic",
+      external_reference: tx.id,
+      total_amount: sandboxAmountText,
+      payer: {
+        email: "test_user_br@testuser.com",
+        first_name: "APRO",
+      },
+      transactions: {
+        payments: [
+          {
+            amount: sandboxAmountText,
+            payment_method: {
+              id: "pix",
+              type: "bank_transfer",
+            },
+          },
+        ],
+      },
+    };
+
+    let response: Response;
+    let providerOrder: Record<string, any>;
+    try {
+      response = await fetch("https://api.mercadopago.com/v1/orders", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": idempotencyKey,
+        },
+        body: JSON.stringify(orderBody),
+        signal: AbortSignal.timeout(15_000),
+      });
+      providerOrder = await response.json();
+    } catch (error) {
+      console.error("Mercado Pago sandbox order request failed", error);
+      await markFailed(supabase, tx.id, "gateway_unreachable", {
+        ...trustedIdentityPayload,
+        provider_api: "orders",
+        sandbox: true,
+        provider_error: "gateway_unreachable",
+      });
+      return jsonResponse({ error: "mercadopago_unreachable" }, 502);
+    }
+
+    if (!response.ok || !providerOrder.id) {
+      await markFailed(
+        supabase,
+        tx.id,
+        providerOrder?.message ?? providerOrder?.error ?? `http_${response.status}`,
+        {
+          ...trustedIdentityPayload,
+          provider_api: "orders",
+          sandbox: true,
+          provider_error: providerOrder ?? {},
+        },
+      );
+      return jsonResponse(
+        {
+          error: "payment_rejected_by_gateway",
+          status: providerOrder?.status ?? null,
+          status_detail:
+            providerOrder?.status_detail ??
+            providerOrder?.message ??
+            providerOrder?.error ??
+            null,
+        },
+        422,
+      );
+    }
+
+    const providerPayment = providerOrder.transactions?.payments?.[0] ?? null;
+    const pixData = providerPayment?.payment_method ?? null;
+    const providerUserId =
+      providerOrder.user_id == null ? null : String(providerOrder.user_id);
+    const identityMatches =
+      providerUserId == null || providerUserId === expectedCollectorId;
+    const referenceMatches = providerOrder.external_reference === tx.id;
+    const methodMatches =
+      providerPayment?.payment_method?.id === "pix" &&
+      providerPayment?.payment_method?.type === "bank_transfer";
+    const pixPresent = Boolean(
+      pixData?.qr_code || pixData?.qr_code_base64 || pixData?.ticket_url,
+    );
+
+    if (!identityMatches || !referenceMatches || !methodMatches || !pixPresent) {
+      await markFailed(supabase, tx.id, "provider_order_validation_failed", {
+        ...trustedIdentityPayload,
+        provider_api: "orders",
+        sandbox: true,
+        received_user_id: providerUserId,
+        order_id: String(providerOrder.id),
+      });
+      return jsonResponse({ error: "payment_provider_identity_mismatch" }, 422);
+    }
+
+    const storedProviderPayload = {
+      ...providerOrder,
+      _cash_engine: {
+        sandbox: true,
+        provider_api: "orders",
+        collector_id: expectedCollectorId,
+        local_amount: persistedTotal,
+        provider_amount: sandboxAmount,
+      },
+    };
+
+    const updateResult = await supabase
+      .from("transacoes")
+      .update({
+        id_transacao_gateway: String(providerOrder.id),
+        provedor_pagamento: "mercadopago",
+        // Deliberately keep sandbox transactions pending in the database.
+        // The status endpoint exposes a virtual test approval after consulting
+        // Mercado Pago, preventing sandbox approvals from crediting real saldo.
+        status: "pendente",
+        status_detalhe_provedor:
+          `sandbox:${providerOrder.status_detail ?? providerOrder.status ?? "created"}`,
+        metodo_pagamento: "pix",
+        parcelas: 1,
+        data_pagamento: null,
+        pix_qrcode: pixData?.qr_code_base64 ?? null,
+        pix_copia_cola: pixData?.qr_code ?? null,
+        pix_expiracao: providerOrder.expiration_time ?? null,
+        pix_modo: "provedor",
+        payload_provedor: storedProviderPayload,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", tx.id);
+
+    if (updateResult.error) {
+      await markFailed(supabase, tx.id, "payment_persist_failed", {
+        ...trustedIdentityPayload,
+        provider_api: "orders",
+        sandbox: true,
+        order_id: String(providerOrder.id),
+      });
+      return jsonResponse({ error: "payment_persist_failed" }, 500);
+    }
+
+    return jsonResponse({
+      ok: true,
+      order_id: orderId,
+      transaction_id: tx.id,
+      payment_id: String(providerOrder.id),
+      provider_payment_id: providerPayment?.id ? String(providerPayment.id) : null,
+      status: "pendente",
+      status_detail: providerOrder.status_detail ?? providerOrder.status ?? null,
+      amount: sandboxAmount,
+      checkout_amount: persistedTotal,
+      sandbox: true,
+      manual_confirmation: false,
+      message: "Ambiente de teste Mercado Pago: o Pix sandbox usa o valor predefinido de R$ 50,00.",
+      pix: {
+        qr_code: pixData?.qr_code ?? null,
+        qr_code_base64: pixData?.qr_code_base64 ?? null,
+        ticket_url: pixData?.ticket_url ?? null,
+      },
+      success_url: source.link?.url_redirecionamento_sucesso ?? source.checkout.url_sucesso ?? null,
+    });
   }
 
   const { firstName, lastName } = splitName(fullName);
