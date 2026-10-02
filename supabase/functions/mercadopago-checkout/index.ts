@@ -382,6 +382,7 @@ Deno.serve(async (request) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
   const webhookSecret = Deno.env.get("MERCADO_PAGO_WEBHOOK_SECRET");
+  const mercadoPagoEnvironment = (Deno.env.get("MERCADO_PAGO_ENV") ?? "production").trim().toLowerCase();
   if (!supabaseUrl || !serviceRoleKey) return jsonResponse({ error: "checkout_not_configured" }, 503);
 
   let body: Record<string, any>;
@@ -747,12 +748,18 @@ Deno.serve(async (request) => {
   }
 
   const { firstName, lastName } = splitName(fullName);
+  // Mercado Pago test credentials require a test payer identity. Keep the real
+  // buyer email in Cash Engine and substitute only the provider-facing email
+  // while the backend is explicitly running in test mode.
+  const providerPayerEmail = mercadoPagoEnvironment === "test"
+    ? "test_user_br@testuser.com"
+    : email;
   const paymentBody: Record<string, any> = {
     transaction_amount: persistedTotal,
     description: source.product.nome,
     payment_method_id: "pix",
     payer: {
-      email,
+      email: providerPayerEmail,
       first_name: firstName,
       last_name: lastName,
       ...(cpf ? { identification: { type: "CPF", number: cpf } } : {}),
