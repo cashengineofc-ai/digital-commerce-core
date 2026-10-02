@@ -328,6 +328,10 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
       setPaymentStatus(result.status);
     } catch (error) {
       const code = error instanceof Error ? error.message : "payment_failed";
+      // A failed provider attempt must not reuse the same idempotency key.
+      // Retrying with a fresh key creates a new local transaction/order instead
+      // of returning the previously failed attempt.
+      idempotencyKeyRef.current = null;
       setPayError(errorLabels[code] ?? "Não foi possível gerar o Pix. Tente novamente.");
     } finally {
       setPaying(false);
