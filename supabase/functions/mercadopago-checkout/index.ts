@@ -344,7 +344,7 @@ async function resolveAffiliate(supabase: any, code: string, source: Source) {
   return { afiliado_id: data.afiliado_id as string, link_afiliado_id: data.id as string };
 }
 
-async function mercadoPagoCollectorId(accessToken: string) {
+async function mercadoPagoIdentity(accessToken: string) {
   const response = await fetch("https://api.mercadopago.com/users/me", {
     method: "GET",
     headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
@@ -353,7 +353,14 @@ async function mercadoPagoCollectorId(accessToken: string) {
   if (!response.ok) throw new Error(`provider_identity_${response.status}`);
   const body = await response.json();
   if (body?.id == null) throw new Error("provider_identity_missing");
-  return String(body.id);
+
+  const nickname = typeof body?.nickname === "string" ? body.nickname.trim() : "";
+  const providerEmail = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const isTestUser =
+    /^TEST(?:USER)?/i.test(nickname) ||
+    providerEmail.endsWith("@testuser.com");
+
+  return { id: String(body.id), isTestUser };
 }
 
 async function markFailed(
@@ -721,18 +728,21 @@ Deno.serve(async (request) => {
     });
   }
 
-  let expectedCollectorId: string;
+  let providerIdentity: { id: string; isTestUser: boolean };
   try {
-    expectedCollectorId = await mercadoPagoCollectorId(accessToken);
+    providerIdentity = await mercadoPagoIdentity(accessToken);
   } catch (error) {
     console.error("Mercado Pago identity lookup failed", error);
     await markFailed(supabase, tx.id, "provider_identity_unavailable");
     return jsonResponse({ error: "mercadopago_identity_unavailable" }, 503);
   }
 
+  const expectedCollectorId = providerIdentity.id;
+  const providerTestMode = mercadoPagoEnvironment === "test" || providerIdentity.isTestUser;
   const trustedIdentityPayload = {
     collector_id: expectedCollectorId,
     identity_source: "mercadopago_users_me",
+    environment: providerTestMode ? "test" : "production",
   };
   const { error: identityPersistError } = await supabase
     .from("transacoes")
@@ -751,7 +761,7 @@ Deno.serve(async (request) => {
   // Mercado Pago test credentials require a test payer identity. Keep the real
   // buyer email in Cash Engine and substitute only the provider-facing email
   // while the backend is explicitly running in test mode.
-  const providerPayerEmail = mercadoPagoEnvironment === "test"
+  const providerPayerEmail = providerTestMode
     ? "test_user_br@testuser.com"
     : email;
   const paymentBody: Record<string, any> = {
