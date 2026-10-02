@@ -93,6 +93,8 @@ type PaymentResult = {
   status: string;
   status_detail: string | null;
   amount?: number;
+  checkout_amount?: number;
+  sandbox?: boolean;
   receiver_name?: string | null;
   receiver_city?: string | null;
   manual_confirmation?: boolean;
@@ -105,7 +107,7 @@ type PaymentResult = {
   success_url: string | null;
 };
 
-const paidStatuses = new Set(["aprovada", "capturada", "paga", "disponivel"]);
+const paidStatuses = new Set(["aprovada", "capturada", "paga", "disponivel", "teste_aprovada"]);
 const terminalFailureStatuses = new Set([
   "cancelada",
   "rejeitada",
@@ -627,9 +629,13 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
               <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500/15 text-emerald-400">
                 <CheckCircle2 className="h-8 w-8" />
               </span>
-              <h2 className="mt-5 text-2xl font-semibold">Pagamento confirmado</h2>
+              <h2 className="mt-5 text-2xl font-semibold">
+                {payment.sandbox ? "Teste Pix confirmado" : "Pagamento confirmado"}
+              </h2>
               <p className="mt-2 text-sm opacity-55">
-                O recebimento foi confirmado e o pedido foi atualizado.
+                {payment.sandbox
+                  ? "O Mercado Pago confirmou a order sandbox. Este teste não gera saldo, comissão ou receita real."
+                  : "O recebimento foi confirmado e o pedido foi atualizado."}
               </p>
               {payment.order_id && (
                 <p className="mt-2 font-mono text-[11px] opacity-30">
@@ -657,6 +663,15 @@ export function PublicCheckoutPage({ source }: { source: CheckoutSource }) {
                   Escaneie o QR Code ou copie o código abaixo.
                 </p>
               </div>
+
+              {payment.sandbox && (
+                <div className="mt-5 rounded-xl border border-amber-500/20 bg-amber-500/[0.07] p-4 text-sm">
+                  <p className="font-medium text-amber-200">Ambiente de teste do Mercado Pago</p>
+                  <p className="mt-1 text-xs opacity-60">
+                    O sandbox de Pix usa obrigatoriamente uma order de R$ 50,00. O valor original do checkout permanece separado e não entra no financeiro real.
+                  </p>
+                </div>
+              )}
 
               <div className="mt-5 grid gap-2 rounded-xl border border-current/10 p-4 text-sm" style={subtlePanelStyle}>
                 <div className="flex items-center justify-between gap-4">
