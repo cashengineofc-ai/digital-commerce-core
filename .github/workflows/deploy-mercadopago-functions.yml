@@ -1,0 +1,47 @@
+name: Deploy Mercado Pago Edge Functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/mercadopago-checkout/**"
+      - "supabase/functions/mercadopago-payment-status/**"
+      - "supabase/functions/mercadopago-webhook/**"
+      - "supabase/functions/_shared/**"
+      - ".github/workflows/deploy-mercadopago-functions.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-mercadopago-functions
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: wxmvlrxbbdtqcjsfpwxt
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify deploy credential
+        shell: bash
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::GitHub secret SUPABASE_ACCESS_TOKEN is not configured."
+            exit 1
+          fi
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy Mercado Pago checkout
+        run: supabase functions deploy mercadopago-checkout --project-ref "$PROJECT_REF" --no-verify-jwt
+
+      - name: Deploy Mercado Pago payment status
+        run: supabase functions deploy mercadopago-payment-status --project-ref "$PROJECT_REF" --no-verify-jwt
+
+      - name: Deploy Mercado Pago webhook
+        run: supabase functions deploy mercadopago-webhook --project-ref "$PROJECT_REF" --no-verify-jwt
