@@ -218,6 +218,163 @@ Deno.serve(async (request) => {
     if (error) console.error("Failed finalizing webhook event", error);
   };
 
+  const isOrderNotification =
+    notification.type === "order" || notification.action?.startsWith("order.");
+
+  if (isOrderNotification && dataId) {
+    let providerOrder: Record<string, any>;
+    try {
+      const response = await fetch(
+        `https://api.mercadopago.com/v1/orders/${encodeURIComponent(dataId)}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
+          signal: AbortSignal.timeout(15_000),
+        },
+      );
+      if (!response.ok) {
+        const errorBody = await response.text();
+        await finishEvent("failed", {
+          error: `mercadopago_order_${response.status}:${errorBody.slice(0, 500)}`,
+        });
+        return jsonResponse(
+          { error: "order_lookup_failed" },
+          response.status >= 500 ? 500 : 502,
+        );
+      }
+      providerOrder = await response.json();
+    } catch (error) {
+      await finishEvent("failed", {
+        error: error instanceof Error ? error.message : "order_lookup_failed",
+      });
+      return jsonResponse({ error: "order_lookup_failed" }, 500);
+    }
+
+    const orderId = String(providerOrder.id ?? dataId);
+    const externalReference =
+      typeof providerOrder.external_reference === "string"
+        ? providerOrder.external_reference
+        : null;
+
+    const transactionColumns =
+      "id,id_transacao_gateway,payload_provedor,provedor_pagamento";
+    let transaction: {
+      id: string;
+      id_transacao_gateway: string | null;
+      payload_provedor: Record<string, any> | null;
+      provedor_pagamento: string | null;
+    } | null = null;
+
+    const byGateway = await supabase
+      .from("transacoes")
+      .select(transactionColumns)
+      .eq("provedor_pagamento", "mercadopago")
+      .eq("id_transacao_gateway", orderId)
+      .maybeSingle();
+    if (byGateway.error) {
+      await finishEvent("failed", { error: byGateway.error.message });
+      return jsonResponse({ error: "transaction_lookup_failed" }, 500);
+    }
+    transaction = byGateway.data;
+
+    if (!transaction && externalReference) {
+      const byReference = await supabase
+        .from("transacoes")
+        .select(transactionColumns)
+        .eq("id", externalReference)
+        .maybeSingle();
+      if (byReference.error) {
+        await finishEvent("failed", { error: byReference.error.message });
+        return jsonResponse({ error: "transaction_lookup_failed" }, 500);
+      }
+      transaction = byReference.data;
+    }
+
+    if (!transaction) {
+      await finishEvent("ignored", { error: "local_transaction_not_found" });
+      return jsonResponse({
+        ok: true,
+        ignored: true,
+        reason: "local_transaction_not_found",
+      });
+    }
+
+    const originalPayload = transaction.payload_provedor ?? {};
+    const cashEngineMeta =
+      originalPayload._cash_engine && typeof originalPayload._cash_engine === "object"
+        ? originalPayload._cash_engine as Record<string, any>
+        : null;
+    const isSandboxOrder =
+      cashEngineMeta?.sandbox === true &&
+      cashEngineMeta?.provider_api === "orders";
+    const expectedCollector =
+      cashEngineMeta?.collector_id == null ? null : String(cashEngineMeta.collector_id);
+    const receivedCollector =
+      providerOrder.user_id == null ? null : String(providerOrder.user_id);
+    const collectorMatches =
+      expectedCollector == null ||
+      receivedCollector == null ||
+      expectedCollector === receivedCollector;
+    const referenceMatches =
+      externalReference == null || externalReference === transaction.id;
+    const gatewayMatches =
+      !transaction.id_transacao_gateway ||
+      transaction.id_transacao_gateway === orderId;
+
+    if (!collectorMatches || !referenceMatches || !gatewayMatches) {
+      const reason = !collectorMatches
+        ? "collector_id_mismatch"
+        : !referenceMatches
+          ? "transaction_reference_mismatch"
+          : "gateway_id_mismatch";
+      await finishEvent("failed", {
+        transaction_id: transaction.id,
+        error: reason,
+      });
+      return jsonResponse({ error: "order_validation_failed", reason }, 422);
+    }
+
+    if (!isSandboxOrder) {
+      await finishEvent("ignored", {
+        transaction_id: transaction.id,
+        error: "unsupported_order_context",
+      });
+      return jsonResponse({ ok: true, ignored: true, reason: "unsupported_order_context" });
+    }
+
+    // Sandbox order notifications are recorded for observability but do not
+    // change the local financial status. The status endpoint exposes a virtual
+    // test approval after consulting Mercado Pago directly.
+    const storedPayload = {
+      ...providerOrder,
+      _cash_engine: cashEngineMeta,
+    };
+    const { error: orderUpdateError } = await supabase
+      .from("transacoes")
+      .update({
+        payload_provedor: storedPayload,
+        status_detalhe_provedor:
+          `sandbox:${providerOrder.status_detail ?? providerOrder.status ?? "updated"}`,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", transaction.id);
+    if (orderUpdateError) {
+      await finishEvent("failed", {
+        transaction_id: transaction.id,
+        error: orderUpdateError.message,
+      });
+      return jsonResponse({ error: "transaction_update_failed" }, 500);
+    }
+
+    await finishEvent("processed", { transaction_id: transaction.id });
+    return jsonResponse({
+      ok: true,
+      sandbox: true,
+      transaction_id: transaction.id,
+      order_id: orderId,
+      provider_status: providerOrder.status ?? null,
+    });
+  }
+
   const isPaymentNotification =
     notification.type === "payment" || notification.action?.startsWith("payment.");
   if (!isPaymentNotification || !dataId) {
